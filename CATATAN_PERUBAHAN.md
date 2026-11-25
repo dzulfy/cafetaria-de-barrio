@@ -72,6 +72,11 @@ Tujuan utama fitur ini adalah mengimplementasikan antarmuka serta sistem backend
     - Modal Edit Data Bahan
     - Modal Catat Mutasi Stok (Pilihan jenis: Masuk, Keluar, Penyesuaian)
     - Modal Konfirmasi Hapus Bahan
+  - **Desain Responsif Penuh (Mobile, Tablet, Laptop, Desktop)**:
+    - **Header & Drawer Sidebar Mobile**: Navigasi atas khusus mobile dengan tombol hamburger (`☰`), logo De Barrio, inisial pengguna, dan drawer menu yang dapat dibuka/tutup dengan transisi halus dan backdrop blur.
+    - **Penyesuaian Tombol Aksi**: Di layar HP, tombol "Catat Mutasi" dan "+ Tambah Bahan" berbagi porsi seimbang (`50:50`) secara berdampingan sehingga ramah sentuhan (*touch friendly*).
+    - **Tabel Responsif**: Tabel dibungkus kontainer `overflow-x-auto custom-scrollbar` dengan lebar minimum terukur (`min-w-[680px]`) sehingga data tidak terjepit di smartphone dan tetap dapat digulir secara horizontal dengan mulus.
+    - **Modal Ramah Layar Kecil**: Dilengkapi batas tinggi maksimal (`max-h-[92vh] overflow-y-auto`) agar tetap nyaman digunakan di smartphone saat keyboard virtual muncul.
 
 ### 5. Routing ([routes/web.php](routes/web.php))
 - Menambahkan route:
