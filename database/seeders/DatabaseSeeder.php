@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             CategorySeeder::class,
             DiningTableSeeder::class,
+            BahanSeeder::class,
         ]);
     }
 }
