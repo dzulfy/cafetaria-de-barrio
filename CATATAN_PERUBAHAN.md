@@ -3,13 +3,14 @@
 **Branch**: `feature/inventory-management`  
 **Fitur**: Manajemen Stok Bahan & Mutasi Stok (Inventory Management)  
 **Pengembang**: M. Fikri Firdaus (Admin / Owner)  
+**Status**: Selesai & Teruji 100% (Siap Push ke GitHub)  
 
 ---
 
 ## 📌 Ringkasan Pengerjaan
-Dokumen ini mencatat seluruh rangkaian perubahan, penambahan file, konfigurasi database, integrasi antarmuka (UI), dan pengujian dari awal sesi pengerjaan fitur **Stok Bahan** agar siap di-*commit* dan di-*push* ke repositori GitHub tim.
+Dokumen ini mencatat seluruh rangkaian perubahan, penambahan file, konfigurasi database, integrasi antarmuka (UI), optimasi responsif lintas perangkat, penanganan bug, dan pengujian dari awal sesi pengerjaan fitur **Stok Bahan** agar siap di-*commit* dan di-*push* ke repositori GitHub tim.
 
-Tujuan utama fitur ini adalah mengimplementasikan antarmuka serta sistem backend pemantauan stok bahan baku kafe yang persis menyerupai desain acuan, lengkap dengan indikator level stok, status peringatan stok menipis, pencarian, filter, paginasi, operasi CRUD, dan pencatatan mutasi stok.
+Tujuan utama fitur ini adalah mengimplementasikan antarmuka serta sistem backend pemantauan stok bahan baku kafe yang persis menyerupai desain acuan, lengkap dengan indikator level stok, status peringatan stok menipis, pencarian, filter status, paginasi, operasi CRUD, pencatatan mutasi stok, serta tampilan yang responsif di smartphone, tablet, laptop, dan desktop.
 
 ---
 
@@ -22,8 +23,8 @@ Tujuan utama fitur ini adalah mengimplementasikan antarmuka serta sistem backend
 ### 2. Konfigurasi Database & Data Seeder
 - **Koneksi Database `.env`**:
   - Mengonfigurasi koneksi MySQL Laragon (`127.0.0.1:3306`) dengan nama database `warkop_de_barrio`.
-  - Mengaktifkan ekstensi `pdo_sqlite` dan `sqlite3` pada PHP agar pengujian otomatis (*Automated Testing*) dapat dijalankan secara cepat via *in-memory SQLite*.
-- **Migrasi Tabel**: Memastikan tabel `bahan` dan `mutasi_stok` termigrasi dengan foreign key yang valid ke tabel `pengguna`.
+  - Mengaktifkan ekstensi `pdo_sqlite` dan `sqlite3` pada `php.ini` agar pengujian otomatis (*Automated Testing*) dapat dijalankan secara cepat via *in-memory SQLite*.
+- **Migrasi Tabel**: Memastikan tabel `bahan` dan `mutasi_stok` termigrasi dengan *foreign key* yang valid ke tabel `pengguna`.
 - **Pembuatan Seeder ([database/seeders/BahanSeeder.php](database/seeders/BahanSeeder.php))**:
   - Menambahkan **18 item bahan baku** kafe lengkap dengan satuan, stok awal, dan batas minimum.
   - Halaman 1 (7 bahan pertama) dibuat **persis sesuai desain acuan**:
@@ -47,23 +48,23 @@ Tujuan utama fitur ini adalah mengimplementasikan antarmuka serta sistem backend
     - `keluar`: Mengurangi stok bahan (`-`) dengan proteksi stok minimal 0.
     - `penyesuaian`: Menyesuaikan total stok fisik riil.
     - Riwayat dicatat ke tabel `mutasi_stok` lengkap dengan catatan dan pengguna yang mencatat.
-  - `getPenggunaId()`: Proteksi foreign key agar selalu menggunakan ID pengguna yang valid saat mutasi dicatat.
+  - `getPenggunaId()`: Proteksi *foreign key* agar selalu menggunakan ID pengguna yang valid saat mutasi dicatat (mencegah *Foreign Key Constraint Violation* jika user belum login).
 
-### 4. Tampilan Antarmuka (UI/UX)
+### 4. Tampilan Antarmuka (UI/UX) & Responsivitas
 - **Pembuatan Layout Utama ([resources/views/layouts/admin.blade.php](resources/views/layouts/admin.blade.php))**:
   - Sidebar bernuansa *deep forest green* (`#184233`) dengan branding **De Barrio** dan logo cangkir kopi.
   - Menu navigasi: *Dashboard*, *Menu & Kategori*, **Stok Bahan** (*Active State* pill `#285744`), *Pengeluaran*, *Laporan*, *Pengguna*, *Meja & QR*.
-  - Kartu profil di sidebar bawah: Avatar **MF**, nama **M. Fikri Firdaus**, jabatan **Admin / Owner**, dan tombol logout.
+  - Kartu profil di sidebar bawah: Avatar inisial **MF**, nama **M. Fikri Firdaus**, jabatan **Admin / Owner**, dan tombol logout.
   - Dukungan build Tailwind CSS v4 serta CDN *fallback* untuk kompatibilitas lintas environment.
 - **Halaman Utama Stok Bahan ([resources/views/bahan/index.blade.php](resources/views/bahan/index.blade.php))**:
   - **Header**: Judul *"Stok Bahan"*, deskripsi *"Pantau stok dan peringatan stok menipis"*, tombol *"Catat Mutasi"*, dan tombol *"+ Tambah Bahan"*.
-  - **Banner Peringatan Dinamis**: Kotak peringatan warna kuning-oranye pastel dengan teks:  
+  - **Banner Peringatan Dinamis**: Kotak peringatan warna kuning-oranye pastel (`#FEF7DC`) dengan teks otomatis:  
     `3 bahan berada di bawah batas minimum: Biji kopi arabica, Gula aren, Pisang.`
   - **Toolbar Pencarian & Filter**: Form input pencarian *"Cari bahan..."* dan dropdown filter status *"Semua status"*, *"Aman"*, *"Menipis"*.
   - **Tabel Data Bahan**:
     - Header berlatar hijau sage lembut (`#EBF2EE`).
-    - Kolom `Level`: Progress bar kapsul proporsional (warna *amber* untuk stok menipis, warna *hijau tua* untuk stok aman).
-    - Kolom `Status`: Badge pill cantik (`Menipis` warna kuning-oranye, `Aman` warna mint-hijau).
+    - Kolom `Level`: Progress bar kapsul proporsional (warna *amber* `#BD852A` untuk stok menipis, warna *hijau tua* `#184835` untuk stok aman).
+    - Kolom `Status`: Badge pill (`Menipis` warna kuning-oranye `#FCEFD8`, `Aman` warna mint-hijau `#DEF0E5`).
     - Kolom `Aksi`: Ikon pensil untuk Edit dan ikon tempat sampah merah untuk Hapus.
     - Format angka menggunakan titik ribuan khas Indonesia (`1.200`, `8.500`, dll.).
   - **Paginasi Kustom**: Teks keterangan *"Menampilkan 1-7 dari 18 bahan"* dan kontrol tombol `< 1 2 3 >`.
@@ -72,11 +73,11 @@ Tujuan utama fitur ini adalah mengimplementasikan antarmuka serta sistem backend
     - Modal Edit Data Bahan
     - Modal Catat Mutasi Stok (Pilihan jenis: Masuk, Keluar, Penyesuaian)
     - Modal Konfirmasi Hapus Bahan
-  - **Desain Responsif Penuh (Mobile, Tablet, Laptop, Desktop)**:
-    - **Header & Drawer Sidebar Mobile**: Navigasi atas khusus mobile dengan tombol hamburger (`☰`), logo De Barrio, inisial pengguna, dan drawer menu yang dapat dibuka/tutup dengan transisi halus dan backdrop blur.
-    - **Penyesuaian Tombol Aksi**: Di layar HP, tombol "Catat Mutasi" dan "+ Tambah Bahan" berbagi porsi seimbang (`50:50`) secara berdampingan sehingga ramah sentuhan (*touch friendly*).
-    - **Tabel Responsif**: Tabel dibungkus kontainer `overflow-x-auto custom-scrollbar` dengan lebar minimum terukur (`min-w-[680px]`) sehingga data tidak terjepit di smartphone dan tetap dapat digulir secara horizontal dengan mulus.
-    - **Modal Ramah Layar Kecil**: Dilengkapi batas tinggi maksimal (`max-h-[92vh] overflow-y-auto`) agar tetap nyaman digunakan di smartphone saat keyboard virtual muncul.
+- **Desain Responsif Penuh (Mobile, Tablet, Laptop, Desktop)**:
+  - **Header & Drawer Sidebar Mobile**: Navigasi atas khusus mobile (`lg:hidden`) dengan tombol hamburger (`☰`), logo De Barrio, inisial pengguna, dan drawer menu yang dapat dibuka/tutup dengan transisi halus dan latar belakang *backdrop blur*. Terdapat juga tombol silang (`✕`) di pojok drawer.
+  - **Penyesuaian Tombol Aksi**: Di layar handphone, tombol "Catat Mutasi" dan "+ Tambah Bahan" berbagi porsi seimbang (`50:50`) secara berdampingan sehingga ramah sentuhan (*touch friendly*).
+  - **Tabel Responsif**: Tabel dibungkus kontainer `overflow-x-auto custom-scrollbar` dengan lebar minimum terukur (`min-w-[680px]`) sehingga data tidak gepeng/terhimpit di smartphone dan tetap dapat digulir secara horizontal dengan mulus.
+  - **Modal Ramah Layar Kecil**: Dilengkapi batas tinggi maksimal (`max-h-[92vh] overflow-y-auto`) agar tetap nyaman digunakan di smartphone saat keyboard virtual muncul.
 
 ### 5. Routing ([routes/web.php](routes/web.php))
 - Menambahkan route:
@@ -91,7 +92,8 @@ Tujuan utama fitur ini adalah mengimplementasikan antarmuka serta sistem backend
 ### 6. Perbaikan Bug (*Bug Fixes*) & Optimasi
 - **Masalah Vite Dev Server**: Menghapus file `public/hot` yang sempat terbentuk agar browser tidak mencari port dev `:5173`, serta menjalankan `npm run build` sehingga aset statis ter-generate sempurna di `public/build/`.
 - **Tailwind CSS v4 Content Path**: Menambahkan directive `@source '../views'` di `resources/css/app.css` agar styling pada file Blade terdeteksi dan di-*compile* secara utuh.
-- **Dynamic Action URL**: Mengganti URL hardcoded pada form modal dengan `{{ url('bahan') }}` agar bebas kendala saat diakses via subfolder Apache/Laragon.
+- **Dynamic Action URL**: Mengganti URL hardcoded pada form modal dengan `{{ url('bahan') }}` agar bebas kendala saat diakses via subfolder Apache/Laragon (`localhost/cafetaria-de-barrio/public` maupun virtual host).
+- **Penanganan Foreign Key Default User**: Menggunakan metode `getPenggunaId()` untuk memastikan entri `pengguna_id` selalu valid dan aman dari error constraint database.
 
 ### 7. Pengujian (*Testing*)
 - **Pembuatan [tests/Feature/BahanTest.php](tests/Feature/BahanTest.php)**:
@@ -111,11 +113,11 @@ Tujuan utama fitur ini adalah mengimplementasikan antarmuka serta sistem backend
 | Status | File Path | Keterangan |
 | :--- | :--- | :--- |
 | **Baru** | `app/Http/Controllers/BahanController.php` | Controller utama manajemen stok bahan & mutasi |
-| **Baru** | `resources/views/layouts/admin.blade.php` | Layout dashboard admin De Barrio & sidebar navigasi |
+| **Baru** | `resources/views/layouts/admin.blade.php` | Layout dashboard admin De Barrio & sidebar navigasi responsif |
 | **Baru** | `resources/views/bahan/index.blade.php` | Halaman utama Stok Bahan & modal-modal interaktif |
 | **Baru** | `database/seeders/BahanSeeder.php` | Seeder 18 item bahan baku kafe |
 | **Baru** | `tests/Feature/BahanTest.php` | Unit & Feature testing untuk fitur bahan |
-| **Baru** | `CATATAN_PERUBAHAN.md` | Dokumen riwayat perubahan ini |
+| **Baru** | `CATATAN_PERUBAHAN.md` | Dokumen riwayat perubahan komprehensif ini |
 | **Modifikasi** | `routes/web.php` | Pendaftaran routing Stok Bahan |
 | **Modifikasi** | `database/seeders/DatabaseSeeder.php` | Memanggil `BahanSeeder` |
 | **Modifikasi** | `resources/css/app.css` | Menambahkan `@source '../views'` untuk Tailwind v4 |
@@ -127,7 +129,7 @@ Tujuan utama fitur ini adalah mengimplementasikan antarmuka serta sistem backend
 ## 💻 Panduan Menjalankan di Lokal
 
 1. Nyalakan Laragon (Pastikan tombol **Start All** sudah diklik dan MySQL aktif).
-2. Jalankan perintah migrasi & seeder (jika belum):
+2. Jalankan perintah migrasi & seeder (jika database belum diisi):
    ```bash
    php artisan migrate --seed
    ```
@@ -146,6 +148,6 @@ Untuk menyimpan seluruh progres ini ke repositori GitHub pada branch `feature/in
 
 ```bash
 git add .
-git commit -m "feat(inventory): implementasi lengkap halaman stok bahan, mutasi stok, dan layout admin"
+git commit -m "feat(inventory): implementasi lengkap halaman stok bahan, mutasi stok, layout responsif, dan dokumentasi changelog"
 git push origin feature/inventory-management
 ```
