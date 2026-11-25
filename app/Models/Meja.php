@@ -30,4 +30,3 @@ class Meja extends Model
         return $this->hasMany(Pesanan::class, 'meja_id');
     }
 }
-

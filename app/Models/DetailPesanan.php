@@ -43,4 +43,3 @@ class DetailPesanan extends Model
         return $this->belongsTo(Menu::class, 'menu_id');
     }
 }
-

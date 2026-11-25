@@ -33,4 +33,3 @@ class Pengeluaran extends Model
         return $this->belongsTo(User::class, 'pengguna_id');
     }
 }
-

@@ -39,4 +39,3 @@ class Bahan extends Model
         return $this->hasMany(MutasiStok::class, 'bahan_id');
     }
 }
-

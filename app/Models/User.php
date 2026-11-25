@@ -15,12 +15,17 @@ class User extends Authenticatable
 
     protected $table = 'pengguna';
 
+    public const ROLES = ['admin', 'kasir', 'pelanggan'];
+
     protected $fillable = [
         'nama',
         'email',
         'password',
         'peran',
         'status_aktif',
+        'name',
+        'role',
+        'is_active',
     ];
 
     protected $hidden = [
@@ -65,6 +70,23 @@ class User extends Authenticatable
     public function setIsActiveAttribute($value): void
     {
         $this->attributes['status_aktif'] = (bool) $value;
+    }
+
+    public function hasRole(string ...$roles): bool
+    {
+        return in_array($this->role, $roles, true);
+    }
+
+    /**
+     * Nama route halaman utama sesuai peran.
+     */
+    public function homeRoute(): string
+    {
+        return match ($this->role) {
+            'admin' => 'admin.dashboard',
+            'kasir' => 'kasir.index',
+            default => 'pelanggan.beranda',
+        };
     }
 
     public function pesanan(): HasMany
