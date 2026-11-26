@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             DiningTableSeeder::class,
             BahanSeeder::class,
             DashboardSeeder::class,
+            PengeluaranSeeder::class,
         ]);
     }
 }

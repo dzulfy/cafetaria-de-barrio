@@ -181,7 +181,7 @@
                 </a>
 
                 <!-- Pengeluaran -->
-                <a href="#" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-medium text-[#8DAAA0] hover:text-white hover:bg-[#1E4D3D] transition">
+                <a href="{{ route('pengeluaran.index') }}" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm {{ request()->routeIs('pengeluaran.*') ? 'font-semibold bg-[#285744] text-white shadow-inner' : 'font-medium text-[#8DAAA0] hover:text-white hover:bg-[#1E4D3D]' }} transition">
                     <svg class="w-5 h-5 stroke-current stroke-2 fill-none" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="2" y="5" width="20" height="14" rx="2"></rect>
                         <line x1="2" y1="10" x2="22" y2="10"></line>
