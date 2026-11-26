@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', 'Stok Bahan') - De Barrio</title>
+    <title>@yield('title', 'Dashboard') - De Barrio</title>
 
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700" rel="stylesheet" />
@@ -147,7 +147,7 @@
             <!-- Navigation Links -->
             <nav class="mt-8 space-y-1.5">
                 <!-- Dashboard -->
-                <a href="#" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-medium text-[#8DAAA0] hover:text-white hover:bg-[#1E4D3D] transition">
+                <a href="{{ route('dashboard') }}" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm {{ request()->routeIs('dashboard') || request()->is('/') || request()->is('dashboard') ? 'font-semibold bg-[#285744] text-white shadow-inner' : 'font-medium text-[#8DAAA0] hover:text-white hover:bg-[#1E4D3D]' }} transition">
                     <svg class="w-5 h-5 stroke-current stroke-2 fill-none" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="3" width="7" height="7"></rect>
                         <rect x="14" y="3" width="7" height="7"></rect>
@@ -169,8 +169,8 @@
                     <span>Menu & Kategori</span>
                 </a>
 
-                <!-- Stok Bahan (Active) -->
-                <a href="{{ route('bahan.index') }}" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold bg-[#285744] text-white shadow-inner transition">
+                <!-- Stok Bahan -->
+                <a href="{{ route('bahan.index') }}" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm {{ request()->routeIs('bahan.*') || request()->is('bahan*') ? 'font-semibold bg-[#285744] text-white shadow-inner' : 'font-medium text-[#8DAAA0] hover:text-white hover:bg-[#1E4D3D]' }} transition">
                     <svg class="w-5 h-5 stroke-current stroke-2 fill-none" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
                         <path d="m7.5 4.27 9 5.15"></path>
                         <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path>

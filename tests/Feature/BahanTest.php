@@ -26,7 +26,7 @@ class BahanTest extends TestCase
     {
         $this->seed(\Database\Seeders\BahanSeeder::class);
 
-        $response = $this->get('/');
+        $response = $this->get(route('bahan.index'));
 
         $response->assertStatus(200);
         $response->assertSee('Stok Bahan');
@@ -148,12 +148,12 @@ class BahanTest extends TestCase
     {
         $this->seed(\Database\Seeders\BahanSeeder::class);
 
-        $responseSearch = $this->get('/?search=Pisang');
+        $responseSearch = $this->get(route('bahan.index', ['search' => 'Pisang']));
         $responseSearch->assertStatus(200);
         $this->assertTrue($responseSearch->viewData('bahanList')->contains('nama', 'Pisang'));
         $this->assertFalse($responseSearch->viewData('bahanList')->contains('nama', 'Susu UHT'));
 
-        $responseFilter = $this->get('/?status=menipis');
+        $responseFilter = $this->get(route('bahan.index', ['status' => 'menipis']));
         $responseFilter->assertStatus(200);
         $this->assertTrue($responseFilter->viewData('bahanList')->contains('nama', 'Biji kopi arabica'));
         $this->assertTrue($responseFilter->viewData('bahanList')->contains('nama', 'Gula aren'));

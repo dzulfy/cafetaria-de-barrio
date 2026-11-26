@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             DiningTableSeeder::class,
             BahanSeeder::class,
+            DashboardSeeder::class,
         ]);
     }
 }
