@@ -51,13 +51,19 @@
 
             <!-- Bottom Tools -->
             <div class="flex flex-col items-center space-y-4 w-full">
-                <!-- User Avatar (KS) -->
-                <div class="flex flex-col items-center group cursor-pointer" title="Kasir Shift 1">
-                    <div class="w-10 h-10 rounded-full bg-[#1b5e43] border border-emerald-400/30 text-white font-bold text-xs flex items-center justify-center shadow">
-                        KS
-                    </div>
-                    <span class="text-[9px] text-emerald-200/80 font-medium mt-1">Keluar</span>
-                </div>
+                <!-- User Avatar & Logout (KS) -->
+                <form method="POST" action="{{ route('logout') }}" class="w-full flex flex-col items-center">
+                    @csrf
+                    <button type="submit" class="flex flex-col items-center group cursor-pointer transition" title="Keluar / Logout">
+                        <div class="w-10 h-10 rounded-full bg-[#1b5e43] border border-emerald-400/30 text-white font-bold text-xs flex items-center justify-center shadow group-hover:bg-red-700/80 group-hover:border-red-400/50 transition">
+                            {{ strtoupper(substr(auth()->user()->nama ?? auth()->user()->name ?? 'KS', 0, 2)) }}
+                        </div>
+                        <span class="text-[9px] text-emerald-200/80 group-hover:text-red-300 font-medium mt-1 flex items-center gap-0.5 transition">
+                            <i data-lucide="log-out" class="w-2.5 h-2.5"></i>
+                            Keluar
+                        </span>
+                    </button>
+                </form>
             </div>
         </aside>
 

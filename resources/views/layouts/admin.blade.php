@@ -100,6 +100,18 @@
             <div class="w-8 h-8 rounded-full bg-[#E5DFD3] text-[#184233] font-bold text-xs flex items-center justify-center tracking-wider shadow-xs">
                 {{ strtoupper(substr(auth()->user()->nama ?? auth()->user()->name ?? 'AD', 0, 2)) }}
             </div>
+            @if(auth()->check())
+            <form method="POST" action="{{ route('logout') }}" class="inline">
+                @csrf
+                <button type="submit" class="p-1.5 rounded-lg text-[#8DAAA0] hover:text-red-400 hover:bg-[#224E3D] transition flex items-center justify-center" title="Keluar / Logout">
+                    <svg class="w-4 h-4 stroke-current stroke-2 fill-none" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                </button>
+            </form>
+            @endif
         </div>
     </header>
 
@@ -230,9 +242,9 @@
                     </div>
                 </div>
                 @if(auth()->check())
-                <form method="POST" action="{{ route('logout') }}">
+                <form method="POST" action="{{ route('logout') }}" class="shrink-0">
                     @csrf
-                    <button type="submit" class="text-[#8DAAA0] hover:text-white transition p-1 shrink-0" title="Keluar">
+                    <button type="submit" class="p-1.5 rounded-lg text-[#8DAAA0] hover:text-red-400 hover:bg-[#1E4D3D] transition flex items-center justify-center cursor-pointer" title="Keluar / Logout">
                         <svg class="w-4 h-4 stroke-current stroke-2 fill-none" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                             <polyline points="16 17 21 12 16 7"></polyline>
