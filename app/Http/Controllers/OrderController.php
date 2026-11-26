@@ -300,7 +300,23 @@ class OrderController extends Controller
             return response()->json($historyOrders);
         }
 
-        return view('kasir.riwayat', compact('historyOrders'));
+        // Return customer order history view if customer route or table provided
+        if ($request->filled('table') || ! $request->is('kasir*')) {
+            $tableNumber = (string) $request->query('table', '05');
+            $orders = Order::with('items')
+                ->when($request->filled('table'), function ($q) use ($tableNumber) {
+                    $q->where('table_number', $tableNumber);
+                })
+                ->latest()
+                ->get();
+
+            return view('orders.history', [
+                'orders' => $orders,
+                'tableNumber' => $tableNumber,
+            ]);
+        }
+
+        return redirect()->route('kasir.index');
     }
 
     /**
