@@ -1,11 +1,11 @@
 @import 'tailwindcss';
 
+@source '../views/**/*.blade.php';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
-@source '../views/**/*.blade.php';
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
 
   --color-brand-900: #1F4D3A;
   --color-brand-700: #2E6B52;
@@ -21,4 +21,18 @@
   --color-warn-bg: #FCEFD0;
   --color-warn-fg: #8A5A0B;
   --color-ok-bg: #DDEEE3;
+
+  --color-debarrio-dark: #16372b;
+  --color-debarrio-sidebar: #1b3d32;
+  --color-debarrio-sidebar-hover: #264e41;
+  --color-debarrio-active: #2f5648;
+  --color-debarrio-cream: #faf7f0;
+  --color-debarrio-card: #f5efe6;
+  --color-debarrio-badge: #dbece2;
+
+  --color-warkop-dark: #123d29;
+  --color-warkop-primary: #154734;
+  --color-warkop-hover: #0f3627;
+  --color-warkop-light: #e8f5e9;
+  --color-warkop-accent: #f97316;
 }

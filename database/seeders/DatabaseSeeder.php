@@ -14,7 +14,12 @@ class DatabaseSeeder extends Seeder
         $this->call([
             UserSeeder::class,
             CategorySeeder::class,
+            MenuSeeder::class,
             DiningTableSeeder::class,
         ]);
+
+        if (class_exists(WarkopDeBarrioSeeder::class)) {
+            $this->call(WarkopDeBarrioSeeder::class);
+        }
     }
 }
