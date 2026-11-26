@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\MenuItem;
 use App\Models\Order;
 use App\Models\RestaurantTable;
+use App\Models\SyncQueue;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -43,7 +44,31 @@ class OrderController extends Controller
             ?? $orders->firstWhere('status', 'menunggu')
             ?? $orders->first();
 
-        return view('kasir.index', compact('orders', 'counts', 'categories', 'tables', 'selectedOrder'));
+        // Sync Queue & Stats (K6 Sinkronisasi Offline)
+        $syncQueue = SyncQueue::whereIn('status', ['pending', 'failed'])
+            ->orderBy('created_at', 'asc')
+            ->get();
+        $menungguCount = SyncQueue::where('status', 'pending')->count();
+        $gagalCount = SyncQueue::where('status', 'failed')->count();
+        $syncedTodayCount = SyncQueue::where('status', 'synced')
+            ->whereDate('synced_at', Carbon::today())
+            ->count();
+        $lastSyncedRecord = SyncQueue::where('status', 'synced')
+            ->whereNotNull('synced_at')
+            ->orderBy('synced_at', 'desc')
+            ->first();
+        $terakhirSinkron = $lastSyncedRecord ? $lastSyncedRecord->synced_at->format('H.i') : '19.12';
+
+        $syncStats = [
+            'menunggu' => $menungguCount,
+            'gagal' => $gagalCount,
+            'synced_today' => $syncedTodayCount,
+            'terakhir_sinkron' => $terakhirSinkron,
+            'total_menunggu' => $menungguCount + $gagalCount,
+            'is_offline' => session()->get('is_offline', true),
+        ];
+
+        return view('kasir.index', compact('orders', 'counts', 'categories', 'tables', 'selectedOrder', 'syncQueue', 'syncStats'));
     }
 
     /**

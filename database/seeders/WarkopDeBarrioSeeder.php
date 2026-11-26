@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\MenuItem;
 use App\Models\Order;
 use App\Models\RestaurantTable;
+use App\Models\SyncQueue;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 
@@ -302,6 +303,93 @@ class WarkopDeBarrioSeeder extends Seeder
                 'quantity' => 1,
                 'subtotal' => 20000,
             ],
+        ]);
+
+        // 5. Offline Sync Queue (Matching Figma "K6 Sinkronisasi Offline")
+        SyncQueue::truncate();
+
+        // 18 records synced earlier today
+        $baseDate = Carbon::today();
+        for ($i = 1; $i <= 18; $i++) {
+            $syncedMinute = 12 - (18 - $i); // up to 19:12
+            $syncedHour = 19;
+            if ($syncedMinute < 0) {
+                $syncedHour = 18;
+                $syncedMinute += 60;
+            }
+            $syncTime = $baseDate->copy()->setTime($syncedHour, max(0, $syncedMinute), 0);
+
+            SyncQueue::create([
+                'local_id' => 'sync-'.str_pad($i, 4, '0', STR_PAD_LEFT).'-'.substr(md5($i), 0, 8),
+                'short_id' => substr(md5($i), 0, 4).'...'.substr(md5($i), -4),
+                'total_amount' => 15000 + ($i * 2000),
+                'description' => 'Tersinkron otomatis',
+                'status' => 'synced',
+                'attempts' => 1,
+                'synced_at' => $syncTime,
+                'created_at' => $syncTime->copy()->subMinutes(2),
+                'updated_at' => $syncTime,
+            ]);
+        }
+
+        // 3 active offline records shown in Figma screenshot
+        // 1. a41f...c9e2 | 19.30 | Rp 27.000 | Menunggu koneksi | Pending
+        SyncQueue::create([
+            'local_id' => 'a41fc9e2-8172-4d51-9f20-9182a41fc9e2',
+            'short_id' => 'a41f...c9e2',
+            'order_payload' => [
+                'table_number' => 'Meja 03',
+                'customer_name' => 'Offline Order 1',
+                'items' => [
+                    ['name' => 'Americano', 'price' => 14000, 'quantity' => 1],
+                    ['name' => 'Pisang Goreng', 'price' => 10000, 'quantity' => 1],
+                ],
+            ],
+            'total_amount' => 27000,
+            'description' => 'Menunggu koneksi',
+            'status' => 'pending',
+            'attempts' => 0,
+            'created_at' => $baseDate->copy()->setTime(19, 30, 0),
+            'updated_at' => $baseDate->copy()->setTime(19, 30, 0),
+        ]);
+
+        // 2. 7be0...12d8 | 19.34 | Rp 15.000 | Menunggu koneksi | Pending
+        SyncQueue::create([
+            'local_id' => '7be012d8-9921-4f10-b182-12717be012d8',
+            'short_id' => '7be0...12d8',
+            'order_payload' => [
+                'table_number' => 'Meja 07',
+                'customer_name' => 'Offline Order 2',
+                'items' => [
+                    ['name' => 'Roti Bakar Coklat Keju', 'price' => 15000, 'quantity' => 1],
+                ],
+            ],
+            'total_amount' => 15000,
+            'description' => 'Menunggu koneksi',
+            'status' => 'pending',
+            'attempts' => 0,
+            'created_at' => $baseDate->copy()->setTime(19, 34, 0),
+            'updated_at' => $baseDate->copy()->setTime(19, 34, 0),
+        ]);
+
+        // 3. c2d9...e771 | 19.36 | Rp 36.000 | Percobaan ke-3 | Gagal
+        SyncQueue::create([
+            'local_id' => 'c2d9e771-4412-4aa9-9912-3819c2d9e771',
+            'short_id' => 'c2d9...e771',
+            'order_payload' => [
+                'table_number' => 'Meja 02',
+                'customer_name' => 'Offline Order 3',
+                'items' => [
+                    ['name' => 'Mie Nyemek De Barrio', 'price' => 18000, 'quantity' => 2],
+                ],
+            ],
+            'total_amount' => 36000,
+            'description' => 'Percobaan ke-3',
+            'status' => 'failed',
+            'attempts' => 3,
+            'last_attempt_at' => $baseDate->copy()->setTime(19, 37, 0),
+            'created_at' => $baseDate->copy()->setTime(19, 36, 0),
+            'updated_at' => $baseDate->copy()->setTime(19, 37, 0),
         ]);
     }
 }
