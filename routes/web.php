@@ -75,7 +75,7 @@ Route::prefix('pengeluaran')->name('pengeluaran.')->group(function () {
 });
 
 // Admin routes
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', function () {
         return redirect()->route('admin.dashboard');
     });
@@ -103,7 +103,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 });
 
 // Kasir routes (can be accessed by kasir and admin)
-Route::prefix('kasir')->name('kasir.')->group(function () {
+Route::middleware(['auth', 'role:kasir,admin'])->prefix('kasir')->name('kasir.')->group(function () {
     Route::get('/', [OrderController::class, 'index'])->name('index');
     Route::get('/riwayat', [OrderController::class, 'history'])->name('riwayat');
     Route::get('/sinkron', [SyncController::class, 'index'])->name('sinkron');

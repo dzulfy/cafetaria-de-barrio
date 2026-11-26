@@ -46,8 +46,8 @@ class BahanController extends Controller
 
         $query = Bahan::query()->orderBy('id', 'asc');
 
-        if (!empty($search)) {
-            $query->where('nama', 'like', '%' . $search . '%');
+        if (! empty($search)) {
+            $query->where('nama', 'like', '%'.$search.'%');
         }
 
         if ($status === 'menipis') {
@@ -106,7 +106,7 @@ class BahanController extends Controller
     public function update(Request $request, Bahan $bahan): RedirectResponse
     {
         $validated = $request->validate([
-            'nama' => ['required', 'string', 'max:100', 'unique:bahan,nama,' . $bahan->id],
+            'nama' => ['required', 'string', 'max:100', 'unique:bahan,nama,'.$bahan->id],
             'satuan' => ['required', 'string', 'max:20'],
             'stok' => ['required', 'numeric', 'min:0'],
             'stok_minimum' => ['required', 'numeric', 'min:0'],

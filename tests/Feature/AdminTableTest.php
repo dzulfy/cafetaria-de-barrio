@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Models\CafeTable;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -15,6 +16,9 @@ class AdminTableTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        $admin = User::factory()->create(['peran' => 'admin']);
+        $this->actingAs($admin);
 
         CafeTable::create([
             'table_number' => '01',

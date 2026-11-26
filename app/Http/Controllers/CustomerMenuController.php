@@ -28,7 +28,7 @@ class CustomerMenuController extends Controller
             });
         }
 
-        if (!empty($search)) {
+        if (! empty($search)) {
             $menusQuery->where('name', 'like', "%{$search}%");
         }
 
@@ -58,7 +58,7 @@ class CustomerMenuController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Pesanan berhasil dibuat!',
-            'order_id' => 'ORD-' . strtoupper(uniqid()),
+            'order_id' => 'ORD-'.strtoupper(uniqid()),
         ]);
     }
 }

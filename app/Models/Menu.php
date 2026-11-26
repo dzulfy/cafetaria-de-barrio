@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * Class Menu
@@ -18,9 +19,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $price
  * @property string|null $image
  * @property bool $is_available
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Category $category
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Category $category
  */
 class Menu extends Model
 {
@@ -80,7 +81,8 @@ class Menu extends Model
     public function getFormattedPriceAttribute(): string
     {
         $amount = $this->price ?? $this->attributes['harga'] ?? 0;
-        return 'Rp ' . number_format((int) $amount, 0, ',', '.');
+
+        return 'Rp '.number_format((int) $amount, 0, ',', '.');
     }
 
     public function getNamaAttribute(): ?string

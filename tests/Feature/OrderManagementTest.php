@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\MenuItem;
 use App\Models\Order;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -16,6 +17,9 @@ class OrderManagementTest extends TestCase
         parent::setUp();
 
         $this->seed();
+
+        $kasir = User::where('peran', 'kasir')->first() ?? User::factory()->create(['peran' => 'kasir']);
+        $this->actingAs($kasir);
     }
 
     public function test_kasir_screen_loads_successfully_with_orders(): void

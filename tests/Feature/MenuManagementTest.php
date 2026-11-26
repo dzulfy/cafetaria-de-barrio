@@ -4,12 +4,21 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Menu;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class MenuManagementTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $admin = User::factory()->create(['peran' => 'admin']);
+        $this->actingAs($admin);
+    }
 
     /**
      * Test customer menu page loads with seeded data.

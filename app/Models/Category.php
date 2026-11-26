@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * Class Category
@@ -13,9 +15,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $name
  * @property string $slug
  * @property string|null $icon
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Menu> $menus
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Collection<int, Menu> $menus
  */
 class Category extends Model
 {
@@ -32,7 +34,7 @@ class Category extends Model
     /**
      * Get the menus for the category.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Menu, $this>
+     * @return HasMany<Menu, $this>
      */
     public function menus(): HasMany
     {

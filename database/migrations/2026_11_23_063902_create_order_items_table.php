@@ -11,16 +11,22 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('order_items', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('order_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('menu_id')->nullable()->constrained()->nullOnDelete();
-            $table->string('menu_name');
-            $table->unsignedInteger('price');
-            $table->unsignedInteger('quantity');
-            $table->unsignedInteger('subtotal');
-            $table->timestamps();
-        });
+        if (! Schema::hasTable('order_items')) {
+            Schema::create('order_items', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('order_id')->constrained()->cascadeOnDelete();
+                $table->foreignId('menu_id')->nullable()->constrained()->nullOnDelete();
+                $table->string('menu_name');
+                $table->unsignedInteger('price');
+                $table->unsignedInteger('quantity');
+                $table->unsignedInteger('subtotal');
+                $table->timestamps();
+            });
+        } elseif (! Schema::hasColumn('order_items', 'menu_id')) {
+            Schema::table('order_items', function (Blueprint $table) {
+                $table->foreignId('menu_id')->nullable()->after('order_id')->constrained()->nullOnDelete();
+            });
+        }
     }
 
     /**

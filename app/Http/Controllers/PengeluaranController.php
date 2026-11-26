@@ -38,7 +38,7 @@ class PengeluaranController extends Controller
             $search = trim($request->search);
             $query->where(function ($q) use ($search) {
                 $q->where('deskripsi', 'like', "%{$search}%")
-                  ->orWhere('catatan', 'like', "%{$search}%");
+                    ->orWhere('catatan', 'like', "%{$search}%");
             });
         }
 
@@ -121,7 +121,7 @@ class PengeluaranController extends Controller
             'catatan' => ['nullable', 'string', 'max:255'],
         ]);
 
-        if (!empty($validated['pengguna_id'])) {
+        if (! empty($validated['pengguna_id'])) {
             $validated['pengguna_id'] = $this->getPenggunaId($validated['pengguna_id']);
         }
 

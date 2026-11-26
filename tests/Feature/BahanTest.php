@@ -3,8 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Bahan;
-use App\Models\MutasiStok;
 use App\Models\User;
+use Database\Seeders\BahanSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -24,7 +24,7 @@ class BahanTest extends TestCase
 
     public function test_halaman_stok_bahan_dapat_diakses(): void
     {
-        $this->seed(\Database\Seeders\BahanSeeder::class);
+        $this->seed(BahanSeeder::class);
 
         $response = $this->get(route('bahan.index'));
 
@@ -146,7 +146,7 @@ class BahanTest extends TestCase
 
     public function test_filter_dan_pencarian_bekerja(): void
     {
-        $this->seed(\Database\Seeders\BahanSeeder::class);
+        $this->seed(BahanSeeder::class);
 
         $responseSearch = $this->get(route('bahan.index', ['search' => 'Pisang']));
         $responseSearch->assertStatus(200);

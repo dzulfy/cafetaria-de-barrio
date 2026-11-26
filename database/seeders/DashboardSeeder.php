@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\DetailPesanan;
 use App\Models\Kategori;
 use App\Models\Meja;
 use App\Models\Menu;
@@ -10,6 +9,7 @@ use App\Models\Pengeluaran;
 use App\Models\Pesanan;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class DashboardSeeder extends Seeder
@@ -46,13 +46,15 @@ class DashboardSeeder extends Seeder
         ];
 
         foreach ($menuList as $m) {
-            Menu::firstOrCreate(
+            DB::table('menu')->updateOrInsert(
                 ['nama' => $m['nama']],
                 [
                     'kategori_id' => $m['kategori_id'],
                     'deskripsi' => 'Menu andalan De Barrio',
                     'harga' => $m['harga'],
                     'status_tersedia' => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ]
             );
         }
@@ -88,7 +90,7 @@ class DashboardSeeder extends Seeder
                 'pengguna_id' => $adminId,
                 'sumber' => 'kasir',
                 'status' => 'selesai',
-                'nama_pelanggan' => 'Pelanggan Selesai ' . $i,
+                'nama_pelanggan' => 'Pelanggan Selesai '.$i,
                 'total_harga' => 26000,
                 'waktu_pesan' => now()->subHours(4)->subMinutes($i * 5),
             ]);
@@ -124,7 +126,7 @@ class DashboardSeeder extends Seeder
                 'pengguna_id' => $adminId,
                 'sumber' => 'qr',
                 'status' => 'menunggu',
-                'nama_pelanggan' => 'Pelanggan Menunggu ' . $i,
+                'nama_pelanggan' => 'Pelanggan Menunggu '.$i,
                 'total_harga' => 26000,
                 'waktu_pesan' => now()->subHours(1)->subMinutes($i * 5),
             ]);

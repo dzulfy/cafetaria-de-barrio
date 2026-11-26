@@ -2,11 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\Bahan;
-use App\Models\Meja;
-use App\Models\Pengeluaran;
-use App\Models\Pesanan;
 use App\Models\User;
+use Database\Seeders\BahanSeeder;
 use Database\Seeders\DashboardSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -43,7 +40,7 @@ class DashboardTest extends TestCase
 
     public function test_dashboard_displays_seeded_data_accurately(): void
     {
-        $this->seed(\Database\Seeders\BahanSeeder::class);
+        $this->seed(BahanSeeder::class);
         $this->seed(DashboardSeeder::class);
 
         $response = $this->get(route('dashboard'));

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\SyncQueue;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -15,6 +16,9 @@ class SyncManagementTest extends TestCase
         parent::setUp();
 
         $this->seed();
+
+        $kasir = User::where('peran', 'kasir')->first() ?? User::factory()->create(['peran' => 'kasir']);
+        $this->actingAs($kasir);
     }
 
     public function test_sinkron_page_loads_successfully_with_data_from_database(): void

@@ -32,7 +32,7 @@ class MenuController extends Controller
             });
         }
 
-        if (!empty($search)) {
+        if (! empty($search)) {
             $menusQuery->where('name', 'like', "%{$search}%");
         }
 
@@ -157,13 +157,13 @@ class MenuController extends Controller
      */
     public function toggleStatus(Request $request, Menu $menu): JsonResponse
     {
-        $menu->is_available = !$menu->is_available;
+        $menu->is_available = ! $menu->is_available;
         $menu->save();
 
         return response()->json([
             'success' => true,
             'is_available' => $menu->is_available,
-            'message' => 'Status menu diperbarui: ' . ($menu->is_available ? 'Tersedia' : 'Habis'),
+            'message' => 'Status menu diperbarui: '.($menu->is_available ? 'Tersedia' : 'Habis'),
         ]);
     }
 }

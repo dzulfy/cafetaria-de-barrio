@@ -11,17 +11,31 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('menus', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('slug')->unique();
-            $table->text('description')->nullable();
-            $table->unsignedInteger('price');
-            $table->string('category')->default('minuman');
-            $table->string('icon')->default('coffee');
-            $table->boolean('is_available')->default(true);
-            $table->timestamps();
-        });
+        if (! Schema::hasTable('menus')) {
+            Schema::create('menus', function (Blueprint $table) {
+                $table->id();
+                $table->string('name');
+                $table->string('slug')->unique();
+                $table->text('description')->nullable();
+                $table->unsignedInteger('price');
+                $table->string('category')->default('minuman');
+                $table->string('icon')->default('coffee');
+                $table->boolean('is_available')->default(true);
+                $table->timestamps();
+            });
+        } else {
+            Schema::table('menus', function (Blueprint $table) {
+                if (! Schema::hasColumn('menus', 'slug')) {
+                    $table->string('slug')->nullable()->after('name');
+                }
+                if (! Schema::hasColumn('menus', 'category')) {
+                    $table->string('category')->default('minuman')->after('price');
+                }
+                if (! Schema::hasColumn('menus', 'icon')) {
+                    $table->string('icon')->default('coffee')->after('category');
+                }
+            });
+        }
     }
 
     /**

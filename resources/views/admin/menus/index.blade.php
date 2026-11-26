@@ -96,7 +96,7 @@
 
                         <!-- Kategori -->
                         <td class="py-3.5 px-6 text-gray-600 font-medium">
-                            {{ $menu->category->name }}
+                            {{ $menu->getRelationValue('category')?->name ?? $menu->category }}
                         </td>
 
                         <!-- Harga -->
