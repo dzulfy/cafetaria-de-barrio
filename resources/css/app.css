@@ -1,6 +1,10 @@
 @import 'tailwindcss';
 
+<<<<<<< HEAD
 @source '../views/**/*.blade.php';
+=======
+@source '../views';
+>>>>>>> origin/feature/inventory-management
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 

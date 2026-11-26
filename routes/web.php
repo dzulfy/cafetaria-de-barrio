@@ -1,12 +1,15 @@
 <?php
 
-use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\MenuController as AdminMenuController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BahanController;
 use App\Http\Controllers\CustomerMenuController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PengeluaranController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SyncController;
 use Illuminate\Support\Facades\Route;
@@ -39,8 +42,33 @@ Route::middleware('auth')->group(function () {
     Route::put('/akun/kata-sandi', [ProfileController::class, 'update'])->name('password.update');
 });
 
+// Admin Dashboard & Inventory / Pengeluaran aliases
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::redirect('/stok-bahan', '/bahan');
+Route::redirect('/stok', '/bahan');
+
+// Bahan & Mutasi Stok
+Route::prefix('bahan')->name('bahan.')->group(function () {
+    Route::get('/', [BahanController::class, 'index'])->name('index');
+    Route::post('/', [BahanController::class, 'store'])->name('store');
+    Route::post('/mutasi', [BahanController::class, 'mutasi'])->name('mutasi');
+    Route::put('/{bahan}', [BahanController::class, 'update'])->name('update');
+    Route::delete('/{bahan}', [BahanController::class, 'destroy'])->name('destroy');
+});
+
+// Pengeluaran Operasional
+Route::prefix('pengeluaran')->name('pengeluaran.')->group(function () {
+    Route::get('/', [PengeluaranController::class, 'index'])->name('index');
+    Route::post('/', [PengeluaranController::class, 'store'])->name('store');
+    Route::put('/{pengeluaran}', [PengeluaranController::class, 'update'])->name('update');
+    Route::delete('/{pengeluaran}', [PengeluaranController::class, 'destroy'])->name('destroy');
+});
+
 // Admin routes
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', function () {
+        return redirect()->route('admin.dashboard');
+    });
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::patch('/users/{user}/toggle', [UserController::class, 'toggle'])->name('users.toggle');
     Route::resource('users', UserController::class)->except('show');
@@ -51,6 +79,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::put('/menu/{menu}', [AdminMenuController::class, 'update'])->name('menus.update');
     Route::delete('/menu/{menu}', [AdminMenuController::class, 'destroy'])->name('menus.destroy');
     Route::patch('/menu/{menu}/toggle-status', [AdminMenuController::class, 'toggleStatus'])->name('menus.toggle');
+
+    // Inventory & Pengeluaran inside Admin
+    Route::get('/inventory', [BahanController::class, 'index'])->name('inventory.index');
+    Route::get('/pengeluaran', [PengeluaranController::class, 'index'])->name('pengeluaran.index');
 });
 
 // Kasir routes (can be accessed by kasir and admin)

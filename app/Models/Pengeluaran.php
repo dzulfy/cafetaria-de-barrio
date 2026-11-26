@@ -16,6 +16,7 @@ class Pengeluaran extends Model
         'pengguna_id',
         'deskripsi',
         'jumlah',
+        'kategori',
         'tanggal_pengeluaran',
         'catatan',
     ];

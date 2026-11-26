@@ -16,6 +16,9 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             MenuSeeder::class,
             DiningTableSeeder::class,
+            BahanSeeder::class,
+            DashboardSeeder::class,
+            PengeluaranSeeder::class,
         ]);
 
         if (class_exists(WarkopDeBarrioSeeder::class)) {
