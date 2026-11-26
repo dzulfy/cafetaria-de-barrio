@@ -26,6 +26,7 @@ Route::get('/menu', [CustomerMenuController::class, 'index'])->name('customer.me
 Route::post('/checkout', [CustomerMenuController::class, 'checkout'])->name('customer.checkout');
 
 // Customer Cart & QR Order Status (qr-ordering)
+Route::get('/cart', [OrderController::class, 'cart'])->name('cart');
 Route::get('/keranjang', [OrderController::class, 'cart'])->name('cart.keranjang');
 Route::post('/keranjang/update', [OrderController::class, 'updateCart'])->name('cart.update');
 Route::post('/pesanan', [OrderController::class, 'store'])->name('pesanan.store');

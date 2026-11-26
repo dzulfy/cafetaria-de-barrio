@@ -1,0 +1,395 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\Category;
+use App\Models\MenuItem;
+use App\Models\Order;
+use App\Models\RestaurantTable;
+use App\Models\SyncQueue;
+use Carbon\Carbon;
+use Illuminate\Database\Seeder;
+
+class WarkopDeBarrioSeeder extends Seeder
+{
+    public function run(): void
+    {
+        // 1. Tables
+        $tables = [
+            'Meja 01', 'Meja 02', 'Meja 03', 'Meja 04',
+            'Meja 05', 'Meja 06', 'Meja 07', 'Meja 08',
+        ];
+
+        foreach ($tables as $tbl) {
+            RestaurantTable::firstOrCreate(['table_number' => $tbl], ['status' => 'available']);
+        }
+
+        // 2. Categories
+        $catKopi = Category::firstOrCreate(['slug' => 'kopi'], ['name' => 'Kopi', 'icon' => 'coffee']);
+        $catNonKopi = Category::firstOrCreate(['slug' => 'non-kopi'], ['name' => 'Non-Kopi', 'icon' => 'cup']);
+        $catMakanan = Category::firstOrCreate(['slug' => 'makanan'], ['name' => 'Makanan', 'icon' => 'utensils']);
+        $catCamilan = Category::firstOrCreate(['slug' => 'camilan'], ['name' => 'Camilan', 'icon' => 'cookie']);
+
+        // 3. Menu Items
+        $menus = [
+            // Kopi
+            [
+                'category_id' => $catKopi->id,
+                'name' => 'Kopi Susu Gula Aren',
+                'description' => 'Espresso robusta & arabica blend dengan susu creamy dan gula aren organik',
+                'price' => 16000,
+                'is_available' => true,
+            ],
+            [
+                'category_id' => $catKopi->id,
+                'name' => 'Americano',
+                'description' => 'Double shot espresso dengan air dingin dan es batu segar',
+                'price' => 14000,
+                'is_available' => true,
+            ],
+            [
+                'category_id' => $catKopi->id,
+                'name' => 'Caramel Macchiato',
+                'description' => 'Espresso dengan sirup vanila, susu berbusa, dan drizzle saus karamel lezat',
+                'price' => 22000,
+                'is_available' => true,
+            ],
+            [
+                'category_id' => $catKopi->id,
+                'name' => 'Cafe Latte',
+                'description' => 'Kombinasi klasik espresso lembut dengan steamed milk gurih',
+                'price' => 18000,
+                'is_available' => true,
+            ],
+            [
+                'category_id' => $catKopi->id,
+                'name' => 'Kopi Tubruk De Barrio',
+                'description' => 'Kopi hitam tradisional khas Nusantara dengan aroma rempah harum',
+                'price' => 10000,
+                'is_available' => true,
+            ],
+            // Non-Kopi
+            [
+                'category_id' => $catNonKopi->id,
+                'name' => 'Matcha Latte',
+                'description' => 'Bubuk matcha murni Jepang berpadu dengan susu segar lembut',
+                'price' => 20000,
+                'is_available' => true,
+            ],
+            [
+                'category_id' => $catNonKopi->id,
+                'name' => 'Chocolate Signature',
+                'description' => 'Cokelat Belgia pekat dengan rasa manis gurih yang pas di lidah',
+                'price' => 20000,
+                'is_available' => true,
+            ],
+            [
+                'category_id' => $catNonKopi->id,
+                'name' => 'Lemon Tea Segar',
+                'description' => 'Teh hitam pilihan disajikan dengan perasan jeruk lemon asli',
+                'price' => 12000,
+                'is_available' => true,
+            ],
+            // Makanan
+            [
+                'category_id' => $catMakanan->id,
+                'name' => 'Mie Nyemek De Barrio',
+                'description' => 'Mie kuah kental bumbu rempah spesial, sayuran, dan telur setengah matang',
+                'price' => 18000,
+                'is_available' => true,
+            ],
+            [
+                'category_id' => $catMakanan->id,
+                'name' => 'Nasi Goreng Spesial',
+                'description' => 'Nasi goreng kampung dengan suwiran ayam, sosis, dan telur ceplok',
+                'price' => 25000,
+                'is_available' => true,
+            ],
+            [
+                'category_id' => $catMakanan->id,
+                'name' => 'Ayam Geprek Sambal Korek',
+                'description' => 'Ayam krispi renyah diulek dengan cabai rawit pedas mantap',
+                'price' => 23000,
+                'is_available' => true,
+            ],
+            // Camilan
+            [
+                'category_id' => $catCamilan->id,
+                'name' => 'Pisang Goreng',
+                'description' => 'Pisang kepok manis digoreng tepung renyah dengan taburan gula aren halus',
+                'price' => 10000,
+                'is_available' => true,
+            ],
+            [
+                'category_id' => $catCamilan->id,
+                'name' => 'Roti Bakar Coklat Keju',
+                'description' => 'Roti tebal panggang renyah isi meses coklat melimpah dan keju parut gurih',
+                'price' => 15000,
+                'is_available' => true,
+            ],
+            [
+                'category_id' => $catCamilan->id,
+                'name' => 'Cireng Krispi Sambal Rujak',
+                'description' => 'Cireng gurih kenyal renyah di luar dicocol bumbu rujak pedas manis',
+                'price' => 12000,
+                'is_available' => true,
+            ],
+        ];
+
+        $menuMap = [];
+        foreach ($menus as $m) {
+            $created = MenuItem::updateOrCreate(
+                ['name' => $m['name']],
+                $m
+            );
+            $menuMap[$m['name']] = $created;
+        }
+
+        // 4. Figma mockup Orders
+        // Order 1: DB-0124 (Selected in Figma)
+        $order1 = Order::updateOrCreate(
+            ['order_code' => 'DB-0124'],
+            [
+                'table_number' => 'Meja 05',
+                'customer_name' => 'Bima',
+                'source' => 'QR Meja',
+                'status' => 'menunggu',
+                'customer_notes' => 'Gula sedikit, karna perasaan bisa berubah tapi kopi harus tetap manis.',
+                'total_amount' => 42000,
+                'created_at' => Carbon::now()->subMinutes(2),
+            ]
+        );
+        $order1->items()->delete();
+        $order1->items()->createMany([
+            [
+                'menu_item_id' => $menuMap['Kopi Susu Gula Aren']->id ?? null,
+                'menu_name' => 'Kopi Susu Gula Aren',
+                'price' => 16000,
+                'quantity' => 2,
+                'subtotal' => 32000,
+            ],
+            [
+                'menu_item_id' => $menuMap['Pisang Goreng']->id ?? null,
+                'menu_name' => 'Pisang Goreng',
+                'price' => 10000,
+                'quantity' => 1,
+                'subtotal' => 10000,
+            ],
+        ]);
+
+        // Order 2: DB-0123
+        $order2 = Order::updateOrCreate(
+            ['order_code' => 'DB-0123'],
+            [
+                'table_number' => 'Meja 02',
+                'customer_name' => 'Andi',
+                'source' => 'QR Meja',
+                'status' => 'menunggu',
+                'customer_notes' => 'Dingin, es batu dibanyakin ya kak.',
+                'total_amount' => 25000,
+                'created_at' => Carbon::now()->subMinutes(6),
+            ]
+        );
+        $order2->items()->delete();
+        $order2->items()->createMany([
+            [
+                'menu_item_id' => $menuMap['Nasi Goreng Spesial']->id ?? null,
+                'menu_name' => 'Nasi Goreng Spesial',
+                'price' => 25000,
+                'quantity' => 1,
+                'subtotal' => 25000,
+            ],
+        ]);
+
+        // Order 3: DB-0122
+        $order3 = Order::updateOrCreate(
+            ['order_code' => 'DB-0122'],
+            [
+                'table_number' => 'Meja 01',
+                'customer_name' => 'Citra',
+                'source' => 'QR Meja',
+                'status' => 'menunggu',
+                'customer_notes' => 'Mienya jangan terlalu pedas ya mas.',
+                'total_amount' => 61000,
+                'created_at' => Carbon::now()->subMinutes(12),
+            ]
+        );
+        $order3->items()->delete();
+        $order3->items()->createMany([
+            [
+                'menu_item_id' => $menuMap['Mie Nyemek De Barrio']->id ?? null,
+                'menu_name' => 'Mie Nyemek De Barrio',
+                'price' => 18000,
+                'quantity' => 1,
+                'subtotal' => 18000,
+            ],
+            [
+                'menu_item_id' => $menuMap['Matcha Latte']->id ?? null,
+                'menu_name' => 'Matcha Latte',
+                'price' => 20000,
+                'quantity' => 1,
+                'subtotal' => 20000,
+            ],
+            [
+                'menu_item_id' => $menuMap['Ayam Geprek Sambal Korek']->id ?? null,
+                'menu_name' => 'Ayam Geprek Sambal Korek',
+                'price' => 23000,
+                'quantity' => 1,
+                'subtotal' => 23000,
+            ],
+        ]);
+
+        // Order 4: DB-0121 (Diproses)
+        $order4 = Order::updateOrCreate(
+            ['order_code' => 'DB-0121'],
+            [
+                'table_number' => 'Meja 04',
+                'customer_name' => 'Fahri',
+                'source' => 'Kasir',
+                'status' => 'diproses',
+                'customer_notes' => 'Dibungkus terpisah ya.',
+                'total_amount' => 37000,
+                'created_at' => Carbon::now()->subMinutes(20),
+            ]
+        );
+        $order4->items()->delete();
+        $order4->items()->createMany([
+            [
+                'menu_item_id' => $menuMap['Caramel Macchiato']->id ?? null,
+                'menu_name' => 'Caramel Macchiato',
+                'price' => 22000,
+                'quantity' => 1,
+                'subtotal' => 22000,
+            ],
+            [
+                'menu_item_id' => $menuMap['Roti Bakar Coklat Keju']->id ?? null,
+                'menu_name' => 'Roti Bakar Coklat Keju',
+                'price' => 15000,
+                'quantity' => 1,
+                'subtotal' => 15000,
+            ],
+        ]);
+
+        // Order 5: DB-0120 (Selesai)
+        $order5 = Order::updateOrCreate(
+            ['order_code' => 'DB-0120'],
+            [
+                'table_number' => 'Meja 03',
+                'customer_name' => 'Dina',
+                'source' => 'QR Meja',
+                'status' => 'selesai',
+                'customer_notes' => 'Gula normal.',
+                'total_amount' => 38000,
+                'payment_method' => 'tunai',
+                'amount_paid' => 50000,
+                'change_amount' => 12000,
+                'paid_at' => Carbon::now()->subMinutes(45),
+                'created_at' => Carbon::now()->subMinutes(50),
+            ]
+        );
+        $order5->items()->delete();
+        $order5->items()->createMany([
+            [
+                'menu_item_id' => $menuMap['Cafe Latte']->id ?? null,
+                'menu_name' => 'Cafe Latte',
+                'price' => 18000,
+                'quantity' => 1,
+                'subtotal' => 18000,
+            ],
+            [
+                'menu_item_id' => $menuMap['Chocolate Signature']->id ?? null,
+                'menu_name' => 'Chocolate Signature',
+                'price' => 20000,
+                'quantity' => 1,
+                'subtotal' => 20000,
+            ],
+        ]);
+
+        // 5. Offline Sync Queue (Matching Figma "K6 Sinkronisasi Offline")
+        SyncQueue::truncate();
+
+        // 18 records synced earlier today
+        $baseDate = Carbon::today();
+        for ($i = 1; $i <= 18; $i++) {
+            $syncedMinute = 12 - (18 - $i); // up to 19:12
+            $syncedHour = 19;
+            if ($syncedMinute < 0) {
+                $syncedHour = 18;
+                $syncedMinute += 60;
+            }
+            $syncTime = $baseDate->copy()->setTime($syncedHour, max(0, $syncedMinute), 0);
+
+            SyncQueue::create([
+                'local_id' => 'sync-'.str_pad($i, 4, '0', STR_PAD_LEFT).'-'.substr(md5($i), 0, 8),
+                'short_id' => substr(md5($i), 0, 4).'...'.substr(md5($i), -4),
+                'total_amount' => 15000 + ($i * 2000),
+                'description' => 'Tersinkron otomatis',
+                'status' => 'synced',
+                'attempts' => 1,
+                'synced_at' => $syncTime,
+                'created_at' => $syncTime->copy()->subMinutes(2),
+                'updated_at' => $syncTime,
+            ]);
+        }
+
+        // 3 active offline records shown in Figma screenshot
+        // 1. a41f...c9e2 | 19.30 | Rp 27.000 | Menunggu koneksi | Pending
+        SyncQueue::create([
+            'local_id' => 'a41fc9e2-8172-4d51-9f20-9182a41fc9e2',
+            'short_id' => 'a41f...c9e2',
+            'order_payload' => [
+                'table_number' => 'Meja 03',
+                'customer_name' => 'Offline Order 1',
+                'items' => [
+                    ['name' => 'Americano', 'price' => 14000, 'quantity' => 1],
+                    ['name' => 'Pisang Goreng', 'price' => 10000, 'quantity' => 1],
+                ],
+            ],
+            'total_amount' => 27000,
+            'description' => 'Menunggu koneksi',
+            'status' => 'pending',
+            'attempts' => 0,
+            'created_at' => $baseDate->copy()->setTime(19, 30, 0),
+            'updated_at' => $baseDate->copy()->setTime(19, 30, 0),
+        ]);
+
+        // 2. 7be0...12d8 | 19.34 | Rp 15.000 | Menunggu koneksi | Pending
+        SyncQueue::create([
+            'local_id' => '7be012d8-9921-4f10-b182-12717be012d8',
+            'short_id' => '7be0...12d8',
+            'order_payload' => [
+                'table_number' => 'Meja 07',
+                'customer_name' => 'Offline Order 2',
+                'items' => [
+                    ['name' => 'Roti Bakar Coklat Keju', 'price' => 15000, 'quantity' => 1],
+                ],
+            ],
+            'total_amount' => 15000,
+            'description' => 'Menunggu koneksi',
+            'status' => 'pending',
+            'attempts' => 0,
+            'created_at' => $baseDate->copy()->setTime(19, 34, 0),
+            'updated_at' => $baseDate->copy()->setTime(19, 34, 0),
+        ]);
+
+        // 3. c2d9...e771 | 19.36 | Rp 36.000 | Percobaan ke-3 | Gagal
+        SyncQueue::create([
+            'local_id' => 'c2d9e771-4412-4aa9-9912-3819c2d9e771',
+            'short_id' => 'c2d9...e771',
+            'order_payload' => [
+                'table_number' => 'Meja 02',
+                'customer_name' => 'Offline Order 3',
+                'items' => [
+                    ['name' => 'Mie Nyemek De Barrio', 'price' => 18000, 'quantity' => 2],
+                ],
+            ],
+            'total_amount' => 36000,
+            'description' => 'Percobaan ke-3',
+            'status' => 'failed',
+            'attempts' => 3,
+            'last_attempt_at' => $baseDate->copy()->setTime(19, 37, 0),
+            'created_at' => $baseDate->copy()->setTime(19, 36, 0),
+            'updated_at' => $baseDate->copy()->setTime(19, 37, 0),
+        ]);
+    }
+}
