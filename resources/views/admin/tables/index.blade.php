@@ -14,9 +14,11 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         body { font-family: 'Inter', 'Plus Jakarta Sans', sans-serif; }
+        .bg-canvas { background-color: #FAF7F0; }
+        .qr-placeholder-svg { stroke: #2D3748; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; fill: none; }
     </style>
 </head>
-<body class="bg-[#FBF8EE] text-[#1B2B24] min-h-screen flex flex-col md:flex-row antialiased">
+<body class="bg-canvas text-[#1B2B24] min-h-screen flex flex-col md:flex-row antialiased">
 
     <!-- Mobile Topbar for Admin -->
     <header class="md:hidden bg-[#1F4D3A] text-white p-4 flex items-center justify-between sticky top-0 z-40 shadow-sm">
@@ -58,37 +60,37 @@
 
         <!-- Navigation Menu -->
         <nav class="space-y-1.5 my-4 flex-1">
-            <a href="#" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#A9C4B5] hover:bg-[#2E6B52]/50 hover:text-white transition">
+            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#A9C4B5] hover:bg-[#2E6B52]/50 hover:text-white transition">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
                 <span>Dashboard</span>
             </a>
-            <a href="#" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#A9C4B5] hover:bg-[#2E6B52]/50 hover:text-white transition">
+            <a href="{{ route('admin.menus.index') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#A9C4B5] hover:bg-[#2E6B52]/50 hover:text-white transition">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                 </svg>
                 <span>Menu & Kategori</span>
             </a>
-            <a href="#" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#A9C4B5] hover:bg-[#2E6B52]/50 hover:text-white transition">
+            <a href="{{ route('bahan.index') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#A9C4B5] hover:bg-[#2E6B52]/50 hover:text-white transition">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                 </svg>
                 <span>Stok Bahan</span>
             </a>
-            <a href="#" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#A9C4B5] hover:bg-[#2E6B52]/50 hover:text-white transition">
+            <a href="{{ route('pengeluaran.index') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#A9C4B5] hover:bg-[#2E6B52]/50 hover:text-white transition">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
                 <span>Pengeluaran</span>
             </a>
-            <a href="#" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#A9C4B5] hover:bg-[#2E6B52]/50 hover:text-white transition">
+            <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#A9C4B5] hover:bg-[#2E6B52]/50 hover:text-white transition">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
                 <span>Laporan</span>
             </a>
-            <a href="#" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#A9C4B5] hover:bg-[#2E6B52]/50 hover:text-white transition">
+            <a href="{{ route('admin.users.index') }}" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#A9C4B5] hover:bg-[#2E6B52]/50 hover:text-white transition">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                 </svg>
@@ -106,39 +108,32 @@
 
         <!-- Profile Section -->
         <div class="pt-4 border-t border-[#2E6B52]">
-            <div class="bg-[#2E6B52] p-3 rounded-xl flex items-center gap-2.5">
-                <div class="w-9 h-9 rounded-full bg-[#F6EFD8] text-[#1F4D3A] flex items-center justify-center font-bold text-xs shrink-0">
-                    MF
+            <div class="bg-[#2E6B52] p-3 rounded-xl flex items-center justify-between gap-2.5">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-9 h-9 rounded-full bg-[#F6EFD8] text-[#1F4D3A] flex items-center justify-center font-bold text-xs shrink-0">
+                        {{ strtoupper(substr(auth()->user()->nama ?? auth()->user()->name ?? 'MF', 0, 2)) }}
+                    </div>
+                    <div class="truncate flex-1 min-w-0">
+                        <p class="font-bold text-xs text-white truncate">{{ auth()->user()->nama ?? auth()->user()->name ?? 'M. Fikri Firdaus' }}</p>
+                        <p class="text-[11px] text-[#BFD3C7] truncate">{{ auth()->user()->peran ?? 'Admin / Owner' }}</p>
+                    </div>
                 </div>
-                <div class="truncate flex-1 min-w-0">
-                    <p class="font-bold text-xs text-white truncate">M. Fikri Firdaus</p>
-                    <p class="text-[11px] text-[#BFD3C7] truncate">Admin / Owner</p>
-                </div>
-                <a href="{{ route('cart') }}" class="text-[#BFD3C7] hover:text-white transition" title="Ke Pelanggan">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                </a>
+                <form method="POST" action="{{ route('logout') }}" class="inline shrink-0">
+                    @csrf
+                    <button type="submit" class="text-[#BFD3C7] hover:text-white p-1 rounded-lg transition" title="Keluar / Logout">
+                        <svg class="w-4 h-4 stroke-current stroke-2 fill-none" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                    </button>
+                </form>
             </div>
         </div>
     </aside>
 
     <!-- Main Content (Sesuai Figma Node 7:826) -->
     <main class="flex-1 p-5 sm:p-7 md:p-8 overflow-y-auto">
-        <!-- Breadcrumb / Link Back to Customer -->
-        <div class="mb-4 flex flex-wrap items-center justify-between gap-2 text-xs text-[#66776D]">
-            <div class="flex items-center gap-1.5">
-                <span>Panel Admin</span>
-                <span>/</span>
-                <span class="text-[#1F4D3A] font-semibold">A7 Meja & QR Code</span>
-            </div>
-            <div class="flex items-center gap-2">
-                <a href="{{ route('cart') }}" class="inline-flex items-center gap-1 text-[#1F4D3A] font-semibold hover:underline bg-[#DDEEE3] px-2.5 py-1 rounded-lg">
-                    📱 Buka Halaman Pelanggan (Meja 05) →
-                </a>
-            </div>
-        </div>
-
         @if(session('success'))
             <div class="mb-5 bg-[#DDEEE3] border border-[#1F4D3A]/20 text-[#1F4D3A] px-4 py-3 rounded-xl text-sm flex items-center justify-between">
                 <span>{{ session('success') }}</span>
@@ -157,7 +152,7 @@
             <div>
                 <button type="button" 
                         onclick="document.getElementById('modal-tambah-meja').classList.remove('hidden')" 
-                        class="bg-[#1F4D3A] hover:bg-[#143529] text-white px-4 py-2.5 rounded-[10px] text-xs sm:text-[13px] font-semibold inline-flex items-center gap-2 shadow-xs transition cursor-pointer active:scale-95">
+                        class="bg-[#143D2B] hover:bg-[#0E2C1F] text-white px-5 py-2.5 rounded-xl text-xs sm:text-[13px] font-semibold inline-flex items-center gap-2 shadow-sm transition cursor-pointer active:scale-95">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
                     </svg>
@@ -167,19 +162,33 @@
         </div>
 
         <!-- Grid Kartu Meja (Responsive: Mobile 1-col, Tablet 2-col, Desktop 4-col) -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 mb-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-8">
             @forelse($tables as $table)
-                <div class="bg-white border border-[#E6E0CC] rounded-[14px] p-3.5 shadow-2xs hover:shadow-md transition flex flex-col justify-between">
+                <div class="bg-white border border-[#EBE6D8] rounded-[20px] p-4 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
                     <!-- Top Section: QR Box -->
                     <div>
-                        <div class="bg-[#FBF8EE] rounded-[12px] h-[130px] flex items-center justify-center p-3 mb-3 relative overflow-hidden group">
-                            <!-- Crisp Vector QR Code SVG -->
-                            <div class="w-20 h-20 text-[#1B2B24] flex items-center justify-center">
-                                {!! \App\Services\QrCodeService::generateSvg($table->qr_url, 80, '#1B2B24') !!}
+                        <div class="bg-[#FAF3E5] rounded-[16px] h-[148px] flex items-center justify-center p-4 mb-3.5 relative overflow-hidden group">
+                            <!-- Crisp QR Code Icon / Vector SVG (matches Figma A7 Meja & QR Code) -->
+                            <div class="w-20 h-20 text-[#2D3748] flex items-center justify-center">
+                                <svg class="w-16 h-16" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <!-- Top-Left Finder Box -->
+                                    <rect x="8" y="8" width="16" height="16" rx="4" />
+                                    <rect x="13" y="13" width="6" height="6" rx="1.5" fill="currentColor" />
+                                    <!-- Top-Right Finder Box -->
+                                    <rect x="40" y="8" width="16" height="16" rx="4" />
+                                    <rect x="45" y="13" width="6" height="6" rx="1.5" fill="currentColor" />
+                                    <!-- Bottom-Left Finder Box -->
+                                    <rect x="8" y="40" width="16" height="16" rx="4" />
+                                    <rect x="13" y="45" width="6" height="6" rx="1.5" fill="currentColor" />
+                                    <!-- QR Pattern Elements -->
+                                    <path d="M40 40h4v6h-4z" fill="currentColor" />
+                                    <path d="M48 40h6v4h-6z" fill="currentColor" />
+                                    <path d="M44 50h10v4h-10z" fill="currentColor" />
+                                </svg>
                             </div>
 
                             <!-- Overlay Quick Scan Link on hover -->
-                            <a href="{{ route('cart', ['table' => $table->table_number]) }}" target="_blank" class="absolute inset-0 bg-[#1F4D3A]/80 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition p-2 text-center text-xs font-semibold">
+                            <a href="{{ route('cart', ['table' => $table->table_number]) }}" target="_blank" class="absolute inset-0 bg-[#143D2B]/85 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition p-2 text-center text-xs font-semibold rounded-[16px]">
                                 <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                 </svg>
@@ -197,23 +206,23 @@
                                 <button type="submit" 
                                         title="Klik untuk ubah status"
                                         class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold transition cursor-pointer
-                                        {{ $table->status === 'aktif' ? 'bg-[#DDEEE3] text-[#1F4D3A] hover:bg-[#c9e3d2]' : 'bg-[#FBE7E3] text-[#B3402F] hover:bg-[#fad4cc]' }}">
+                                        {{ $table->status === 'aktif' ? 'bg-[#E3F2E9] text-[#1E7446] hover:bg-[#d0ebd9]' : 'bg-[#FCE8E6] text-[#C53929] hover:bg-[#fad3cf]' }}">
                                     {{ ucfirst($table->status) }}
                                 </button>
                             </form>
                         </div>
 
                         <!-- Token Text -->
-                        <p class="text-[11px] text-[#66776D] font-normal mb-3">
-                            Token: <span class="font-mono text-gray-700">{{ $table->token }}</span>
+                        <p class="text-[11px] text-[#8C988F] font-normal mb-3">
+                            Token: <span class="font-mono text-gray-600">{{ $table->token }}</span>
                         </p>
                     </div>
 
                     <!-- Action Buttons Row (Unduh & Cetak) -->
-                    <div class="flex items-center gap-2 pt-2 border-t border-gray-100">
+                    <div class="flex items-center gap-2 pt-2.5 border-t border-gray-100/80">
                         <a href="{{ route('admin.tables.download-qr', $table->id) }}" 
-                           class="flex-1 bg-white border border-[#E6E0CC] hover:bg-gray-50 text-[#1B2B24] py-2 px-2 rounded-[10px] text-[13px] font-semibold flex items-center justify-center gap-1.5 transition text-center shadow-2xs">
-                            <svg class="w-4 h-4 text-[#66776D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           class="flex-1 bg-white border border-[#E6E0CC] hover:bg-gray-50 text-[#1B2B24] py-1.5 px-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition text-center shadow-2xs">
+                            <svg class="w-3.5 h-3.5 text-[#1B2B24]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                             </svg>
                             <span>Unduh</span>
@@ -221,8 +230,8 @@
 
                         <a href="{{ route('admin.tables.print', $table->id) }}" 
                            target="_blank"
-                           class="flex-1 bg-white border border-[#E6E0CC] hover:bg-gray-50 text-[#1B2B24] py-2 px-2 rounded-[10px] text-[13px] font-semibold flex items-center justify-center gap-1.5 transition text-center shadow-2xs">
-                            <svg class="w-4 h-4 text-[#66776D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           class="flex-1 bg-white border border-[#E6E0CC] hover:bg-gray-50 text-[#1B2B24] py-1.5 px-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition text-center shadow-2xs">
+                            <svg class="w-3.5 h-3.5 text-[#1B2B24]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                             </svg>
                             <span>Cetak</span>
@@ -250,7 +259,7 @@
 
                 @for($page = 1; $page <= $tables->lastPage(); $page++)
                     @if($page == $tables->currentPage())
-                        <span class="w-8 h-8 rounded-lg bg-[#1F4D3A] text-white font-semibold flex items-center justify-center">{{ $page }}</span>
+                        <span class="w-8 h-8 rounded-lg bg-[#143D2B] text-white font-semibold flex items-center justify-center">{{ $page }}</span>
                     @else
                         <a href="{{ $tables->url($page) }}" class="w-8 h-8 rounded-lg bg-white border border-[#E6E0CC] text-[#1B2B24] font-semibold flex items-center justify-center hover:bg-gray-50">{{ $page }}</a>
                     @endif

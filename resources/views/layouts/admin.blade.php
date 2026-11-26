@@ -218,7 +218,7 @@
                     </a>
 
                     <!-- Meja & QR -->
-                    <a href="{{ route('customer.qr') }}" target="_blank" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#8DAAA0] hover:text-white hover:bg-[#1E4D3D] transition">
+                    <a href="{{ route('admin.tables.index') }}" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm {{ request()->routeIs('admin.tables.*') ? 'font-semibold bg-[#285744] text-white shadow-inner' : 'font-medium text-[#8DAAA0] hover:text-white hover:bg-[#1E4D3D]' }} transition">
                         <svg class="w-5 h-5 stroke-current stroke-2 fill-none shrink-0" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="3" y="3" width="7" height="7"></rect>
                             <rect x="14" y="3" width="7" height="7"></rect>
