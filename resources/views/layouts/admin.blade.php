@@ -39,6 +39,17 @@
             font-family: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
             background-color: #FAF8F4;
         }
+        /* Hilangkan scrollbar pada sidebar secara permanen */
+        #sidebarMenu {
+            overflow: hidden !important;
+            scrollbar-width: none !important;
+            -ms-overflow-style: none !important;
+        }
+        #sidebarMenu::-webkit-scrollbar {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
         /* Custom scrollbar halus untuk tabel pada layar kecil */
         .custom-scrollbar::-webkit-scrollbar {
             height: 6px;
@@ -106,14 +117,14 @@
         aria-hidden="true"
     ></div>
 
-    <!-- Sidebar (Drawer Responsif di Mobile, Kolom Statis di Desktop/Laptop) -->
+    <!-- Sidebar (Drawer Responsif di Mobile, Kolom Statis & Non-Scrollable di Desktop/Laptop) -->
     <aside
         id="sidebarMenu"
-        class="fixed inset-y-0 left-0 z-50 w-72 lg:w-64 bg-[#184233] text-white flex flex-col justify-between p-6 shrink-0 min-h-screen select-none transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out lg:static lg:min-h-screen shadow-2xl lg:shadow-none overflow-y-auto"
+        class="fixed inset-y-0 left-0 z-50 w-72 lg:w-64 bg-[#184233] text-white flex flex-col justify-between p-5 lg:p-6 shrink-0 h-screen select-none transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out lg:sticky lg:top-0 lg:h-screen lg:overflow-hidden shadow-2xl lg:shadow-none overflow-hidden"
     >
-        <div>
+        <div class="flex flex-col h-full">
             <!-- Header Brand & Tombol Tutup di Mobile -->
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between shrink-0">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-[#184233] shadow-sm">
                         <svg class="w-6 h-6 fill-none stroke-current stroke-2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
@@ -144,11 +155,11 @@
                 </button>
             </div>
 
-            <!-- Navigation Links -->
-            <nav class="mt-8 space-y-1.5">
+            <!-- Navigation Links (Non-scrollable, fit comfortably) -->
+            <nav class="mt-6 lg:mt-7 space-y-1 sm:space-y-1.5 shrink-0">
                 <!-- Dashboard -->
-                <a href="{{ route('dashboard') }}" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm {{ request()->routeIs('dashboard') || request()->is('/') || request()->is('dashboard') ? 'font-semibold bg-[#285744] text-white shadow-inner' : 'font-medium text-[#8DAAA0] hover:text-white hover:bg-[#1E4D3D]' }} transition">
-                    <svg class="w-5 h-5 stroke-current stroke-2 fill-none" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                <a href="{{ route('dashboard') }}" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm {{ request()->routeIs('dashboard') || request()->is('/') || request()->is('dashboard') ? 'font-semibold bg-[#285744] text-white shadow-inner' : 'font-medium text-[#8DAAA0] hover:text-white hover:bg-[#1E4D3D]' }} transition">
+                    <svg class="w-5 h-5 stroke-current stroke-2 fill-none shrink-0" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="3" width="7" height="7"></rect>
                         <rect x="14" y="3" width="7" height="7"></rect>
                         <rect x="14" y="14" width="7" height="7"></rect>
@@ -158,8 +169,8 @@
                 </a>
 
                 <!-- Menu & Kategori -->
-                <a href="#" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-medium text-[#8DAAA0] hover:text-white hover:bg-[#1E4D3D] transition">
-                    <svg class="w-5 h-5 stroke-current stroke-2 fill-none" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                <a href="#" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#8DAAA0] hover:text-white hover:bg-[#1E4D3D] transition">
+                    <svg class="w-5 h-5 stroke-current stroke-2 fill-none shrink-0" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
                         <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
                         <line x1="6" y1="1" x2="6" y2="4"></line>
@@ -170,8 +181,8 @@
                 </a>
 
                 <!-- Stok Bahan -->
-                <a href="{{ route('bahan.index') }}" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm {{ request()->routeIs('bahan.*') || request()->is('bahan*') ? 'font-semibold bg-[#285744] text-white shadow-inner' : 'font-medium text-[#8DAAA0] hover:text-white hover:bg-[#1E4D3D]' }} transition">
-                    <svg class="w-5 h-5 stroke-current stroke-2 fill-none" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                <a href="{{ route('bahan.index') }}" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm {{ request()->routeIs('bahan.*') || request()->is('bahan*') ? 'font-semibold bg-[#285744] text-white shadow-inner' : 'font-medium text-[#8DAAA0] hover:text-white hover:bg-[#1E4D3D]' }} transition">
+                    <svg class="w-5 h-5 stroke-current stroke-2 fill-none shrink-0" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
                         <path d="m7.5 4.27 9 5.15"></path>
                         <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path>
                         <path d="m3.3 7 8.7 5 8.7-5"></path>
@@ -181,8 +192,8 @@
                 </a>
 
                 <!-- Pengeluaran -->
-                <a href="{{ route('pengeluaran.index') }}" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm {{ request()->routeIs('pengeluaran.*') ? 'font-semibold bg-[#285744] text-white shadow-inner' : 'font-medium text-[#8DAAA0] hover:text-white hover:bg-[#1E4D3D]' }} transition">
-                    <svg class="w-5 h-5 stroke-current stroke-2 fill-none" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                <a href="{{ route('pengeluaran.index') }}" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm {{ request()->routeIs('pengeluaran.*') ? 'font-semibold bg-[#285744] text-white shadow-inner' : 'font-medium text-[#8DAAA0] hover:text-white hover:bg-[#1E4D3D]' }} transition">
+                    <svg class="w-5 h-5 stroke-current stroke-2 fill-none shrink-0" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="2" y="5" width="20" height="14" rx="2"></rect>
                         <line x1="2" y1="10" x2="22" y2="10"></line>
                     </svg>
@@ -190,8 +201,8 @@
                 </a>
 
                 <!-- Laporan -->
-                <a href="#" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-medium text-[#8DAAA0] hover:text-white hover:bg-[#1E4D3D] transition">
-                    <svg class="w-5 h-5 stroke-current stroke-2 fill-none" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                <a href="#" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#8DAAA0] hover:text-white hover:bg-[#1E4D3D] transition">
+                    <svg class="w-5 h-5 stroke-current stroke-2 fill-none shrink-0" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="20" x2="18" y2="10"></line>
                         <line x1="12" y1="20" x2="12" y2="4"></line>
                         <line x1="6" y1="20" x2="6" y2="14"></line>
@@ -200,8 +211,8 @@
                 </a>
 
                 <!-- Pengguna -->
-                <a href="#" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-medium text-[#8DAAA0] hover:text-white hover:bg-[#1E4D3D] transition">
-                    <svg class="w-5 h-5 stroke-current stroke-2 fill-none" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                <a href="#" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#8DAAA0] hover:text-white hover:bg-[#1E4D3D] transition">
+                    <svg class="w-5 h-5 stroke-current stroke-2 fill-none shrink-0" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
                         <circle cx="9" cy="7" r="4"></circle>
                         <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
@@ -211,8 +222,8 @@
                 </a>
 
                 <!-- Meja & QR -->
-                <a href="#" class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-medium text-[#8DAAA0] hover:text-white hover:bg-[#1E4D3D] transition">
-                    <svg class="w-5 h-5 stroke-current stroke-2 fill-none" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                <a href="#" class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-sm font-medium text-[#8DAAA0] hover:text-white hover:bg-[#1E4D3D] transition">
+                    <svg class="w-5 h-5 stroke-current stroke-2 fill-none shrink-0" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="3" width="7" height="7"></rect>
                         <rect x="14" y="3" width="7" height="7"></rect>
                         <rect x="3" y="14" width="7" height="7"></rect>
@@ -221,26 +232,26 @@
                     <span>Meja & QR</span>
                 </a>
             </nav>
-        </div>
 
-        <!-- User Profile Card -->
-        <div class="bg-[#224E3D] rounded-2xl p-3 flex items-center justify-between shadow-xs mt-8">
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-full bg-[#E5DFD3] text-[#184233] font-bold text-xs flex items-center justify-center tracking-wider shrink-0">
-                    MF
+            <!-- User Profile Card (Pinned at bottom, never scrolled) -->
+            <div class="bg-[#224E3D] rounded-2xl p-3 flex items-center justify-between shadow-xs mt-auto shrink-0">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-9 h-9 rounded-full bg-[#E5DFD3] text-[#184233] font-bold text-xs flex items-center justify-center tracking-wider shrink-0">
+                        MF
+                    </div>
+                    <div class="min-w-0">
+                        <h2 class="text-white font-semibold text-xs leading-tight truncate">M. Fikri Firdaus</h2>
+                        <p class="text-[#8DAAA0] text-[11px] font-medium truncate">Admin / Owner</p>
+                    </div>
                 </div>
-                <div class="min-w-0">
-                    <h2 class="text-white font-semibold text-xs leading-tight truncate">M. Fikri Firdaus</h2>
-                    <p class="text-[#8DAAA0] text-[11px] font-medium truncate">Admin / Owner</p>
-                </div>
+                <button type="button" class="text-[#8DAAA0] hover:text-white transition p-1 shrink-0" title="Keluar">
+                    <svg class="w-4 h-4 stroke-current stroke-2 fill-none" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                </button>
             </div>
-            <button type="button" class="text-[#8DAAA0] hover:text-white transition p-1 shrink-0" title="Keluar">
-                <svg class="w-4 h-4 stroke-current stroke-2 fill-none" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                    <polyline points="16 17 21 12 16 7"></polyline>
-                    <line x1="21" y1="12" x2="9" y2="12"></line>
-                </svg>
-            </button>
         </div>
     </aside>
 
@@ -275,6 +286,16 @@
                 document.body.classList.remove('overflow-hidden', 'lg:overflow-auto');
             }
         }
+
+        // Tutup drawer saat menekan tombol Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const sidebar = document.getElementById('sidebarMenu');
+                if (sidebar && !sidebar.classList.contains('-translate-x-full') && window.innerWidth < 1024) {
+                    toggleSidebar();
+                }
+            }
+        });
     </script>
 
     @stack('scripts')

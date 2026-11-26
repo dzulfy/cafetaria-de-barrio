@@ -196,6 +196,38 @@ Tujuan utama dari pengerjaan ini adalah mengimplementasikan sistem backend dan f
 
 ---
 
+### BAGIAN 6: FIKSASI SISTEM, PENYEMPURNAAN TAMPILAN & SIDEBAR NON-SCROLLABLE
+
+1. **Fiksasi Sidebar Non-Scrollable (Strict Lock)**:
+   - Sidebar diubah dari `min-h-screen overflow-y-auto` menjadi `sticky top-0 h-screen overflow-hidden` di desktop/laptop.
+   - Menambahkan aturan CSS spesifik `#sidebarMenu { overflow: hidden !important; scrollbar-width: none !important; }` dan `::-webkit-scrollbar { display: none !important; }` sehingga sidebar **tidak bisa di-scroll sama sekali** dan tidak ada scrollbar yang muncul di layar desktop atau laptop.
+   - Menata ulang tata letak internal sidebar dengan `flex flex-col h-full`, navigasi compact `space-y-1 sm:space-y-1.5`, dan kartu profil dipin ke bagian paling bawah (`mt-auto`) sehingga seluruh 7 menu navigasi pas dan proporsional di semua resolusi layar (dari laptop 768px hingga monitor besar).
+   - Menambahkan event listener keyboard `Escape` untuk menutup drawer navigasi mobile secara instan.
+
+2. **Penyempurnaan Tampilan & Interaktivitas 3 Fitur**:
+   - **Dashboard**:
+     - Kartu metrik *Pengeluaran* dan *Stok menipis* dibuat interaktif (`cursor-pointer`, hover border highlight) langsung terhubung ke halaman masing-masing (`/pengeluaran` dan `/bahan`).
+     - Grafik batang 7 hari disempurnakan dengan proporsi presisi, label nilai atas yang naik halus saat hover (`group-hover:-translate-y-0.5`), dan sorotan hari ini dengan warna hijau tua `#184233`.
+   - **Stok Bahan**:
+     - Form pencarian dan filter status diselaraskan dengan transisi mulus.
+     - Peringatan stok menipis dinamis menampilkan 3 bahan di bawah batas minimum (*Biji kopi arabica*, *Gula aren*, *Pisang*).
+   - **Pengeluaran**:
+     - Nominal tabel dan total bulan ini konsisten berwarna merah tegas (`#B91C1C`) persis desain acuan.
+     - Paginasi 6 data per halaman dengan tombol `< 1 2 3 >` yang rapi.
+     - Modal interaktif (Tambah, Edit, Hapus) bekerja mulus dengan proteksi input dan auto-fill tanpa konflik pengujian.
+
+3. **Fiksasi Header & Footer Modal Permanen (Non-Scrollable)**:
+   - Pada modal *Catat Pengeluaran Baru*, *Edit Pengeluaran*, *Tambah Bahan*, *Edit Bahan*, dan *Catat Mutasi*, struktur modal ditata ulang dengan arsitektur flexbox modern:
+     - Header judul modal dikunci permanen (`shrink-0 border-b`) di bagian atas, tidak pernah tenggelam saat form digulir.
+     - Tombol aksi (*Batal* & *Simpan*) dikunci permanen (`shrink-0 border-t bg-[#FAF8F4]`) di bagian paling bawah modal, selalu terlihat dan mudah ditekan kapan saja tanpa perlu scroll sampai habis.
+     - Kontainer input form di tengah menjadi satu-satunya area yang dapat di-scroll (`flex-1 overflow-y-auto custom-scrollbar`).
+
+4. **Kompilasi Aset Produksi**:
+   - Berhasil membersihkan file `public/hot` dan menjalankan `npm run build` sehingga seluruh CSS dan JavaScript terkompilasi optimal di folder `public/build/`.
+   - Seluruh 16 unit & feature test PHPUnit teruji lulus 100% (100 assertions).
+
+---
+
 ## 📂 Ringkasan File Baru & Modifikasi
 
 | Status | File Path | Keterangan |

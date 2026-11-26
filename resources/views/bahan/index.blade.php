@@ -285,148 +285,166 @@
 
 </div>
 
-<!-- Modal Tambah Bahan (Responsif: Fit di layar smartphone) -->
-<div id="modalTambah" class="fixed inset-0 z-50 hidden overflow-y-auto bg-black/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full max-h-[92vh] overflow-y-auto p-5 sm:p-6 shadow-2xl border border-gray-100 transition-all">
-        <div class="flex items-center justify-between pb-3 sm:pb-4 border-b border-gray-100">
+<!-- Modal Tambah Bahan (Responsif: Header & Footer Permanen) -->
+<div id="modalTambah" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-gray-100 flex flex-col max-h-[90vh] overflow-hidden">
+        <!-- Header (Permanen / Tidak bisa di-scroll) -->
+        <div class="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-gray-100 bg-white shrink-0">
             <h3 class="font-bold text-base sm:text-lg text-[#1B2721]">Tambah Bahan Baru</h3>
-            <button onclick="closeModal('modalTambah')" class="text-gray-400 hover:text-gray-600 p-1">
+            <button onclick="closeModal('modalTambah')" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
 
-        <form method="POST" action="{{ route('bahan.store') }}" class="mt-4 space-y-3.5 sm:space-y-4">
+        <form method="POST" action="{{ route('bahan.store') }}" class="flex flex-col flex-1 overflow-hidden min-h-0">
             @csrf
-            <div>
-                <label class="block text-xs font-semibold text-[#2F4439] uppercase tracking-wider mb-1.5">Nama Bahan</label>
-                <input type="text" name="nama" required placeholder="Contoh: Kopi Arabica" class="w-full bg-[#FAFBF9] border border-[#E3E8E4] rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
-            </div>
 
-            <div class="grid grid-cols-2 gap-3">
+            <!-- Form Body (Hanya area ini yang dapat di-scroll) -->
+            <div class="p-5 sm:p-6 space-y-3.5 sm:space-y-4 overflow-y-auto flex-1 custom-scrollbar">
                 <div>
-                    <label class="block text-xs font-semibold text-[#2F4439] uppercase tracking-wider mb-1.5">Satuan</label>
-                    <input type="text" name="satuan" required placeholder="gram, ml, pcs" class="w-full bg-[#FAFBF9] border border-[#E3E8E4] rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
+                    <label class="block text-xs font-semibold text-[#2F4439] uppercase tracking-wider mb-1.5">Nama Bahan</label>
+                    <input type="text" name="nama" required placeholder="Contoh: Kopi Arabica" class="w-full bg-[#FAFBF9] border border-[#E3E8E4] rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
                 </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-[#2F4439] uppercase tracking-wider mb-1.5">Satuan</label>
+                        <input type="text" name="satuan" required placeholder="gram, ml, pcs" class="w-full bg-[#FAFBF9] border border-[#E3E8E4] rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-[#2F4439] uppercase tracking-wider mb-1.5">Stok Awal</label>
+                        <input type="number" step="any" min="0" name="stok" required placeholder="0" class="w-full bg-[#FAFBF9] border border-[#E3E8E4] rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
+                    </div>
+                </div>
+
                 <div>
-                    <label class="block text-xs font-semibold text-[#2F4439] uppercase tracking-wider mb-1.5">Stok Awal</label>
-                    <input type="number" step="any" min="0" name="stok" required placeholder="0" class="w-full bg-[#FAFBF9] border border-[#E3E8E4] rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
+                    <label class="block text-xs font-semibold text-[#2F4439] uppercase tracking-wider mb-1.5">Batas Minimum (Peringatan)</label>
+                    <input type="number" step="any" min="0" name="stok_minimum" required placeholder="Contoh: 1000" class="w-full bg-[#FAFBF9] border border-[#E3E8E4] rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
+                    <p class="text-[11px] text-gray-400 mt-1">Sistem akan memberi peringatan jika stok berada di bawah angka ini.</p>
                 </div>
             </div>
 
-            <div>
-                <label class="block text-xs font-semibold text-[#2F4439] uppercase tracking-wider mb-1.5">Batas Minimum (Peringatan)</label>
-                <input type="number" step="any" min="0" name="stok_minimum" required placeholder="Contoh: 1000" class="w-full bg-[#FAFBF9] border border-[#E3E8E4] rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
-                <p class="text-[11px] text-gray-400 mt-1">Sistem akan memberi peringatan jika stok berada di bawah angka ini.</p>
-            </div>
-
-            <div class="flex items-center justify-end gap-2.5 sm:gap-3 pt-4 border-t border-gray-100">
+            <!-- Footer (Permanen di bagian bawah) -->
+            <div class="flex items-center justify-end gap-2.5 sm:gap-3 px-5 sm:px-6 py-4 border-t border-gray-100 bg-[#FAF8F4] shrink-0">
                 <button type="button" onclick="closeModal('modalTambah')" class="px-4 py-2 text-xs sm:text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-xl transition">Batal</button>
-                <button type="submit" class="px-5 py-2 text-xs sm:text-sm font-semibold text-white bg-[#184233] hover:bg-[#133629] rounded-xl transition shadow-xs">Simpan Bahan</button>
+                <button type="submit" class="px-5 py-2 text-xs sm:text-sm font-semibold text-white bg-[#184233] hover:bg-[#133629] rounded-xl transition shadow-xs active:scale-95">Simpan Bahan</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Modal Edit Bahan -->
-<div id="modalEdit" class="fixed inset-0 z-50 hidden overflow-y-auto bg-black/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full max-h-[92vh] overflow-y-auto p-5 sm:p-6 shadow-2xl border border-gray-100 transition-all">
-        <div class="flex items-center justify-between pb-3 sm:pb-4 border-b border-gray-100">
+<!-- Modal Edit Bahan (Responsif: Header & Footer Permanen) -->
+<div id="modalEdit" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-gray-100 flex flex-col max-h-[90vh] overflow-hidden">
+        <!-- Header (Permanen / Tidak bisa di-scroll) -->
+        <div class="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-gray-100 bg-white shrink-0">
             <h3 class="font-bold text-base sm:text-lg text-[#1B2721]">Edit Bahan</h3>
-            <button onclick="closeModal('modalEdit')" class="text-gray-400 hover:text-gray-600 p-1">
+            <button onclick="closeModal('modalEdit')" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
 
-        <form id="formEdit" method="POST" action="" class="mt-4 space-y-3.5 sm:space-y-4">
+        <form id="formEdit" method="POST" action="" class="flex flex-col flex-1 overflow-hidden min-h-0">
             @csrf
             @method('PUT')
-            <div>
-                <label class="block text-xs font-semibold text-[#2F4439] uppercase tracking-wider mb-1.5">Nama Bahan</label>
-                <input type="text" id="editNama" name="nama" required class="w-full bg-[#FAFBF9] border border-[#E3E8E4] rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
-            </div>
 
-            <div class="grid grid-cols-2 gap-3">
+            <!-- Form Body (Hanya area ini yang dapat di-scroll) -->
+            <div class="p-5 sm:p-6 space-y-3.5 sm:space-y-4 overflow-y-auto flex-1 custom-scrollbar">
                 <div>
-                    <label class="block text-xs font-semibold text-[#2F4439] uppercase tracking-wider mb-1.5">Satuan</label>
-                    <input type="text" id="editSatuan" name="satuan" required class="w-full bg-[#FAFBF9] border border-[#E3E8E4] rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
+                    <label class="block text-xs font-semibold text-[#2F4439] uppercase tracking-wider mb-1.5">Nama Bahan</label>
+                    <input type="text" id="editNama" name="nama" required class="w-full bg-[#FAFBF9] border border-[#E3E8E4] rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
                 </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-[#2F4439] uppercase tracking-wider mb-1.5">Satuan</label>
+                        <input type="text" id="editSatuan" name="satuan" required class="w-full bg-[#FAFBF9] border border-[#E3E8E4] rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-[#2F4439] uppercase tracking-wider mb-1.5">Stok Saat Ini</label>
+                        <input type="number" step="any" min="0" id="editStok" name="stok" required class="w-full bg-[#FAFBF9] border border-[#E3E8E4] rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
+                    </div>
+                </div>
+
                 <div>
-                    <label class="block text-xs font-semibold text-[#2F4439] uppercase tracking-wider mb-1.5">Stok Saat Ini</label>
-                    <input type="number" step="any" min="0" id="editStok" name="stok" required class="w-full bg-[#FAFBF9] border border-[#E3E8E4] rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
+                    <label class="block text-xs font-semibold text-[#2F4439] uppercase tracking-wider mb-1.5">Batas Minimum</label>
+                    <input type="number" step="any" min="0" id="editStokMinimum" name="stok_minimum" required class="w-full bg-[#FAFBF9] border border-[#E3E8E4] rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
                 </div>
             </div>
 
-            <div>
-                <label class="block text-xs font-semibold text-[#2F4439] uppercase tracking-wider mb-1.5">Batas Minimum</label>
-                <input type="number" step="any" min="0" id="editStokMinimum" name="stok_minimum" required class="w-full bg-[#FAFBF9] border border-[#E3E8E4] rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
-            </div>
-
-            <div class="flex items-center justify-end gap-2.5 sm:gap-3 pt-4 border-t border-gray-100">
+            <!-- Footer (Permanen di bagian bawah) -->
+            <div class="flex items-center justify-end gap-2.5 sm:gap-3 px-5 sm:px-6 py-4 border-t border-gray-100 bg-[#FAF8F4] shrink-0">
                 <button type="button" onclick="closeModal('modalEdit')" class="px-4 py-2 text-xs sm:text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-xl transition">Batal</button>
-                <button type="submit" class="px-5 py-2 text-xs sm:text-sm font-semibold text-white bg-[#184233] hover:bg-[#133629] rounded-xl transition shadow-xs">Perbarui Bahan</button>
+                <button type="submit" class="px-5 py-2 text-xs sm:text-sm font-semibold text-white bg-[#184233] hover:bg-[#133629] rounded-xl transition shadow-xs active:scale-95">Perbarui Bahan</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Modal Catat Mutasi -->
-<div id="modalMutasi" class="fixed inset-0 z-50 hidden overflow-y-auto bg-black/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full max-h-[92vh] overflow-y-auto p-5 sm:p-6 shadow-2xl border border-gray-100 transition-all">
-        <div class="flex items-center justify-between pb-3 sm:pb-4 border-b border-gray-100">
+<!-- Modal Catat Mutasi (Responsif: Header & Footer Permanen) -->
+<div id="modalMutasi" class="fixed inset-0 z-50 hidden bg-black/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-gray-100 flex flex-col max-h-[90vh] overflow-hidden">
+        <!-- Header (Permanen / Tidak bisa di-scroll) -->
+        <div class="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-gray-100 bg-white shrink-0">
             <div>
                 <h3 class="font-bold text-base sm:text-lg text-[#1B2721]">Catat Mutasi Stok</h3>
                 <p class="text-[11px] sm:text-xs text-[#738078] mt-0.5">Catat stok masuk, stok keluar, atau penyesuaian</p>
             </div>
-            <button onclick="closeModal('modalMutasi')" class="text-gray-400 hover:text-gray-600 p-1">
+            <button onclick="closeModal('modalMutasi')" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
 
-        <form method="POST" action="{{ route('bahan.mutasi') }}" class="mt-4 space-y-3.5 sm:space-y-4">
+        <form method="POST" action="{{ route('bahan.mutasi') }}" class="flex flex-col flex-1 overflow-hidden min-h-0">
             @csrf
-            <div>
-                <label class="block text-xs font-semibold text-[#2F4439] uppercase tracking-wider mb-1.5">Pilih Bahan</label>
-                <select name="bahan_id" required class="w-full bg-[#FAFBF9] border border-[#E3E8E4] rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
-                    <option value="">-- Pilih bahan --</option>
-                    @foreach($allBahan as $b)
-                        <option value="{{ $b->id }}">
-                            {{ $b->nama }} (Stok saat ini: {{ number_format($b->stok, 0, ',', '.') }} {{ $b->satuan }})
-                        </option>
-                    @endforeach
-                </select>
-            </div>
 
-            <div>
-                <label class="block text-xs font-semibold text-[#2F4439] uppercase tracking-wider mb-1.5">Jenis Mutasi</label>
-                <div class="grid grid-cols-3 gap-2">
-                    <label class="flex items-center justify-center gap-1.5 p-2 sm:p-2.5 rounded-xl border border-[#E3E8E4] cursor-pointer hover:bg-emerald-50/50 has-checked:border-[#184233] has-checked:bg-[#184233]/10">
-                        <input type="radio" name="jenis" value="masuk" checked class="text-[#184233] focus:ring-[#184233]">
-                        <span class="text-[11px] sm:text-xs font-semibold text-[#2F4439]">Masuk (+)</span>
-                    </label>
-                    <label class="flex items-center justify-center gap-1.5 p-2 sm:p-2.5 rounded-xl border border-[#E3E8E4] cursor-pointer hover:bg-red-50/50 has-checked:border-red-600 has-checked:bg-red-50">
-                        <input type="radio" name="jenis" value="keluar" class="text-red-600 focus:ring-red-600">
-                        <span class="text-[11px] sm:text-xs font-semibold text-[#2F4439]">Keluar (-)</span>
-                    </label>
-                    <label class="flex items-center justify-center gap-1.5 p-2 sm:p-2.5 rounded-xl border border-[#E3E8E4] cursor-pointer hover:bg-amber-50/50 has-checked:border-amber-600 has-checked:bg-amber-50">
-                        <input type="radio" name="jenis" value="penyesuaian" class="text-amber-600 focus:ring-amber-600">
-                        <span class="text-[11px] sm:text-xs font-semibold text-[#2F4439]">Sesuaikan</span>
-                    </label>
+            <!-- Form Body (Hanya area ini yang dapat di-scroll) -->
+            <div class="p-5 sm:p-6 space-y-3.5 sm:space-y-4 overflow-y-auto flex-1 custom-scrollbar">
+                <div>
+                    <label class="block text-xs font-semibold text-[#2F4439] uppercase tracking-wider mb-1.5">Pilih Bahan</label>
+                    <select name="bahan_id" required class="w-full bg-[#FAFBF9] border border-[#E3E8E4] rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
+                        <option value="">-- Pilih bahan --</option>
+                        @foreach($allBahan as $b)
+                            <option value="{{ $b->id }}">
+                                {{ $b->nama }} (Stok saat ini: {{ number_format($b->stok, 0, ',', '.') }} {{ $b->satuan }})
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-[#2F4439] uppercase tracking-wider mb-1.5">Jenis Mutasi</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <label class="flex items-center justify-center gap-1.5 p-2 sm:p-2.5 rounded-xl border border-[#E3E8E4] cursor-pointer hover:bg-emerald-50/50 has-checked:border-[#184233] has-checked:bg-[#184233]/10">
+                            <input type="radio" name="jenis" value="masuk" checked class="text-[#184233] focus:ring-[#184233]">
+                            <span class="text-[11px] sm:text-xs font-semibold text-[#2F4439]">Masuk (+)</span>
+                        </label>
+                        <label class="flex items-center justify-center gap-1.5 p-2 sm:p-2.5 rounded-xl border border-[#E3E8E4] cursor-pointer hover:bg-red-50/50 has-checked:border-red-600 has-checked:bg-red-50">
+                            <input type="radio" name="jenis" value="keluar" class="text-red-600 focus:ring-red-600">
+                            <span class="text-[11px] sm:text-xs font-semibold text-[#2F4439]">Keluar (-)</span>
+                        </label>
+                        <label class="flex items-center justify-center gap-1.5 p-2 sm:p-2.5 rounded-xl border border-[#E3E8E4] cursor-pointer hover:bg-amber-50/50 has-checked:border-amber-600 has-checked:bg-amber-50">
+                            <input type="radio" name="jenis" value="penyesuaian" class="text-amber-600 focus:ring-amber-600">
+                            <span class="text-[11px] sm:text-xs font-semibold text-[#2F4439]">Sesuaikan</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-[#2F4439] uppercase tracking-wider mb-1.5">Jumlah</label>
+                    <input type="number" step="any" min="0.01" name="jumlah" required placeholder="Masukkan jumlah" class="w-full bg-[#FAFBF9] border border-[#E3E8E4] rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-[#2F4439] uppercase tracking-wider mb-1.5">Catatan (Opsional)</label>
+                    <input type="text" name="catatan" placeholder="Contoh: Pembelian agen, terbuang, dll" class="w-full bg-[#FAFBF9] border border-[#E3E8E4] rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
                 </div>
             </div>
 
-            <div>
-                <label class="block text-xs font-semibold text-[#2F4439] uppercase tracking-wider mb-1.5">Jumlah</label>
-                <input type="number" step="any" min="0.01" name="jumlah" required placeholder="Masukkan jumlah" class="w-full bg-[#FAFBF9] border border-[#E3E8E4] rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
-            </div>
-
-            <div>
-                <label class="block text-xs font-semibold text-[#2F4439] uppercase tracking-wider mb-1.5">Catatan (Opsional)</label>
-                <input type="text" name="catatan" placeholder="Contoh: Pembelian agen, terbuang, dll" class="w-full bg-[#FAFBF9] border border-[#E3E8E4] rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
-            </div>
-
-            <div class="flex items-center justify-end gap-2.5 sm:gap-3 pt-4 border-t border-gray-100">
+            <!-- Footer (Permanen di bagian bawah) -->
+            <div class="flex items-center justify-end gap-2.5 sm:gap-3 px-5 sm:px-6 py-4 border-t border-gray-100 bg-[#FAF8F4] shrink-0">
                 <button type="button" onclick="closeModal('modalMutasi')" class="px-4 py-2 text-xs sm:text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-xl transition">Batal</button>
-                <button type="submit" class="px-5 py-2 text-xs sm:text-sm font-semibold text-white bg-[#184233] hover:bg-[#133629] rounded-xl transition shadow-xs">Simpan Mutasi</button>
+                <button type="submit" class="px-5 py-2 text-xs sm:text-sm font-semibold text-white bg-[#184233] hover:bg-[#133629] rounded-xl transition shadow-xs active:scale-95">Simpan Mutasi</button>
             </div>
         </form>
     </div>

@@ -337,71 +337,75 @@
 
 <!-- Modal 1: Tambah Pengeluaran Baru -->
 <div id="modalTambah" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 hidden">
-    <div class="bg-white rounded-2xl w-full max-w-lg p-6 shadow-2xl max-h-[92vh] overflow-y-auto">
-        <div class="flex items-center justify-between pb-4 border-b border-[#EBE8E0]">
-            <h2 class="text-lg font-bold text-[#1E2922]">Catat Pengeluaran Baru</h2>
-            <button type="button" onclick="closeModal('modalTambah')" class="text-[#6F7D75] hover:text-[#1E2922]">
+    <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl max-h-[90vh] flex flex-col overflow-hidden">
+        <!-- Header Modal (Permanen / Tidak bisa di-scroll) -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-[#EBE8E0] bg-white shrink-0">
+            <h2 class="text-base sm:text-lg font-bold text-[#1E2922]">Catat Pengeluaran Baru</h2>
+            <button type="button" onclick="closeModal('modalTambah')" class="p-1 rounded-lg text-[#6F7D75] hover:text-[#1E2922] hover:bg-gray-100 transition">
                 <svg class="w-5 h-5 stroke-current stroke-2 fill-none" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
         </div>
 
-        <form action="{{ route('pengeluaran.store') }}" method="POST" class="mt-4 space-y-4">
+        <form action="{{ route('pengeluaran.store') }}" method="POST" class="flex flex-col flex-1 overflow-hidden min-h-0">
             @csrf
 
-            <!-- Tanggal -->
-            <div>
-                <label class="block text-xs font-semibold text-[#1E2922] mb-1.5">Tanggal Pengeluaran <span class="text-red-500">*</span></label>
-                <input type="date" name="tanggal_pengeluaran" value="{{ now()->toDateString() }}" required class="w-full px-3.5 py-2.5 border border-[#EBE8E0] rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
-            </div>
-
-            <!-- Uraian -->
-            <div>
-                <label class="block text-xs font-semibold text-[#1E2922] mb-1.5">Uraian / Deskripsi <span class="text-red-500">*</span></label>
-                <input type="text" name="deskripsi" placeholder="cth: Belanja bahan baku mingguan" required class="w-full px-3.5 py-2.5 border border-[#EBE8E0] rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <!-- Nominal -->
+            <!-- Form Content (Hanya area ini yang dapat di-scroll) -->
+            <div class="p-6 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
+                <!-- Tanggal -->
                 <div>
-                    <label class="block text-xs font-semibold text-[#1E2922] mb-1.5">Nominal (Rp) <span class="text-red-500">*</span></label>
-                    <input type="number" name="jumlah" placeholder="cth: 245000" min="0" required class="w-full px-3.5 py-2.5 border border-[#EBE8E0] rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
+                    <label class="block text-xs font-semibold text-[#1E2922] mb-1.5">Tanggal Pengeluaran <span class="text-red-500">*</span></label>
+                    <input type="date" name="tanggal_pengeluaran" value="{{ now()->toDateString() }}" required class="w-full px-3.5 py-2.5 border border-[#EBE8E0] rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
                 </div>
 
-                <!-- Kategori -->
+                <!-- Uraian -->
                 <div>
-                    <label class="block text-xs font-semibold text-[#1E2922] mb-1.5">Kategori <span class="text-red-500">*</span></label>
-                    <select name="kategori" required class="w-full px-3.5 py-2.5 border border-[#EBE8E0] rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
-                        <option value="Bahan baku">Bahan baku</option>
-                        <option value="Operasional">Operasional</option>
-                        <option value="Lainnya">Lainnya</option>
+                    <label class="block text-xs font-semibold text-[#1E2922] mb-1.5">Uraian / Deskripsi <span class="text-red-500">*</span></label>
+                    <input type="text" name="deskripsi" placeholder="cth: Belanja bahan baku mingguan" required class="w-full px-3.5 py-2.5 border border-[#EBE8E0] rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Nominal -->
+                    <div>
+                        <label class="block text-xs font-semibold text-[#1E2922] mb-1.5">Nominal (Rp) <span class="text-red-500">*</span></label>
+                        <input type="number" name="jumlah" placeholder="cth: 245000" min="0" required class="w-full px-3.5 py-2.5 border border-[#EBE8E0] rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
+                    </div>
+
+                    <!-- Kategori -->
+                    <div>
+                        <label class="block text-xs font-semibold text-[#1E2922] mb-1.5">Kategori <span class="text-red-500">*</span></label>
+                        <select name="kategori" required class="w-full px-3.5 py-2.5 border border-[#EBE8E0] rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
+                            <option value="Bahan baku">Bahan baku</option>
+                            <option value="Operasional">Operasional</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Pencatat -->
+                <div>
+                    <label class="block text-xs font-semibold text-[#1E2922] mb-1.5">Pencatat</label>
+                    <select name="pengguna_id" class="w-full px-3.5 py-2.5 border border-[#EBE8E0] rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
+                        @foreach($penggunaList as $user)
+                            <option value="{{ $user->id }}" {{ $user->peran === 'admin' ? 'selected' : '' }}>
+                                {{ $user->peran === 'admin' ? 'Owner (' . $user->nama . ')' : $user->nama }}
+                            </option>
+                        @endforeach
                     </select>
                 </div>
+
+                <!-- Catatan -->
+                <div>
+                    <label class="block text-xs font-semibold text-[#1E2922] mb-1.5">Catatan (Opsional)</label>
+                    <textarea name="catatan" rows="2" placeholder="Catatan tambahan mengenai pengeluaran..." class="w-full px-3.5 py-2 border border-[#EBE8E0] rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]"></textarea>
+                </div>
             </div>
 
-            <!-- Pencatat -->
-            <div>
-                <label class="block text-xs font-semibold text-[#1E2922] mb-1.5">Pencatat</label>
-                <select name="pengguna_id" class="w-full px-3.5 py-2.5 border border-[#EBE8E0] rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
-                    @foreach($penggunaList as $user)
-                        <option value="{{ $user->id }}" {{ $user->peran === 'admin' ? 'selected' : '' }}>
-                            {{ $user->peran === 'admin' ? 'Owner (' . $user->nama . ')' : $user->nama }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <!-- Catatan -->
-            <div>
-                <label class="block text-xs font-semibold text-[#1E2922] mb-1.5">Catatan (Opsional)</label>
-                <textarea name="catatan" rows="2" placeholder="Catatan tambahan mengenai pengeluaran..." class="w-full px-3.5 py-2 border border-[#EBE8E0] rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]"></textarea>
-            </div>
-
-            <!-- Tombol Aksi Modal -->
-            <div class="flex items-center justify-end gap-3 pt-3 border-t border-[#EBE8E0]">
-                <button type="button" onclick="closeModal('modalTambah')" class="px-4 py-2.5 rounded-xl border border-[#EBE8E0] text-[#6F7D75] text-xs sm:text-sm font-semibold hover:bg-gray-50">
+            <!-- Footer Modal (Permanen / Tidak bisa di-scroll di bagian bawah) -->
+            <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-[#EBE8E0] bg-[#FAF8F4] shrink-0">
+                <button type="button" onclick="closeModal('modalTambah')" class="px-4 py-2.5 rounded-xl border border-[#EBE8E0] bg-white text-[#6F7D75] text-xs sm:text-sm font-semibold hover:bg-gray-50 active:scale-95 transition">
                     Batal
                 </button>
-                <button type="submit" class="px-5 py-2.5 rounded-xl bg-[#184233] text-white text-xs sm:text-sm font-semibold hover:bg-[#224E3D] shadow-xs">
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-[#184233] text-white text-xs sm:text-sm font-semibold hover:bg-[#224E3D] shadow-xs active:scale-95 transition">
                     Simpan Pengeluaran
                 </button>
             </div>
@@ -411,71 +415,76 @@
 
 <!-- Modal 2: Edit Pengeluaran -->
 <div id="modalEdit" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 hidden">
-    <div class="bg-white rounded-2xl w-full max-w-lg p-6 shadow-2xl max-h-[92vh] overflow-y-auto">
-        <div class="flex items-center justify-between pb-4 border-b border-[#EBE8E0]">
-            <h2 class="text-lg font-bold text-[#1E2922]">Edit Data Pengeluaran</h2>
-            <button type="button" onclick="closeModal('modalEdit')" class="text-[#6F7D75] hover:text-[#1E2922]">
+    <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl max-h-[90vh] flex flex-col overflow-hidden">
+        <!-- Header Modal (Permanen / Tidak bisa di-scroll) -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-[#EBE8E0] bg-white shrink-0">
+            <h2 class="text-base sm:text-lg font-bold text-[#1E2922]">Edit Data Pengeluaran</h2>
+            <button type="button" onclick="closeModal('modalEdit')" class="p-1 rounded-lg text-[#6F7D75] hover:text-[#1E2922] hover:bg-gray-100 transition">
                 <svg class="w-5 h-5 stroke-current stroke-2 fill-none" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
         </div>
 
-        <form id="formEditPengeluaran" method="POST" class="mt-4 space-y-4">
+        <form id="formEditPengeluaran" method="POST" class="flex flex-col flex-1 overflow-hidden min-h-0">
             @csrf
             @method('PUT')
 
-            <!-- Tanggal -->
-            <div>
-                <label class="block text-xs font-semibold text-[#1E2922] mb-1.5">Tanggal Pengeluaran <span class="text-red-500">*</span></label>
-                <input type="date" id="editTanggal" name="tanggal_pengeluaran" required class="w-full px-3.5 py-2.5 border border-[#EBE8E0] rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
-            </div>
-
-            <!-- Uraian -->
-            <div>
-                <label class="block text-xs font-semibold text-[#1E2922] mb-1.5">Uraian / Deskripsi <span class="text-red-500">*</span></label>
-                <input type="text" id="editDeskripsi" name="deskripsi" required class="w-full px-3.5 py-2.5 border border-[#EBE8E0] rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <!-- Nominal -->
+            <!-- Form Content (Hanya area ini yang dapat di-scroll) -->
+            <div class="p-6 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
+                <!-- Tanggal -->
                 <div>
-                    <label class="block text-xs font-semibold text-[#1E2922] mb-1.5">Nominal (Rp) <span class="text-red-500">*</span></label>
-                    <input type="number" id="editJumlah" name="jumlah" min="0" required class="w-full px-3.5 py-2.5 border border-[#EBE8E0] rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
+                    <label class="block text-xs font-semibold text-[#1E2922] mb-1.5">Tanggal Pengeluaran <span class="text-red-500">*</span></label>
+                    <input type="date" id="editTanggal" name="tanggal_pengeluaran" required class="w-full px-3.5 py-2.5 border border-[#EBE8E0] rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
                 </div>
 
-                <!-- Kategori -->
+                <!-- Uraian -->
                 <div>
-                    <label class="block text-xs font-semibold text-[#1E2922] mb-1.5">Kategori <span class="text-red-500">*</span></label>
-                    <select id="editKategori" name="kategori" required class="w-full px-3.5 py-2.5 border border-[#EBE8E0] rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
-                        <option value="Bahan baku">Bahan baku</option>
-                        <option value="Operasional">Operasional</option>
-                        <option value="Lainnya">Lainnya</option>
+                    <label class="block text-xs font-semibold text-[#1E2922] mb-1.5">Uraian / Deskripsi <span class="text-red-500">*</span></label>
+                    <input type="text" id="editDeskripsi" name="deskripsi" required class="w-full px-3.5 py-2.5 border border-[#EBE8E0] rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Nominal -->
+                    <div>
+                        <label class="block text-xs font-semibold text-[#1E2922] mb-1.5">Nominal (Rp) <span class="text-red-500">*</span></label>
+                        <input type="number" id="editJumlah" name="jumlah" min="0" required class="w-full px-3.5 py-2.5 border border-[#EBE8E0] rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
+                    </div>
+
+                    <!-- Kategori -->
+                    <div>
+                        <label class="block text-xs font-semibold text-[#1E2922] mb-1.5">Kategori <span class="text-red-500">*</span></label>
+                        <select id="editKategori" name="kategori" required class="w-full px-3.5 py-2.5 border border-[#EBE8E0] rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
+                            <option value="Bahan baku">Bahan baku</option>
+                            <option value="Operasional">Operasional</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Pencatat -->
+                <div>
+                    <label class="block text-xs font-semibold text-[#1E2922] mb-1.5">Pencatat</label>
+                    <select id="editPenggunaId" name="pengguna_id" class="w-full px-3.5 py-2.5 border border-[#EBE8E0] rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
+                        @foreach($penggunaList as $user)
+                            <option value="{{ $user->id }}">
+                                {{ $user->peran === 'admin' ? 'Owner (' . $user->nama . ')' : $user->nama }}
+                            </option>
+                        @endforeach
                     </select>
                 </div>
+
+                <!-- Catatan -->
+                <div>
+                    <label class="block text-xs font-semibold text-[#1E2922] mb-1.5">Catatan (Opsional)</label>
+                    <textarea id="editCatatan" name="catatan" rows="2" class="w-full px-3.5 py-2 border border-[#EBE8E0] rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]"></textarea>
+                </div>
             </div>
 
-            <!-- Pencatat -->
-            <div>
-                <label class="block text-xs font-semibold text-[#1E2922] mb-1.5">Pencatat</label>
-                <select id="editPenggunaId" name="pengguna_id" class="w-full px-3.5 py-2.5 border border-[#EBE8E0] rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
-                    @foreach($penggunaList as $user)
-                        <option value="{{ $user->id }}">
-                            {{ $user->peran === 'admin' ? 'Owner (' . $user->nama . ')' : $user->nama }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <!-- Catatan -->
-            <div>
-                <label class="block text-xs font-semibold text-[#1E2922] mb-1.5">Catatan (Opsional)</label>
-                <textarea id="editCatatan" name="catatan" rows="2" class="w-full px-3.5 py-2 border border-[#EBE8E0] rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]"></textarea>
-            </div>
-
-            <div class="flex items-center justify-end gap-3 pt-3 border-t border-[#EBE8E0]">
-                <button type="button" onclick="closeModal('modalEdit')" class="px-4 py-2.5 rounded-xl border border-[#EBE8E0] text-[#6F7D75] text-xs sm:text-sm font-semibold hover:bg-gray-50">
+            <!-- Footer Modal (Permanen / Tidak bisa di-scroll di bagian bawah) -->
+            <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-[#EBE8E0] bg-[#FAF8F4] shrink-0">
+                <button type="button" onclick="closeModal('modalEdit')" class="px-4 py-2.5 rounded-xl border border-[#EBE8E0] bg-white text-[#6F7D75] text-xs sm:text-sm font-semibold hover:bg-gray-50 active:scale-95 transition">
                     Batal
                 </button>
-                <button type="submit" class="px-5 py-2.5 rounded-xl bg-[#184233] text-white text-xs sm:text-sm font-semibold hover:bg-[#224E3D] shadow-xs">
+                <button type="submit" class="px-5 py-2.5 rounded-xl bg-[#184233] text-white text-xs sm:text-sm font-semibold hover:bg-[#224E3D] shadow-xs active:scale-95 transition">
                     Simpan Perubahan
                 </button>
             </div>

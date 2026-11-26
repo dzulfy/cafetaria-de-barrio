@@ -82,10 +82,10 @@
         </div>
 
         <!-- 3. Pengeluaran -->
-        <div class="bg-white rounded-2xl p-5 border border-[#EBE8E0] shadow-xs flex flex-col justify-between transition hover:shadow-sm">
+        <a href="{{ route('pengeluaran.index') }}" class="bg-white rounded-2xl p-5 border border-[#EBE8E0] shadow-xs flex flex-col justify-between transition hover:shadow-md hover:border-[#184233]/40 group cursor-pointer">
             <div class="flex items-center justify-between">
-                <span class="text-xs text-[#6F7D75] font-medium">Pengeluaran</span>
-                <div class="w-8 h-8 rounded-lg bg-[#EBF2EE] text-[#184233] flex items-center justify-center shrink-0">
+                <span class="text-xs text-[#6F7D75] font-medium group-hover:text-[#184233] transition">Pengeluaran</span>
+                <div class="w-8 h-8 rounded-lg bg-[#EBF2EE] text-[#184233] flex items-center justify-center shrink-0 group-hover:scale-105 transition">
                     <!-- Trending Up Icon -->
                     <svg class="w-4 h-4 stroke-current stroke-2 fill-none" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
@@ -101,13 +101,13 @@
                     {{ $jumlahTransaksiPengeluaran }} transaksi
                 </div>
             </div>
-        </div>
+        </a>
 
         <!-- 4. Stok menipis -->
-        <div class="bg-white rounded-2xl p-5 border border-[#EBE8E0] shadow-xs flex flex-col justify-between transition hover:shadow-sm">
+        <a href="{{ route('bahan.index') }}" class="bg-white rounded-2xl p-5 border border-[#EBE8E0] shadow-xs flex flex-col justify-between transition hover:shadow-md hover:border-[#BD852A]/40 group cursor-pointer">
             <div class="flex items-center justify-between">
-                <span class="text-xs text-[#6F7D75] font-medium">Stok menipis</span>
-                <div class="w-8 h-8 rounded-lg bg-[#FEF7DC] text-[#BD852A] flex items-center justify-center shrink-0">
+                <span class="text-xs text-[#6F7D75] font-medium group-hover:text-[#BD852A] transition">Stok menipis</span>
+                <div class="w-8 h-8 rounded-lg bg-[#FEF7DC] text-[#BD852A] flex items-center justify-center shrink-0 group-hover:scale-105 transition">
                     <!-- Alert Triangle Icon -->
                     <svg class="w-4 h-4 stroke-current stroke-2 fill-none" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
                         <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
@@ -124,7 +124,7 @@
                     Perlu belanja
                 </div>
             </div>
-        </div>
+        </a>
     </div>
 
     <!-- Middle Section: Chart Pendapatan 7 Hari & Menu Terlaris -->
