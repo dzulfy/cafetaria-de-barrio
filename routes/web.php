@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\MenuController as AdminMenuController;
+use App\Http\Controllers\Admin\TableController as AdminTableController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BahanController;
@@ -24,6 +24,15 @@ use Illuminate\Support\Facades\Route;
 Route::view('/', 'pelanggan.landing')->name('landing');
 Route::get('/menu', [CustomerMenuController::class, 'index'])->name('customer.menu');
 Route::post('/checkout', [CustomerMenuController::class, 'checkout'])->name('customer.checkout');
+
+// Customer Cart & QR Order Status (qr-ordering)
+Route::get('/keranjang', [OrderController::class, 'cart'])->name('cart.keranjang');
+Route::post('/keranjang/update', [OrderController::class, 'updateCart'])->name('cart.update');
+Route::post('/pesanan', [OrderController::class, 'store'])->name('pesanan.store');
+Route::get('/pesanan/{order_code}', [OrderController::class, 'status'])->name('orders.status');
+Route::get('/api/pesanan/{order_code}/status', [OrderController::class, 'checkStatus'])->name('orders.check-status');
+Route::post('/pesanan/{order_code}/update-status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
+Route::get('/riwayat-pesanan', [OrderController::class, 'history'])->name('orders.history');
 
 // Guest routes (not logged in)
 Route::middleware('guest')->group(function () {
@@ -83,6 +92,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // Inventory & Pengeluaran inside Admin
     Route::get('/inventory', [BahanController::class, 'index'])->name('inventory.index');
     Route::get('/pengeluaran', [PengeluaranController::class, 'index'])->name('pengeluaran.index');
+
+    // Meja & QR Code (A7)
+    Route::get('/meja', [AdminTableController::class, 'index'])->name('tables.index');
+    Route::post('/meja', [AdminTableController::class, 'store'])->name('tables.store');
+    Route::post('/meja/{table}/toggle', [AdminTableController::class, 'toggleStatus'])->name('tables.toggle');
+    Route::get('/meja/{table}/unduh', [AdminTableController::class, 'downloadQr'])->name('tables.download-qr');
+    Route::get('/meja/{table}/cetak', [AdminTableController::class, 'print'])->name('tables.print');
 });
 
 // Kasir routes (can be accessed by kasir and admin)

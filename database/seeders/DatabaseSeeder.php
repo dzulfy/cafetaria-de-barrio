@@ -19,6 +19,8 @@ class DatabaseSeeder extends Seeder
             BahanSeeder::class,
             DashboardSeeder::class,
             PengeluaranSeeder::class,
+            CafeTableSeeder::class,
+            OrderSeeder::class,
         ]);
 
         if (class_exists(WarkopDeBarrioSeeder::class)) {

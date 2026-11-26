@@ -2,7 +2,57 @@
 
 namespace App\Models;
 
-class OrderItem extends DetailPesanan
+use Database\Factories\OrderItemFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class OrderItem extends Model
 {
-    // Alias model untuk DetailPesanan
+    /** @use HasFactory<OrderItemFactory> */
+    use HasFactory;
+
+    protected $table = 'order_items';
+
+    protected $fillable = [
+        'order_id',
+        'menu_id',
+        'menu_item_id',
+        'menu_name',
+        'price',
+        'quantity',
+        'subtotal',
+        'notes',
+    ];
+
+    protected $casts = [
+        'price' => 'integer',
+        'quantity' => 'integer',
+        'subtotal' => 'integer',
+    ];
+
+    public function order(): BelongsTo
+    {
+        return $this->belongsTo(Order::class);
+    }
+
+    public function menu(): BelongsTo
+    {
+        return $this->belongsTo(Menu::class);
+    }
+
+    public function menuItem(): BelongsTo
+    {
+        return $this->belongsTo(MenuItem::class);
+    }
+
+    public function getFormattedPriceAttribute(): string
+    {
+        return 'Rp '.number_format((int) $this->price, 0, ',', '.');
+    }
+
+    public function getFormattedSubtotalAttribute(): string
+    {
+        return 'Rp '.number_format((int) $this->subtotal, 0, ',', '.');
+    }
 }
