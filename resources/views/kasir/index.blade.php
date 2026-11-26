@@ -358,10 +358,10 @@
                 </div>
 
                 <!-- Menu Items Grid -->
-                <div class="flex-1 overflow-y-auto p-5 grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div class="flex-1 overflow-y-auto p-5 grid grid-cols-2 md:grid-cols-3 gap-4 content-start">
                     <template x-for="item in filteredMenuItems" :key="item.id">
                         <div @click="addToCart(item)"
-                             class="p-4 rounded-2xl border border-slate-200 hover:border-[#154734] bg-white hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group">
+                             class="p-4 rounded-2xl border border-slate-200 hover:border-[#154734] bg-white hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group h-44">
                             <div>
                                 <div class="flex items-center justify-between mb-2">
                                     <span class="w-8 h-8 rounded-lg bg-emerald-50 text-[#154734] flex items-center justify-center">
@@ -369,11 +369,11 @@
                                     </span>
                                     <span class="text-xs font-bold text-emerald-800" x-text="formatRupiah(item.price)"></span>
                                 </div>
-                                <h4 class="font-bold text-slate-800 text-sm group-hover:text-[#154734]" x-text="item.name"></h4>
-                                <p class="text-[11px] text-slate-400 mt-1 line-clamp-2" x-text="item.description"></p>
+                                <h4 class="font-bold text-slate-800 text-sm group-hover:text-[#154734] line-clamp-1" x-text="item.name"></h4>
+                                <p class="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-relaxed" x-text="item.description"></p>
                             </div>
                             <div class="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                                <span>Tambah ke Pesanan</span>
+                                <span class="font-medium text-slate-500">Tambah ke Pesanan</span>
                                 <span class="w-6 h-6 rounded-full bg-slate-100 group-hover:bg-[#154734] group-hover:text-white flex items-center justify-center transition-colors">
                                     <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                                 </span>
