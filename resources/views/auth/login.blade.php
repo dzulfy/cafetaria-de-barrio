@@ -102,29 +102,6 @@
                class="block w-full rounded-[14px] border border-line bg-white py-3 text-center text-sm font-semibold text-brand-900 transition hover:bg-brand-100">
                 Lanjut tanpa akun
             </a>
-
-            {{-- Bantuan akun demo untuk kemudahan pengujian --}}
-            @if (app()->environment('local'))
-                <div class="space-y-2 rounded-xl bg-warn-bg p-3.5">
-                    <p class="text-xs font-semibold text-warn-fg">Akun demo (klik untuk isi otomatis, lalu klik Masuk):</p>
-                    <div class="grid grid-cols-3 gap-2">
-                        @foreach ([['Admin', 'admin@debarrio.id'], ['Kasir', 'kasir@debarrio.id'], ['Pelanggan', 'pelanggan@debarrio.id']] as [$label, $mail])
-                            <button type="button" data-demo="{{ $mail }}"
-                                    class="rounded-lg bg-white py-2 text-xs font-semibold text-ink shadow-sm ring-1 ring-line transition hover:ring-brand-900">
-                                {{ $label }}
-                            </button>
-                        @endforeach
-                    </div>
-                </div>
-                <script>
-                    document.querySelectorAll('[data-demo]').forEach((b) =>
-                        b.addEventListener('click', () => {
-                            document.getElementById('email').value = b.dataset.demo;
-                            document.getElementById('password').value = 'password';
-                        })
-                    );
-                </script>
-            @endif
         </div>
     </main>
 </div>
