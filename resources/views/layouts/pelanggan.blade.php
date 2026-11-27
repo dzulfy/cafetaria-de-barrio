@@ -10,24 +10,62 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-[#ECEAE4] font-sans text-ink antialiased flex justify-center min-h-screen">
+<body class="bg-cream-50 font-sans text-ink antialiased flex flex-col min-h-screen">
 @php
     $activeTable = session('active_table', '05');
 @endphp
-<div class="w-full max-w-[420px] min-h-screen flex flex-col bg-cream-50 pb-[76px] shadow-xl relative">
-    @if (session('success'))
-        <p class="m-4 rounded-xl bg-ok-bg px-4 py-2.5 text-xs font-medium text-brand-900 shadow-sm">{{ session('success') }}</p>
-    @endif
-    @if (session('error'))
-        <p class="m-4 rounded-xl bg-danger-bg px-4 py-2.5 text-xs font-medium text-danger shadow-sm">{{ session('error') }}</p>
-    @endif
+<div class="w-full min-h-screen flex flex-col bg-cream-50 pb-[76px] md:pb-0 relative">
+    {{-- Desktop / Tablet Top Navbar --}}
+    <header class="hidden md:block sticky top-0 z-40 bg-cream-50/95 backdrop-blur-md border-b border-line">
+        <div class="max-w-5xl mx-auto h-16 px-6 flex items-center justify-between gap-4">
+            <a href="{{ route('landing', ['table' => $activeTable]) }}" class="flex items-center gap-2.5 group">
+                <div class="size-9 rounded-full bg-brand-900 text-cream flex items-center justify-center shadow-2xs transition-transform duration-300 group-hover:-rotate-6">
+                    <x-lucide.coffee class="size-5" />
+                </div>
+                <span class="font-bold text-[17px] text-ink tracking-tight">De Barrio</span>
+            </a>
 
-    @yield('content')
+            <nav class="flex items-center gap-1.5">
+                <a href="{{ route('landing', ['table' => $activeTable]) }}"
+                   class="px-3.5 py-2 rounded-xl text-xs transition {{ request()->routeIs('landing') ? 'bg-brand-100 text-brand-900 font-semibold' : 'font-medium text-muted hover:text-ink hover:bg-white/70' }}">
+                    Beranda
+                </a>
+                <a href="{{ route('customer.menu', ['table' => $activeTable]) }}"
+                   class="px-3.5 py-2 rounded-xl text-xs transition {{ request()->routeIs('customer.menu') ? 'bg-brand-100 text-brand-900 font-semibold' : 'font-medium text-muted hover:text-ink hover:bg-white/70' }}">
+                    Menu
+                </a>
+                <a href="{{ route('orders.history', ['table' => $activeTable]) }}"
+                   class="px-3.5 py-2 rounded-xl text-xs transition {{ request()->routeIs('orders.history', 'pelanggan.beranda') ? 'bg-brand-100 text-brand-900 font-semibold' : 'font-medium text-muted hover:text-ink hover:bg-white/70' }}">
+                    Pesanan
+                </a>
+                <a href="{{ auth()->check() ? route('pelanggan.akun') : route('login') }}"
+                   class="px-3.5 py-2 rounded-xl text-xs transition {{ request()->routeIs('pelanggan.akun') ? 'bg-brand-100 text-brand-900 font-semibold' : 'font-medium text-muted hover:text-ink hover:bg-white/70' }}">
+                    Akun
+                </a>
+            </nav>
 
-    {{-- Bottom Navigation Pelanggan (4 Tab Figma) --}}
-    <nav class="fixed inset-x-0 bottom-0 mx-auto flex h-[72px] max-w-[420px] items-center border-t border-line bg-white px-2 shadow-md z-40">
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-brand-100 px-3 py-1.5 text-xs font-semibold text-brand-900">
+                <x-lucide.qr-code class="size-3.5 shrink-0" />
+                <span>Meja {{ $activeTable }}</span>
+            </span>
+        </div>
+    </header>
+
+    <main class="w-full max-w-5xl mx-auto flex-1">
+        @if (session('success'))
+            <p class="mx-5 mt-4 rounded-xl bg-ok-bg px-4 py-2.5 text-xs font-medium text-brand-900 shadow-sm animate-fade-up">{{ session('success') }}</p>
+        @endif
+        @if (session('error'))
+            <p class="mx-5 mt-4 rounded-xl bg-danger-bg px-4 py-2.5 text-xs font-medium text-danger shadow-sm animate-fade-up">{{ session('error') }}</p>
+        @endif
+
+        @yield('content')
+    </main>
+
+    {{-- Mobile Bottom Navigation (4 Tab Figma) --}}
+    <nav class="md:hidden fixed inset-x-0 bottom-0 flex h-[72px] items-center border-t border-line bg-white/95 backdrop-blur-md px-2 shadow-md z-40">
         <a href="{{ route('landing', ['table' => $activeTable]) }}"
-           class="flex flex-1 flex-col items-center justify-center gap-1 {{ request()->routeIs('landing') ? 'font-bold text-brand-900' : 'font-medium text-muted hover:text-ink' }}">
+           class="flex flex-1 flex-col items-center justify-center gap-1 py-1.5 rounded-xl transition-transform active:scale-95 {{ request()->routeIs('landing') ? 'font-bold text-brand-900' : 'font-medium text-muted hover:text-ink' }}">
             <svg class="size-[22px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
                 <polyline points="9 22 9 12 15 12 15 22" />
@@ -35,12 +73,12 @@
             <span class="text-[11px]">Beranda</span>
         </a>
         <a href="{{ route('customer.menu', ['table' => $activeTable]) }}"
-           class="flex flex-1 flex-col items-center justify-center gap-1 {{ request()->routeIs('customer.menu') ? 'font-bold text-brand-900' : 'font-medium text-muted hover:text-ink' }}">
+           class="flex flex-1 flex-col items-center justify-center gap-1 py-1.5 rounded-xl transition-transform active:scale-95 {{ request()->routeIs('customer.menu') ? 'font-bold text-brand-900' : 'font-medium text-muted hover:text-ink' }}">
             <x-lucide.coffee class="size-[22px]" />
             <span class="text-[11px]">Menu</span>
         </a>
         <a href="{{ route('orders.history', ['table' => $activeTable]) }}"
-           class="flex flex-1 flex-col items-center justify-center gap-1 {{ request()->routeIs('orders.history', 'pelanggan.beranda') ? 'font-bold text-brand-900' : 'font-medium text-muted hover:text-ink' }}">
+           class="flex flex-1 flex-col items-center justify-center gap-1 py-1.5 rounded-xl transition-transform active:scale-95 {{ request()->routeIs('orders.history', 'pelanggan.beranda') ? 'font-bold text-brand-900' : 'font-medium text-muted hover:text-ink' }}">
             <svg class="size-[22px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" />
                 <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h8M8 11h8M8 15h5" />
@@ -48,7 +86,7 @@
             <span class="text-[11px]">Pesanan</span>
         </a>
         <a href="{{ auth()->check() ? route('pelanggan.akun') : route('login') }}"
-           class="flex flex-1 flex-col items-center justify-center gap-1 {{ request()->routeIs('pelanggan.akun') ? 'font-bold text-brand-900' : 'font-medium text-muted hover:text-ink' }}">
+           class="flex flex-1 flex-col items-center justify-center gap-1 py-1.5 rounded-xl transition-transform active:scale-95 {{ request()->routeIs('pelanggan.akun') ? 'font-bold text-brand-900' : 'font-medium text-muted hover:text-ink' }}">
             <x-lucide.user class="size-[22px]" />
             <span class="text-[11px]">Akun</span>
         </a>

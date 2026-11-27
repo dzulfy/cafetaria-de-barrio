@@ -18,8 +18,8 @@
         }
     </style>
 </head>
-<body class="bg-[#ECEAE4] text-ink antialiased min-h-screen flex justify-center">
-    <div class="w-full {{ request()->get('view') === 'mockup' ? 'max-w-5xl bg-transparent shadow-none p-4 sm:p-6' : 'max-w-[420px] bg-cream-50 shadow-xl' }} min-h-screen flex flex-col relative">
+<body class="bg-cream-50 text-ink antialiased min-h-screen flex flex-col">
+    <div class="w-full {{ request()->get('view') === 'mockup' ? 'max-w-5xl mx-auto p-4 sm:p-6' : '' }} min-h-screen flex flex-col relative">
         @yield('content')
     </div>
 
