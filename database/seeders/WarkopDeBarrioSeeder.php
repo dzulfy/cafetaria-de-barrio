@@ -25,124 +25,231 @@ class WarkopDeBarrioSeeder extends Seeder
         }
 
         // 2. Categories
-        $catKopi = Category::firstOrCreate(['slug' => 'kopi'], ['name' => 'Kopi', 'icon' => 'coffee']);
-        $catNonKopi = Category::firstOrCreate(['slug' => 'non-kopi'], ['name' => 'Non-Kopi', 'icon' => 'cup']);
-        $catMakanan = Category::firstOrCreate(['slug' => 'makanan'], ['name' => 'Makanan', 'icon' => 'utensils']);
-        $catCamilan = Category::firstOrCreate(['slug' => 'camilan'], ['name' => 'Camilan', 'icon' => 'cookie']);
+        $catMinuman = Category::firstOrCreate(['slug' => 'minuman'], ['name' => 'Minuman', 'icon' => 'coffee']);
+        $catSnack = Category::firstOrCreate(['slug' => 'snack'], ['name' => 'Snack', 'icon' => 'food']);
+        $catMie = Category::firstOrCreate(['slug' => 'mie'], ['name' => 'Mie', 'icon' => 'food']);
+        $catAddOn = Category::firstOrCreate(['slug' => 'add-on'], ['name' => 'Add On', 'icon' => 'food']);
 
-        // 3. Menu Items
+        // 3. Menu Items (29 item menu asli Cafeteria De Barrio)
+        MenuItem::query()->delete();
+
         $menus = [
-            // Kopi
+            // Minuman (14 item)
             [
-                'category_id' => $catKopi->id,
-                'name' => 'Kopi Susu Gula Aren',
-                'description' => 'Espresso robusta & arabica blend dengan susu creamy dan gula aren organik',
-                'price' => 16000,
+                'category_id' => $catMinuman->id,
+                'name' => 'Nescafe',
+                'description' => 'Kopi instan Nescafe klasik dengan aroma mantap, disajikan hangat atau dingin.',
+                'price' => 7000,
                 'is_available' => true,
             ],
             [
-                'category_id' => $catKopi->id,
-                'name' => 'Americano',
-                'description' => 'Double shot espresso dengan air dingin dan es batu segar',
-                'price' => 14000,
-                'is_available' => true,
-            ],
-            [
-                'category_id' => $catKopi->id,
-                'name' => 'Caramel Macchiato',
-                'description' => 'Espresso dengan sirup vanila, susu berbusa, dan drizzle saus karamel lezat',
-                'price' => 22000,
-                'is_available' => true,
-            ],
-            [
-                'category_id' => $catKopi->id,
-                'name' => 'Cafe Latte',
-                'description' => 'Kombinasi klasik espresso lembut dengan steamed milk gurih',
-                'price' => 18000,
-                'is_available' => true,
-            ],
-            [
-                'category_id' => $catKopi->id,
-                'name' => 'Kopi Tubruk De Barrio',
-                'description' => 'Kopi hitam tradisional khas Nusantara dengan aroma rempah harum',
+                'category_id' => $catMinuman->id,
+                'name' => 'Josu',
+                'description' => 'Perpaduan segar Extra Joss dengan susu kental manis yang creamy.',
                 'price' => 10000,
                 'is_available' => true,
             ],
-            // Non-Kopi
             [
-                'category_id' => $catNonKopi->id,
-                'name' => 'Matcha Latte',
-                'description' => 'Bubuk matcha murni Jepang berpadu dengan susu segar lembut',
-                'price' => 20000,
+                'category_id' => $catMinuman->id,
+                'name' => 'Nutrisari',
+                'description' => 'Minuman buah segar rasa jeruk pilihan pelepas dahaga.',
+                'price' => 7000,
                 'is_available' => true,
             ],
             [
-                'category_id' => $catNonKopi->id,
-                'name' => 'Chocolate Signature',
-                'description' => 'Cokelat Belgia pekat dengan rasa manis gurih yang pas di lidah',
-                'price' => 20000,
+                'category_id' => $catMinuman->id,
+                'name' => 'Lemon Tea',
+                'description' => 'Teh pilihan berpadu dengan kesegaran rasa lemon yang menyegarkan.',
+                'price' => 8000,
                 'is_available' => true,
             ],
             [
-                'category_id' => $catNonKopi->id,
-                'name' => 'Lemon Tea Segar',
-                'description' => 'Teh hitam pilihan disajikan dengan perasan jeruk lemon asli',
+                'category_id' => $catMinuman->id,
+                'name' => 'Teh Tarik',
+                'description' => 'Teh susu khas ala warkop dengan tekstur lembut dan rasa manis pas.',
+                'price' => 8000,
+                'is_available' => true,
+            ],
+            [
+                'category_id' => $catMinuman->id,
+                'name' => 'Matcha',
+                'description' => 'Minuman green tea matcha creamy yang lembut dan menenangkan.',
+                'price' => 8000,
+                'is_available' => true,
+            ],
+            [
+                'category_id' => $catMinuman->id,
+                'name' => 'Drink Beng Beng',
+                'description' => 'Minuman cokelat karamel malt nikmat ala Beng-Beng favorit anak kos.',
+                'price' => 9000,
+                'is_available' => true,
+            ],
+            [
+                'category_id' => $catMinuman->id,
+                'name' => 'Kukubima Susu',
+                'description' => 'Minuman energi Kukubima berpadu dengan susu kental manis penyegar stamina.',
+                'price' => 10000,
+                'is_available' => true,
+            ],
+            [
+                'category_id' => $catMinuman->id,
+                'name' => 'Goodday Freeze',
+                'description' => 'Kopi dingin Good Day Freeze yang menyegarkan untuk teman nongkrong.',
+                'price' => 9000,
+                'is_available' => true,
+            ],
+            [
+                'category_id' => $catMinuman->id,
+                'name' => 'Goodday Cappucino',
+                'description' => 'Kopi cappuccino nikmat dengan taburan choco granule di atasnya.',
+                'price' => 9000,
+                'is_available' => true,
+            ],
+            [
+                'category_id' => $catMinuman->id,
+                'name' => 'ABC Klepon',
+                'description' => 'Minuman kopi susu unik dengan cita rasa pandan gula aren khas klepon.',
+                'price' => 9000,
+                'is_available' => true,
+            ],
+            [
+                'category_id' => $catMinuman->id,
+                'name' => 'Teajus',
+                'description' => 'Es teh manis hemat dan menyegarkan untuk menemani makanan.',
+                'price' => 6000,
+                'is_available' => true,
+            ],
+            [
+                'category_id' => $catMinuman->id,
+                'name' => 'Dancow Putih',
+                'description' => 'Susu Dancow putih gurih dan bergizi, nikmat diminum hangat atau es.',
+                'price' => 10000,
+                'is_available' => true,
+            ],
+            [
+                'category_id' => $catMinuman->id,
+                'name' => 'Dancow Coklat',
+                'description' => 'Susu cokelat Dancow manis creamy favorit semua kalangan.',
+                'price' => 10000,
+                'is_available' => true,
+            ],
+
+            // Snack (4 item)
+            [
+                'category_id' => $catSnack->id,
+                'name' => 'French Fries',
+                'description' => 'Kentang goreng renyah di luar, lembut di dalam, lengkap dengan saus sambal.',
                 'price' => 12000,
                 'is_available' => true,
             ],
-            // Makanan
             [
-                'category_id' => $catMakanan->id,
-                'name' => 'Mie Nyemek De Barrio',
-                'description' => 'Mie kuah kental bumbu rempah spesial, sayuran, dan telur setengah matang',
-                'price' => 18000,
+                'category_id' => $catSnack->id,
+                'name' => 'Nugget',
+                'description' => 'Nugget ayam goreng krispi gurih untuk teman ngobrol.',
+                'price' => 12000,
                 'is_available' => true,
             ],
             [
-                'category_id' => $catMakanan->id,
-                'name' => 'Nasi Goreng Spesial',
-                'description' => 'Nasi goreng kampung dengan suwiran ayam, sosis, dan telur ceplok',
-                'price' => 25000,
+                'category_id' => $catSnack->id,
+                'name' => 'Sosis',
+                'description' => 'Sosis goreng gurih siap santap lengkap dengan cocolan saus.',
+                'price' => 12000,
                 'is_available' => true,
             ],
             [
-                'category_id' => $catMakanan->id,
-                'name' => 'Ayam Geprek Sambal Korek',
-                'description' => 'Ayam krispi renyah diulek dengan cabai rawit pedas mantap',
-                'price' => 23000,
-                'is_available' => true,
-            ],
-            // Camilan
-            [
-                'category_id' => $catCamilan->id,
-                'name' => 'Pisang Goreng',
-                'description' => 'Pisang kepok manis digoreng tepung renyah dengan taburan gula aren halus',
-                'price' => 10000,
-                'is_available' => true,
-            ],
-            [
-                'category_id' => $catCamilan->id,
-                'name' => 'Roti Bakar Coklat Keju',
-                'description' => 'Roti tebal panggang renyah isi meses coklat melimpah dan keju parut gurih',
+                'category_id' => $catSnack->id,
+                'name' => 'Mix Platter',
+                'description' => 'Paket lengkap berisi kentang goreng, sosis, dan nugget dalam satu porsi.',
                 'price' => 15000,
                 'is_available' => true,
             ],
+
+            // Mie (8 item)
             [
-                'category_id' => $catCamilan->id,
-                'name' => 'Cireng Krispi Sambal Rujak',
-                'description' => 'Cireng gurih kenyal renyah di luar dicocol bumbu rujak pedas manis',
-                'price' => 12000,
+                'category_id' => $catMie->id,
+                'name' => 'Indomie Goreng',
+                'description' => 'Indomie goreng legendaris dengan bawang goreng renyah dan bumbu autentik.',
+                'price' => 10000,
+                'is_available' => true,
+            ],
+            [
+                'category_id' => $catMie->id,
+                'name' => 'Indomie Ayam Bawang',
+                'description' => 'Indomie kuah hangat rasa ayam bawang yang gurih menenangkan.',
+                'price' => 10000,
+                'is_available' => true,
+            ],
+            [
+                'category_id' => $catMie->id,
+                'name' => 'Indomie Aceh',
+                'description' => 'Indomie goreng mie tebal berbumbu rempah khas Aceh yang kaya rasa.',
+                'price' => 10000,
+                'is_available' => true,
+            ],
+            [
+                'category_id' => $catMie->id,
+                'name' => 'Indomie Rendang',
+                'description' => 'Indomie goreng dengan bumbu rendang padang yang gurih dan sedap.',
+                'price' => 10000,
+                'is_available' => true,
+            ],
+            [
+                'category_id' => $catMie->id,
+                'name' => 'Mie Sedap Goreng',
+                'description' => 'Mie Sedaap goreng klasik dengan taburan kriuk bawang goreng spesial.',
+                'price' => 10000,
+                'is_available' => true,
+            ],
+            [
+                'category_id' => $catMie->id,
+                'name' => 'Mie Sedap Ayam Bawang',
+                'description' => 'Mie Sedaap kuah kaldu ayam bawang hangat yang nikmat disantap kapan saja.',
+                'price' => 10000,
+                'is_available' => true,
+            ],
+            [
+                'category_id' => $catMie->id,
+                'name' => 'Mie Sedap Kari Ayam',
+                'description' => 'Mie Sedaap kuah kental rasa kari ayam berempah yang menggugah selera.',
+                'price' => 10000,
+                'is_available' => true,
+            ],
+            [
+                'category_id' => $catMie->id,
+                'name' => 'Mie Sedap Soto',
+                'description' => 'Mie Sedaap kuah soto segar lengkap dengan serbuk koya gurih.',
+                'price' => 10000,
+                'is_available' => true,
+            ],
+
+            // Add On (3 item)
+            [
+                'category_id' => $catAddOn->id,
+                'name' => 'Telor',
+                'description' => 'Tambahan telur ceplok atau rebus untuk melengkapi hidangan mie.',
+                'price' => 5000,
+                'is_available' => true,
+            ],
+            [
+                'category_id' => $catAddOn->id,
+                'name' => 'Sosis',
+                'description' => 'Tambahan topping sosis goreng gurih.',
+                'price' => 5000,
+                'is_available' => true,
+            ],
+            [
+                'category_id' => $catAddOn->id,
+                'name' => 'Nugget',
+                'description' => 'Tambahan topping nugget ayam krispi.',
+                'price' => 5000,
                 'is_available' => true,
             ],
         ];
 
         $menuMap = [];
         foreach ($menus as $m) {
-            $created = MenuItem::updateOrCreate(
-                ['name' => $m['name']],
-                $m
-            );
-            $menuMap[$m['name']] = $created;
+            $created = MenuItem::create($m);
+            $menuMap[$m['category_id'].'|'.$m['name']] = $created;
         }
 
         // 4. Figma mockup Orders
@@ -162,14 +269,14 @@ class WarkopDeBarrioSeeder extends Seeder
         $order1->items()->delete();
         $order1->items()->createMany([
             [
-                'menu_item_id' => $menuMap['Kopi Susu Gula Aren']->id ?? null,
+                'menu_item_id' => null,
                 'menu_name' => 'Kopi Susu Gula Aren',
                 'price' => 16000,
                 'quantity' => 2,
                 'subtotal' => 32000,
             ],
             [
-                'menu_item_id' => $menuMap['Pisang Goreng']->id ?? null,
+                'menu_item_id' => null,
                 'menu_name' => 'Pisang Goreng',
                 'price' => 10000,
                 'quantity' => 1,
@@ -193,7 +300,7 @@ class WarkopDeBarrioSeeder extends Seeder
         $order2->items()->delete();
         $order2->items()->createMany([
             [
-                'menu_item_id' => $menuMap['Nasi Goreng Spesial']->id ?? null,
+                'menu_item_id' => null,
                 'menu_name' => 'Nasi Goreng Spesial',
                 'price' => 25000,
                 'quantity' => 1,
@@ -217,21 +324,21 @@ class WarkopDeBarrioSeeder extends Seeder
         $order3->items()->delete();
         $order3->items()->createMany([
             [
-                'menu_item_id' => $menuMap['Mie Nyemek De Barrio']->id ?? null,
+                'menu_item_id' => null,
                 'menu_name' => 'Mie Nyemek De Barrio',
                 'price' => 18000,
                 'quantity' => 1,
                 'subtotal' => 18000,
             ],
             [
-                'menu_item_id' => $menuMap['Matcha Latte']->id ?? null,
+                'menu_item_id' => ($menuMap[$catMinuman->id.'|Matcha'] ?? null)?->id,
                 'menu_name' => 'Matcha Latte',
                 'price' => 20000,
                 'quantity' => 1,
                 'subtotal' => 20000,
             ],
             [
-                'menu_item_id' => $menuMap['Ayam Geprek Sambal Korek']->id ?? null,
+                'menu_item_id' => null,
                 'menu_name' => 'Ayam Geprek Sambal Korek',
                 'price' => 23000,
                 'quantity' => 1,
@@ -255,14 +362,14 @@ class WarkopDeBarrioSeeder extends Seeder
         $order4->items()->delete();
         $order4->items()->createMany([
             [
-                'menu_item_id' => $menuMap['Caramel Macchiato']->id ?? null,
+                'menu_item_id' => null,
                 'menu_name' => 'Caramel Macchiato',
                 'price' => 22000,
                 'quantity' => 1,
                 'subtotal' => 22000,
             ],
             [
-                'menu_item_id' => $menuMap['Roti Bakar Coklat Keju']->id ?? null,
+                'menu_item_id' => null,
                 'menu_name' => 'Roti Bakar Coklat Keju',
                 'price' => 15000,
                 'quantity' => 1,
@@ -290,14 +397,14 @@ class WarkopDeBarrioSeeder extends Seeder
         $order5->items()->delete();
         $order5->items()->createMany([
             [
-                'menu_item_id' => $menuMap['Cafe Latte']->id ?? null,
+                'menu_item_id' => null,
                 'menu_name' => 'Cafe Latte',
                 'price' => 18000,
                 'quantity' => 1,
                 'subtotal' => 18000,
             ],
             [
-                'menu_item_id' => $menuMap['Chocolate Signature']->id ?? null,
+                'menu_item_id' => null,
                 'menu_name' => 'Chocolate Signature',
                 'price' => 20000,
                 'quantity' => 1,

@@ -7,8 +7,8 @@
 
     {{-- Panel merek (tablet/desktop) - Figma K1 --}}
     <aside class="hidden w-[460px] shrink-0 flex-col justify-center gap-5 bg-brand-900 p-12 text-white md:flex">
-        <div class="flex size-16 items-center justify-center rounded-full bg-cream text-brand-900 shadow">
-            <x-lucide.coffee class="size-8" />
+        <div class="flex size-16 items-center justify-center rounded-full bg-cream overflow-hidden border-2 border-white/25 shadow">
+            <img src="{{ asset('images/logo-de-barrio.jpg') }}" alt="Cafeteria De Barrio" class="w-full h-full object-cover">
         </div>
         <h1 class="text-4xl font-bold tracking-tight">De Barrio</h1>
         <p class="text-[15px] leading-6 text-[#D7E5DC]">
@@ -34,8 +34,8 @@
     <main class="flex flex-1 items-center justify-center px-6 py-10">
         <div class="w-full max-w-[380px] space-y-5">
 
-            <div class="flex size-[52px] items-center justify-center rounded-full bg-brand-900 text-cream shadow md:hidden">
-                <x-lucide.coffee class="size-7" />
+            <div class="flex size-[52px] items-center justify-center rounded-full bg-cream overflow-hidden border border-brand-900/20 shadow md:hidden">
+                <img src="{{ asset('images/logo-de-barrio.jpg') }}" alt="Cafeteria De Barrio" class="w-full h-full object-cover">
             </div>
 
             <div class="space-y-2">

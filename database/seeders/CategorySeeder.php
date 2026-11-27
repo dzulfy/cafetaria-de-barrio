@@ -12,11 +12,13 @@ class CategorySeeder extends Seeder
      */
     public function run(): void
     {
+        DB::table('kategori')->delete();
+
         $kategoriList = [
-            ['nama' => 'Kopi', 'urutan' => 1],
-            ['nama' => 'Non-Kopi', 'urutan' => 2],
-            ['nama' => 'Makanan Ringan', 'urutan' => 3],
-            ['nama' => 'Makanan Berat', 'urutan' => 4],
+            ['nama' => 'Minuman', 'urutan' => 1],
+            ['nama' => 'Snack', 'urutan' => 2],
+            ['nama' => 'Mie', 'urutan' => 3],
+            ['nama' => 'Add On', 'urutan' => 4],
         ];
 
         foreach ($kategoriList as $kat) {

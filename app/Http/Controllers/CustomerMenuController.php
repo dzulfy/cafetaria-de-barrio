@@ -9,6 +9,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class CustomerMenuController extends Controller
 {
@@ -112,7 +113,7 @@ class CustomerMenuController extends Controller
         }
 
         $availableMenus = Menu::where('is_available', true)->orderBy('id', 'asc')->get();
-        $preferredNames = ['Kopi Susu Gula Aren', 'V60 Manual Brew'];
+        $preferredNames = ['Mix Platter', 'Indomie Goreng', 'Goodday Freeze', 'Matcha'];
         $favoriteMenus = collect();
 
         foreach ($preferredNames as $prefName) {
@@ -123,7 +124,7 @@ class CustomerMenuController extends Controller
         }
 
         foreach ($availableMenus as $menu) {
-            if ($favoriteMenus->count() >= 2) {
+            if ($favoriteMenus->count() >= 4) {
                 break;
             }
             if (! $favoriteMenus->contains('id', $menu->id)) {
@@ -210,6 +211,19 @@ class CustomerMenuController extends Controller
             'success' => true,
             'message' => 'Pesanan berhasil dibuat!',
             'order_id' => 'ORD-'.strtoupper(uniqid()),
+        ]);
+    }
+
+    /**
+     * Download the official printable/digital menu poster.
+     */
+    public function downloadMenu(): BinaryFileResponse
+    {
+        $path = public_path('images/daftar-menu-de-barrio.jpg');
+        abort_unless(is_file($path), 404, 'File daftar menu belum tersedia.');
+
+        return response()->download($path, 'Daftar-Menu-Cafeteria-De-Barrio.jpg', [
+            'Content-Type' => 'image/jpeg',
         ]);
     }
 }

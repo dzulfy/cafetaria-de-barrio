@@ -6,9 +6,9 @@
         <!-- ============================================================== -->
         <aside class="w-20 md:w-24 bg-[#154734] flex flex-col items-center py-5 justify-between shrink-0 select-none shadow-xl z-20">
             <div class="flex flex-col items-center space-y-7 w-full">
-                <!-- Brand Logo / Emblem (White circle with dark green coffee icon) -->
-                <button @click="currentView = 'qr'" class="w-12 h-12 rounded-full bg-white flex items-center justify-center text-[#154734] shadow-md group cursor-pointer hover:scale-105 transition-transform" title="Warkop De Barrio">
-                    <i data-lucide="coffee" class="w-6 h-6 stroke-[2.2]"></i>
+                <!-- Brand Logo / Emblem -->
+                <button @click="currentView = 'qr'" class="w-12 h-12 rounded-full bg-[#FAF8F4] overflow-hidden border border-white/25 flex items-center justify-center shadow-md group cursor-pointer hover:scale-105 transition-transform" title="Warkop De Barrio">
+                    <img src="{{ asset('images/logo-de-barrio.jpg') }}" alt="Cafeteria De Barrio" class="w-full h-full object-cover">
                 </button>
 
                 <!-- Nav Menu Icons -->

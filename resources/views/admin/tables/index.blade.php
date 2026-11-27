@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>A7 Meja & QR Code - Panel Admin De Barrio</title>
+    <link rel="icon" type="image/jpeg" href="{{ asset('images/logo-de-barrio.jpg') }}">
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,10 +24,8 @@
     <!-- Mobile Topbar for Admin -->
     <header class="md:hidden bg-[#1F4D3A] text-white p-4 flex items-center justify-between sticky top-0 z-40 shadow-sm">
         <div class="flex items-center gap-2.5">
-            <div class="w-8 h-8 rounded-full bg-[#F6EFD8] flex items-center justify-center text-[#1F4D3A]">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3" />
-                </svg>
+            <div class="w-8 h-8 rounded-full bg-[#F6EFD8] overflow-hidden border border-white/25 flex items-center justify-center shrink-0">
+                <img src="{{ asset('images/logo-de-barrio.jpg') }}" alt="Cafeteria De Barrio" class="w-full h-full object-cover">
             </div>
             <div>
                 <span class="font-bold text-sm block">De Barrio</span>
@@ -47,10 +46,8 @@
     <aside id="admin-sidebar" class="hidden md:flex flex-col bg-[#1F4D3A] w-full md:w-[240px] shrink-0 min-h-screen p-4 text-white z-30 transition-all">
         <!-- Logo / Brand -->
         <div class="flex items-center gap-3 pb-5 px-2 border-b border-[#2E6B52]">
-            <div class="w-10 h-10 rounded-full bg-[#F6EFD8] flex items-center justify-center text-[#1F4D3A] shrink-0">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3" />
-                </svg>
+            <div class="w-10 h-10 rounded-full bg-[#F6EFD8] overflow-hidden border border-white/25 flex items-center justify-center shrink-0">
+                <img src="{{ asset('images/logo-de-barrio.jpg') }}" alt="Cafeteria De Barrio" class="w-full h-full object-cover">
             </div>
             <div>
                 <h1 class="font-bold text-base text-white tracking-tight leading-tight">De Barrio</h1>

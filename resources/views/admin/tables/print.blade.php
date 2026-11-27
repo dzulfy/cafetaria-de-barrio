@@ -79,10 +79,8 @@
         <!-- Ornamen Header Brand -->
         <div class="flex flex-col items-center">
             <!-- Icon Logo Lingkaran -->
-            <div class="w-14 h-14 rounded-full bg-[#F6EFD8] border border-[#E6E0CC] text-[#1F4D3A] flex items-center justify-center mb-3 shadow-2xs">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3" />
-                </svg>
+            <div class="w-16 h-16 rounded-full bg-[#F6EFD8] border border-[#E6E0CC] overflow-hidden flex items-center justify-center mb-3 shadow-2xs">
+                <img src="{{ asset('images/logo-de-barrio.jpg') }}" alt="Cafeteria De Barrio" class="w-full h-full object-cover">
             </div>
 
             <!-- Nama Cafe -->

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard') - De Barrio</title>
+    <link rel="icon" type="image/jpeg" href="{{ asset('images/logo-de-barrio.jpg') }}">
 
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700" rel="stylesheet" />
@@ -83,11 +84,8 @@
             </button>
 
             <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#184233] shadow-xs">
-                    <svg class="w-4 h-4 fill-none stroke-current stroke-2" viewBox="0 0 24 24">
-                        <path d="M17 8h1a4 4 0 1 1 0 8h-1"></path>
-                        <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"></path>
-                    </svg>
+                <div class="w-8 h-8 rounded-full bg-[#FAF8F4] overflow-hidden border border-white/25 flex items-center justify-center shadow-xs shrink-0">
+                    <img src="{{ asset('images/logo-de-barrio.jpg') }}" alt="Cafeteria De Barrio" class="w-full h-full object-cover">
                 </div>
                 <div>
                     <h1 class="font-bold text-base leading-tight tracking-tight text-white">De Barrio</h1>
@@ -133,14 +131,8 @@
                 <!-- Header Brand -->
                 <div class="flex items-center justify-between shrink-0 mb-6 lg:mb-7">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-[#184233] shadow-sm">
-                            <svg class="w-6 h-6 fill-none stroke-current stroke-2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M17 8h1a4 4 0 1 1 0 8h-1"></path>
-                                <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"></path>
-                                <line x1="6" y1="2" x2="6" y2="4"></line>
-                                <line x1="10" y1="2" x2="10" y2="4"></line>
-                                <line x1="14" y1="2" x2="14" y2="4"></line>
-                            </svg>
+                        <div class="w-10 h-10 rounded-full bg-[#FAF8F4] overflow-hidden border border-white/25 flex items-center justify-center shadow-sm shrink-0">
+                            <img src="{{ asset('images/logo-de-barrio.jpg') }}" alt="Cafeteria De Barrio" class="w-full h-full object-cover">
                         </div>
                         <div>
                             <h1 class="font-bold text-lg leading-tight tracking-tight text-white">De Barrio</h1>

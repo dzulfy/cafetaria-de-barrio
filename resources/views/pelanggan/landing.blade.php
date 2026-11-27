@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Warkop De Barrio{{ !empty($tableNumber) ? ' — Meja ' . $tableNumber : '' }}</title>
+    <link rel="icon" type="image/jpeg" href="{{ asset('images/logo-de-barrio.jpg') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -26,8 +27,8 @@
     <header class="sticky top-0 z-40 bg-cream-50/95 backdrop-blur-md border-b border-line/60">
         <div class="max-w-6xl mx-auto h-16 px-5 md:px-8 flex items-center justify-between gap-4">
             <a href="{{ route('landing', $tableParams) }}" class="flex items-center gap-2.5 group">
-                <div class="size-9 rounded-full bg-brand-900 text-cream flex items-center justify-center shadow-2xs transition-transform duration-300 group-hover:-rotate-6">
-                    <x-lucide.coffee class="size-5" />
+                <div class="size-9 rounded-full bg-cream overflow-hidden border border-brand-900/15 flex items-center justify-center shadow-2xs transition-transform duration-300 group-hover:-rotate-6 shrink-0">
+                    <img src="{{ asset('images/logo-de-barrio.jpg') }}" alt="Cafeteria De Barrio" class="w-full h-full object-cover">
                 </div>
                 <span class="font-bold text-[17px] text-ink tracking-tight">De Barrio</span>
             </a>
@@ -108,7 +109,7 @@
                     Warkop Cafetaria De Barrio tempat nongkrong, ngerjain tugas, dan ngopi tanpa bikin dompet menjerit.
                 </p>
 
-                <div class="mt-6 grid grid-cols-2 sm:flex sm:items-center gap-2.5 sm:gap-3">
+                <div class="mt-6 grid grid-cols-2 sm:flex sm:flex-wrap sm:items-center gap-2.5 sm:gap-3">
                     <a href="{{ route('customer.menu', $tableParams) }}"
                        class="h-11 sm:px-6 rounded-xl bg-cream text-brand-900 font-semibold text-[13px] sm:text-sm flex items-center justify-center gap-2 shadow-xs transition-all duration-200 hover:bg-[#efe6ca] hover:-translate-y-0.5 active:scale-[0.98]">
                         <x-lucide.coffee class="size-[18px]" />
@@ -126,6 +127,15 @@
                                 {{ $cartCount }}
                             </span>
                         @endif
+                    </a>
+
+                    <a href="{{ route('customer.menu.download') }}"
+                       download="Daftar-Menu-Cafeteria-De-Barrio.jpg"
+                       class="col-span-2 sm:col-span-1 h-11 sm:px-5 rounded-xl bg-white/12 text-white font-semibold text-[13px] sm:text-sm flex items-center justify-center gap-2 border border-white/20 transition-all duration-200 hover:bg-white/20 hover:-translate-y-0.5 active:scale-[0.98]">
+                        <svg class="size-[18px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
+                        </svg>
+                        <span>Download Menu</span>
                     </a>
                 </div>
 
@@ -149,8 +159,8 @@
                 <div class="w-full max-w-sm rounded-3xl bg-brand-700/45 border border-white/15 backdrop-blur-sm p-6 shadow-xl space-y-5">
                     <div class="flex items-center justify-between gap-2">
                         <div class="flex items-center gap-3">
-                            <div class="size-11 rounded-2xl bg-cream text-brand-900 flex items-center justify-center shadow-sm animate-float-soft shrink-0">
-                                <x-lucide.coffee class="size-6" />
+                            <div class="size-12 rounded-full bg-cream overflow-hidden border border-white/30 flex items-center justify-center shadow-sm animate-float-soft shrink-0">
+                                <img src="{{ asset('images/logo-de-barrio.jpg') }}" alt="Cafeteria De Barrio" class="w-full h-full object-cover">
                             </div>
                             <div>
                                 <p class="text-xs font-medium text-[#D7E5DC]">Self-Order QR</p>
@@ -236,20 +246,128 @@
                     <div class="h-24 sm:h-28 rounded-xl bg-cream flex items-center justify-center text-gold mb-2.5">
                         <x-lucide.coffee class="size-8 transition-transform duration-300 group-hover:scale-110" />
                     </div>
-                    <h3 class="text-[13px] sm:text-sm font-bold text-ink leading-tight truncate">Kopi Susu Gula Aren</h3>
-                    <p class="text-[13px] sm:text-sm font-bold text-brand-900 mt-1">Rp 16.000</p>
+                    <h3 class="text-[13px] sm:text-sm font-bold text-ink leading-tight truncate">Mix Platter</h3>
+                    <p class="text-[13px] sm:text-sm font-bold text-brand-900 mt-1">Rp 15.000</p>
                 </a>
                 <a href="{{ route('customer.menu', $tableParams) }}"
                    class="group bg-white border border-line rounded-2xl p-2.5 sm:p-3 flex flex-col shadow-2xs transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
                     <div class="h-24 sm:h-28 rounded-xl bg-cream flex items-center justify-center text-gold mb-2.5">
                         <x-lucide.coffee class="size-8 transition-transform duration-300 group-hover:scale-110" />
                     </div>
-                    <h3 class="text-[13px] sm:text-sm font-bold text-ink leading-tight truncate">V60 Manual Brew</h3>
-                    <p class="text-[13px] sm:text-sm font-bold text-brand-900 mt-1">Rp 18.000</p>
+                    <h3 class="text-[13px] sm:text-sm font-bold text-ink leading-tight truncate">Indomie Goreng</h3>
+                    <p class="text-[13px] sm:text-sm font-bold text-brand-900 mt-1">Rp 10.000</p>
                 </a>
             @endforelse
         </div>
     </section>
+
+    {{-- Daftar Menu Resmi & Download Poster --}}
+    <section class="max-w-6xl mx-auto w-full px-5 md:px-8 pt-7 md:pt-10 reveal-on-scroll">
+        <div class="bg-white border border-line rounded-3xl p-5 sm:p-6 md:p-8 shadow-2xs grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+            <div class="md:col-span-4 flex justify-center">
+                <button type="button"
+                        onclick="openMenuPosterModal()"
+                        class="group relative w-48 sm:w-56 rounded-2xl overflow-hidden border border-line bg-cream shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-900/30"
+                        aria-label="Perbesar Poster Daftar Menu Cafeteria De Barrio">
+                    <img src="{{ asset('images/daftar-menu-de-barrio.jpg') }}"
+                         alt="Poster Daftar Menu Cafeteria De Barrio"
+                         class="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-[1.02]">
+                    <span class="absolute bottom-2.5 right-2.5 rounded-full bg-brand-900/90 text-white text-[11px] font-semibold px-2.5 py-1 shadow">
+                        Perbesar
+                    </span>
+                </button>
+            </div>
+
+            <div class="md:col-span-8 flex flex-col gap-3">
+                <div class="inline-flex items-center gap-1.5 self-start rounded-full bg-brand-100 px-3 py-1 text-[11px] font-semibold text-brand-900">
+                    <span>Menu Resmi Cafeteria De Barrio • Free Wi-Fi</span>
+                </div>
+                <h2 class="text-lg sm:text-xl md:text-2xl font-extrabold text-ink tracking-tight">
+                    Simpan & Unduh Daftar Menu Lengkap
+                </h2>
+                <p class="text-[13px] sm:text-sm text-muted leading-relaxed">
+                    Mau pilih-pilih bareng teman sebelum pesan atau simpan daftar harga? Unduh poster daftar menu resmi kami lengkap dengan harga Minuman, Snack, Mie, dan Add On.
+                </p>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                    <div class="rounded-xl bg-cream-50 border border-line px-3 py-2">
+                        <p class="text-[11px] text-muted font-medium">Minuman</p>
+                        <p class="text-xs font-bold text-ink">Rp 6K – 10K</p>
+                    </div>
+                    <div class="rounded-xl bg-cream-50 border border-line px-3 py-2">
+                        <p class="text-[11px] text-muted font-medium">Snack</p>
+                        <p class="text-xs font-bold text-ink">Rp 12K – 15K</p>
+                    </div>
+                    <div class="rounded-xl bg-cream-50 border border-line px-3 py-2">
+                        <p class="text-[11px] text-muted font-medium">Mie</p>
+                        <p class="text-xs font-bold text-ink">Rp 10K</p>
+                    </div>
+                    <div class="rounded-xl bg-cream-50 border border-line px-3 py-2">
+                        <p class="text-[11px] text-muted font-medium">Add On</p>
+                        <p class="text-xs font-bold text-ink">Rp 5K</p>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-3 pt-2">
+                    <a href="{{ route('customer.menu.download') }}"
+                       download="Daftar-Menu-Cafeteria-De-Barrio.jpg"
+                       class="h-11 px-5 rounded-xl bg-brand-900 text-white font-semibold text-[13px] sm:text-sm inline-flex items-center justify-center gap-2 shadow-xs transition-all duration-200 hover:bg-brand-700 hover:-translate-y-0.5 active:scale-[0.98]">
+                        <svg class="size-[18px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
+                        </svg>
+                        <span>Download Menu (JPG)</span>
+                    </a>
+                    <button type="button"
+                            onclick="openMenuPosterModal()"
+                            class="h-11 px-5 rounded-xl bg-cream text-brand-900 border border-line font-semibold text-[13px] sm:text-sm inline-flex items-center justify-center gap-2 transition-all duration-200 hover:bg-[#efe6ca] active:scale-[0.98] cursor-pointer">
+                        <span>Lihat Poster Menu</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {{-- Modal Preview Poster Menu --}}
+    <div id="menu-poster-modal"
+         onclick="if (event.target === this) closeMenuPosterModal()"
+         class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-xs p-4"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="menu-poster-modal-title">
+        <div class="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-line">
+            <div class="flex items-center justify-between px-5 py-3.5 border-b border-line">
+                <h3 id="menu-poster-modal-title" class="text-sm font-bold text-ink">Daftar Menu Cafeteria De Barrio</h3>
+                <button type="button"
+                        onclick="closeMenuPosterModal()"
+                        class="size-8 rounded-full bg-cream-50 text-ink hover:bg-line/50 flex items-center justify-center transition cursor-pointer"
+                        aria-label="Tutup">
+                    <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="p-4 overflow-y-auto bg-cream-50 flex justify-center">
+                <img src="{{ asset('images/daftar-menu-de-barrio.jpg') }}"
+                     alt="Poster Daftar Menu Cafeteria De Barrio"
+                     class="max-h-[65vh] w-auto rounded-2xl border border-line shadow-sm">
+            </div>
+            <div class="px-5 py-3.5 border-t border-line bg-white flex items-center justify-end gap-2.5">
+                <button type="button"
+                        onclick="closeMenuPosterModal()"
+                        class="h-10 px-4 rounded-xl border border-line text-xs font-semibold text-muted hover:text-ink transition cursor-pointer">
+                    Tutup
+                </button>
+                <a href="{{ route('customer.menu.download') }}"
+                   download="Daftar-Menu-Cafeteria-De-Barrio.jpg"
+                   class="h-10 px-4 rounded-xl bg-brand-900 text-white text-xs font-semibold inline-flex items-center gap-1.5 hover:bg-brand-700 transition">
+                    <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
+                    </svg>
+                    <span>Download Menu</span>
+                </a>
+            </div>
+        </div>
+    </div>
 
     {{-- Tentang Kami & Lokasi --}}
     <section class="max-w-6xl mx-auto w-full px-5 md:px-8 pt-7 md:pt-10 pb-8 md:pb-12 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-start">
@@ -319,6 +437,28 @@
             btn.classList.remove('bg-brand-900', 'text-white');
         }, 1800);
     }
+
+    function openMenuPosterModal() {
+        const modal = document.getElementById('menu-poster-modal');
+        if (!modal) return;
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.classList.add('overflow-hidden');
+    }
+
+    function closeMenuPosterModal() {
+        const modal = document.getElementById('menu-poster-modal');
+        if (!modal) return;
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.classList.remove('overflow-hidden');
+    }
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            closeMenuPosterModal();
+        }
+    });
 </script>
 </body>
 </html>

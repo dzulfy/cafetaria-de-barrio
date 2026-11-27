@@ -7,8 +7,13 @@ namespace Tests\Feature;
 use App\Models\CafeTable;
 use App\Models\Category;
 use App\Models\Menu;
+use App\Models\MenuItem;
 use App\Models\Order;
+use Database\Seeders\CategorySeeder;
+use Database\Seeders\MenuSeeder;
+use Database\Seeders\WarkopDeBarrioSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class CustomerQrFlowTest extends TestCase
@@ -238,5 +243,46 @@ class CustomerQrFlowTest extends TestCase
         $historyResponse->assertSee('Pesanan Saya');
         $historyResponse->assertSee($order->order_code);
         $historyResponse->assertSee('1x Kopi Susu Gula Aren');
+    }
+
+    public function test_landing_page_renders_official_logo_and_download_menu_feature(): void
+    {
+        $response = $this->get(route('landing'));
+
+        $response->assertStatus(200);
+        $response->assertSee('images/logo-de-barrio.jpg', false);
+        $response->assertSee('images/daftar-menu-de-barrio.jpg', false);
+        $response->assertSee(route('customer.menu.download'), false);
+        $response->assertSee('Download Menu');
+    }
+
+    public function test_menu_poster_can_be_downloaded(): void
+    {
+        $response = $this->get(route('customer.menu.download'));
+
+        $response->assertStatus(200);
+        $response->assertDownload('Daftar-Menu-Cafeteria-De-Barrio.jpg');
+    }
+
+    public function test_real_menu_seeder_populates_exact_catalog_across_tables(): void
+    {
+        $this->seed([
+            CategorySeeder::class,
+            MenuSeeder::class,
+            WarkopDeBarrioSeeder::class,
+        ]);
+
+        $this->assertSame(4, DB::table('kategori')->count());
+        $this->assertSame(4, Category::count());
+        $this->assertSame(29, Menu::count());
+        $this->assertSame(29, MenuItem::count());
+
+        $this->assertDatabaseHas('menus', ['name' => 'Nescafe', 'price' => 7000]);
+        $this->assertDatabaseHas('menus', ['name' => 'Mix Platter', 'price' => 15000]);
+        $this->assertDatabaseHas('menus', ['name' => 'Indomie Goreng', 'price' => 10000]);
+        $this->assertDatabaseHas('menus', ['slug' => 'add-on-telor', 'name' => 'Telor', 'price' => 5000]);
+        $this->assertDatabaseHas('menus', ['slug' => 'add-on-sosis', 'name' => 'Sosis', 'price' => 5000]);
+        $this->assertDatabaseHas('menus', ['slug' => 'add-on-nugget', 'name' => 'Nugget', 'price' => 5000]);
+        $this->assertDatabaseHas('menu_items', ['name' => 'Goodday Freeze', 'price' => 9000]);
     }
 }

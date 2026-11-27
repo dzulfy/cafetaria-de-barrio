@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [CustomerMenuController::class, 'landing'])->name('landing');
 Route::get('/meja/{token}', [CustomerMenuController::class, 'scanQr'])->name('customer.qr.scan');
 Route::get('/menu', [CustomerMenuController::class, 'index'])->name('customer.menu');
+Route::get('/menu/download', [CustomerMenuController::class, 'downloadMenu'])->name('customer.menu.download');
 Route::post('/checkout', [CustomerMenuController::class, 'checkout'])->name('customer.checkout');
 
 // Customer Cart & QR Order Status (qr-ordering)

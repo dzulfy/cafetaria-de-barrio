@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title') | Kasir De Barrio</title>
+    <link rel="icon" type="image/jpeg" href="{{ asset('images/logo-de-barrio.jpg') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -13,8 +14,8 @@
 <div class="flex min-h-screen">
     {{-- Rail Kasir (96px) --}}
     <aside class="flex w-24 shrink-0 flex-col items-center gap-4 bg-brand-900 py-6">
-        <span class="flex size-12 items-center justify-center rounded-full bg-cream text-brand-900 shadow">
-            <x-lucide.coffee class="size-6" />
+        <span class="flex size-12 items-center justify-center rounded-full bg-cream overflow-hidden border border-white/25 shadow">
+            <img src="{{ asset('images/logo-de-barrio.jpg') }}" alt="Cafeteria De Barrio" class="w-full h-full object-cover">
         </span>
 
         <div class="mt-4 flex flex-col items-center gap-3">

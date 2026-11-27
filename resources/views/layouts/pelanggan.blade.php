@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title') | Warkop De Barrio</title>
+    <link rel="icon" type="image/jpeg" href="{{ asset('images/logo-de-barrio.jpg') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -20,8 +21,8 @@
     <header class="hidden md:block sticky top-0 z-40 bg-cream-50/95 backdrop-blur-md border-b border-line">
         <div class="max-w-5xl mx-auto h-16 px-6 flex items-center justify-between gap-4">
             <a href="{{ route('landing', $tableParams) }}" class="flex items-center gap-2.5 group">
-                <div class="size-9 rounded-full bg-brand-900 text-cream flex items-center justify-center shadow-2xs transition-transform duration-300 group-hover:-rotate-6">
-                    <x-lucide.coffee class="size-5" />
+                <div class="size-9 rounded-full bg-cream overflow-hidden border border-brand-900/15 flex items-center justify-center shadow-2xs transition-transform duration-300 group-hover:-rotate-6 shrink-0">
+                    <img src="{{ asset('images/logo-de-barrio.jpg') }}" alt="Cafeteria De Barrio" class="w-full h-full object-cover">
                 </div>
                 <span class="font-bold text-[17px] text-ink tracking-tight">De Barrio</span>
             </a>
