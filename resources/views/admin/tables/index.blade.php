@@ -188,7 +188,7 @@
                             </div>
 
                             <!-- Overlay Quick Scan Link on hover -->
-                            <a href="{{ route('cart', ['table' => $table->table_number]) }}" target="_blank" class="absolute inset-0 bg-[#143D2B]/85 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition p-2 text-center text-xs font-semibold rounded-[16px]">
+                            <a href="{{ $table->qr_url }}" target="_blank" class="absolute inset-0 bg-[#143D2B]/85 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition p-2 text-center text-xs font-semibold rounded-[16px]">
                                 <svg class="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                 </svg>

@@ -254,26 +254,59 @@ class OrderController extends Controller
             ]);
         }
 
-        session()->forget('cart');
+        session()->put('cart', []);
+        session()->put('active_table', $this->normalizeTableNumber($validated['table_number'] ?? '05'));
 
         return redirect()->route('orders.status', ['order_code' => $order->order_code]);
+    }
+
+    private function normalizeTableNumber(?string $raw): string
+    {
+        $cleaned = trim((string) preg_replace('/^Meja\s+/i', '', (string) $raw));
+
+        if ($cleaned === '') {
+            return '05';
+        }
+
+        if (ctype_digit($cleaned) && strlen($cleaned) === 1) {
+            return str_pad($cleaned, 2, '0', STR_PAD_LEFT);
+        }
+
+        return $cleaned;
     }
 
     /**
      * Display transaction/order history.
      */
-    public function history(Request $request): View|JsonResponse
+    public function history(Request $request): View|JsonResponse|RedirectResponse
     {
-        if ($request->routeIs('orders.history')) {
-            $tableNumber = (string) $request->query('table', '05');
-            $orders = Order::with('items')
-                ->where('table_number', $tableNumber)
-                ->latest()
-                ->get();
+        if ($request->routeIs('orders.history') || $request->routeIs('pelanggan.beranda')) {
+            $tableNumber = $this->normalizeTableNumber($request->query('table') ?? session('active_table', '05'));
+            session(['active_table' => $tableNumber]);
+            $activeStatus = (string) $request->query('status', 'semua');
+
+            $ordersQuery = Order::with('items')->latest();
+
+            if ($request->routeIs('pelanggan.beranda')) {
+                $userName = auth()->user()?->nama;
+                $ordersQuery->where(function ($q) use ($tableNumber, $userName): void {
+                    $q->whereIn('table_number', [$tableNumber, 'Meja '.$tableNumber]);
+                    if (! empty($userName)) {
+                        $q->orWhere('customer_name', $userName);
+                    }
+                });
+            } else {
+                $ordersQuery->whereIn('table_number', [$tableNumber, 'Meja '.$tableNumber]);
+            }
+
+            if (in_array($activeStatus, ['menunggu', 'diproses', 'selesai', 'dibatalkan'], true)) {
+                $ordersQuery->where('status', $activeStatus);
+            }
 
             return view('orders.history', [
-                'orders' => $orders,
+                'orders' => $ordersQuery->get(),
                 'tableNumber' => $tableNumber,
+                'activeStatus' => $activeStatus,
             ]);
         }
 
@@ -302,10 +335,15 @@ class OrderController extends Controller
 
         // Return customer order history view if customer route or table provided
         if ($request->filled('table') || ! $request->is('kasir*')) {
-            $tableNumber = (string) $request->query('table', '05');
+            $tableNumber = $this->normalizeTableNumber($request->query('table') ?? session('active_table', '05'));
+            $activeStatus = (string) $request->query('status', 'semua');
+
             $orders = Order::with('items')
                 ->when($request->filled('table'), function ($q) use ($tableNumber) {
-                    $q->where('table_number', $tableNumber);
+                    $q->whereIn('table_number', [$tableNumber, 'Meja '.$tableNumber]);
+                })
+                ->when(in_array($activeStatus, ['menunggu', 'diproses', 'selesai', 'dibatalkan'], true), function ($q) use ($activeStatus) {
+                    $q->where('status', $activeStatus);
                 })
                 ->latest()
                 ->get();
@@ -313,6 +351,7 @@ class OrderController extends Controller
             return view('orders.history', [
                 'orders' => $orders,
                 'tableNumber' => $tableNumber,
+                'activeStatus' => $activeStatus,
             ]);
         }
 
@@ -320,16 +359,13 @@ class OrderController extends Controller
     }
 
     /**
-     * Customer self-service QR ordering page.
+     * Customer self-service QR ordering page (redirects to unified Figma 01 Landing Page).
      */
-    public function customerQr(Request $request): View
+    public function customerQr(Request $request): RedirectResponse
     {
-        $tableNumber = $request->query('table', 'Meja 05');
-        $categories = Category::with(['menuItems' => function ($q) {
-            $q->where('is_available', true);
-        }])->get();
+        $tableNumber = $this->normalizeTableNumber($request->query('table', '05'));
 
-        return view('customer.order', compact('tableNumber', 'categories'));
+        return redirect()->route('landing', ['table' => $tableNumber]);
     }
 
     /**
@@ -337,10 +373,12 @@ class OrderController extends Controller
      */
     public function cart(Request $request): View
     {
-        $tableNumber = (string) $request->query('table', '05');
+        $tableNumber = $this->normalizeTableNumber($request->query('table') ?? session('active_table', '05'));
+        session(['active_table' => $tableNumber]);
+
         $cart = session()->get('cart');
 
-        if (empty($cart)) {
+        if ($cart === null && ! session()->get('qr_flow', false)) {
             $kopi = Menu::where('slug', 'kopi-susu-gula-aren')->first();
             $pisang = Menu::where('slug', 'pisang-goreng')->first();
 
@@ -351,6 +389,7 @@ class OrderController extends Controller
                     'name' => $kopi->name,
                     'price' => $kopi->price,
                     'icon' => $kopi->icon,
+                    'image' => $kopi->image,
                     'quantity' => 2,
                 ];
             }
@@ -360,11 +399,14 @@ class OrderController extends Controller
                     'name' => $pisang->name,
                     'price' => $pisang->price,
                     'icon' => $pisang->icon,
+                    'image' => $pisang->image,
                     'quantity' => 1,
                 ];
             }
             session()->put('cart', $cart);
         }
+
+        $cart = $cart ?? [];
 
         $totalItems = array_sum(array_column($cart, 'quantity'));
         $subtotal = 0;
@@ -390,8 +432,20 @@ class OrderController extends Controller
 
         $cart = session()->get('cart', []);
 
-        if (isset($cart[$menuId])) {
-            if ($action === 'increase') {
+        if (($action === 'increase' || $action === 'add') && ! isset($cart[$menuId])) {
+            $menu = Menu::find($menuId);
+            if ($menu && $menu->is_available) {
+                $cart[$menuId] = [
+                    'id' => $menu->id,
+                    'name' => $menu->name,
+                    'price' => (int) $menu->price,
+                    'icon' => $menu->icon ?? 'coffee',
+                    'image' => $menu->image,
+                    'quantity' => 1,
+                ];
+            }
+        } elseif (isset($cart[$menuId])) {
+            if ($action === 'increase' || $action === 'add') {
                 $cart[$menuId]['quantity']++;
             } elseif ($action === 'decrease') {
                 $cart[$menuId]['quantity']--;
@@ -415,6 +469,7 @@ class OrderController extends Controller
             return response()->json([
                 'success' => true,
                 'cart' => $cart,
+                'itemQuantity' => $cart[$menuId]['quantity'] ?? 0,
                 'totalItems' => $totalItems,
                 'subtotal' => $subtotal,
                 'formattedSubtotal' => 'Rp '.number_format($subtotal, 0, ',', '.'),

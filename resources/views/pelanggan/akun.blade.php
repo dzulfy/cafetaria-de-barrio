@@ -1,48 +1,71 @@
 @extends('layouts.pelanggan')
-@section('title', 'Akun Saya')
+
+@section('title', 'Akun')
 
 @section('content')
-<div class="p-5 space-y-5">
-    <div>
-        <h1 class="text-[22px] font-bold text-ink">Akun Saya</h1>
-        <p class="text-xs text-muted">Informasi dan keamanan profil pelanggan.</p>
+@php
+    $user = auth()->user();
+    $displayName = $user->nama ?? $user->name ?? 'Pelanggan';
+    $initials = strtoupper(collect(explode(' ', trim($displayName)))->filter()->map(fn ($w) => mb_substr($w, 0, 1))->take(2)->implode('') ?: 'PL');
+@endphp
+
+<div class="px-5 pt-5 pb-6 space-y-4">
+    <h1 class="text-[22px] font-bold text-ink tracking-tight">Akun</h1>
+
+    {{-- Profile Card (Figma 3:190) --}}
+    <div class="flex items-center gap-3.5 rounded-2xl border border-line bg-white p-4 shadow-2xs">
+        <div class="flex size-14 shrink-0 items-center justify-center rounded-full bg-brand-900 text-base font-bold text-cream">
+            {{ $initials }}
+        </div>
+        <div class="min-w-0">
+            <h2 class="truncate text-sm font-bold text-ink">{{ $displayName }}</h2>
+            <p class="truncate text-xs text-muted mt-0.5">{{ $user->email }}</p>
+            <span class="mt-1.5 inline-block rounded-full bg-brand-100 px-2.5 py-0.5 text-[11px] font-semibold text-brand-900">
+                Pelanggan
+            </span>
+        </div>
     </div>
 
-    {{-- Profil Card - Figma 07 Akun --}}
-    <div class="rounded-2xl border border-line bg-white p-5 shadow-sm space-y-4">
-        <div class="flex items-center gap-3.5">
-            <span class="flex size-14 items-center justify-center rounded-full bg-brand-100 text-lg font-bold text-brand-900">
-                {{ strtoupper(substr(auth()->user()->nama ?? auth()->user()->name, 0, 2)) }}
-            </span>
-            <div class="min-w-0 flex-1">
-                <h2 class="text-base font-bold text-ink truncate">{{ auth()->user()->nama ?? auth()->user()->name }}</h2>
-                <p class="text-xs text-muted truncate">{{ auth()->user()->email }}</p>
-                <span class="mt-1 inline-block rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-bold text-brand-900">
-                    Pelanggan Terdaftar
-                </span>
+    {{-- Account Menu List (Figma 3:213) --}}
+    <div class="rounded-2xl border border-line bg-white px-4 divide-y divide-line shadow-2xs">
+        <a href="{{ route('orders.history', ['table' => session('active_table', '05')]) }}"
+           class="flex items-center justify-between py-3.5 text-xs font-semibold text-ink transition hover:text-brand-900">
+            <div class="flex items-center gap-3">
+                <svg class="size-5 text-muted" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h8M8 11h8M8 15h5" />
+                </svg>
+                <span>Riwayat Pesanan</span>
             </div>
-        </div>
+            <svg class="size-4 text-muted" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m9 18 6-6-6-6" />
+            </svg>
+        </a>
 
-        <div class="border-t border-line pt-4 space-y-2.5">
-            <a href="{{ route('password.edit') }}" class="flex items-center justify-between rounded-xl bg-cream-50 p-3 text-xs font-semibold text-ink transition hover:bg-brand-100 hover:text-brand-900">
-                <div class="flex items-center gap-2.5">
-                    <x-lucide.lock class="size-4 text-muted" />
-                    <span>Ubah Kata Sandi</span>
+        <a href="{{ route('password.edit') }}"
+           class="flex items-center justify-between py-3.5 text-xs font-semibold text-ink transition hover:text-brand-900">
+            <div class="flex items-center gap-3">
+                <x-lucide.lock class="size-5 text-muted" />
+                <span>Ubah Kata Sandi</span>
+            </div>
+            <svg class="size-4 text-muted" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m9 18 6-6-6-6" />
+            </svg>
+        </a>
+
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit"
+                    class="flex w-full items-center justify-between py-3.5 text-xs font-semibold text-danger transition hover:opacity-80 cursor-pointer">
+                <div class="flex items-center gap-3">
+                    <x-lucide.log-out class="size-5 text-danger" />
+                    <span>Keluar</span>
                 </div>
-                <span>&rarr;</span>
-            </a>
-
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="flex w-full items-center justify-between rounded-xl bg-danger-bg p-3 text-xs font-semibold text-danger transition hover:bg-danger hover:text-white">
-                    <div class="flex items-center gap-2.5">
-                        <x-lucide.log-out class="size-4" />
-                        <span>Keluar dari Akun</span>
-                    </div>
-                    <span>&rarr;</span>
-                </button>
-            </form>
-        </div>
+                <svg class="size-4 text-muted" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m9 18 6-6-6-6" />
+                </svg>
+            </button>
+        </form>
     </div>
 </div>
 @endsection

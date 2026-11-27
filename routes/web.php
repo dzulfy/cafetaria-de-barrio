@@ -21,7 +21,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Public landing & customer menu
-Route::view('/', 'pelanggan.landing')->name('landing');
+Route::get('/', [CustomerMenuController::class, 'landing'])->name('landing');
+Route::get('/meja/{token}', [CustomerMenuController::class, 'scanQr'])->name('customer.qr.scan');
 Route::get('/menu', [CustomerMenuController::class, 'index'])->name('customer.menu');
 Route::post('/checkout', [CustomerMenuController::class, 'checkout'])->name('customer.checkout');
 
@@ -137,7 +138,7 @@ Route::prefix('sync')->name('sync.')->group(function () {
 
 // Pelanggan routes
 Route::middleware(['auth', 'role:pelanggan'])->prefix('pelanggan')->name('pelanggan.')->group(function () {
-    Route::view('/', 'pelanggan.beranda')->name('beranda');
+    Route::get('/', [OrderController::class, 'history'])->name('beranda');
     Route::view('/akun', 'pelanggan.akun')->name('akun');
 });
 

@@ -80,7 +80,7 @@ class TableController extends Controller
      */
     public function downloadQr(CafeTable $table): Response
     {
-        $url = route('cart', ['table' => $table->table_number, 'token' => $table->token]);
+        $url = $table->qr_url;
         $svg = self::generateQrSvg($table->table_number, $table->name, $url);
 
         return response($svg, 200, [
@@ -94,7 +94,7 @@ class TableController extends Controller
      */
     public function print(CafeTable $table): View
     {
-        $qrUrl = route('cart', ['table' => $table->table_number, 'token' => $table->token]);
+        $qrUrl = $table->qr_url;
         $qrSvg = self::generateQrSvg($table->table_number, $table->name, $qrUrl);
 
         return view('admin.tables.print', [

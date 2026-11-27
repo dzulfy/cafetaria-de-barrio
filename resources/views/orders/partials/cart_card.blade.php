@@ -1,175 +1,153 @@
 @php
     $inMockup = $inMockup ?? false;
+    $tableNumber = $tableNumber ?? '05';
+    $totalItems = $totalItems ?? 0;
+    $subtotal = $subtotal ?? 0;
 @endphp
 
-<div class="bg-[#F9F7F2] rounded-[32px] p-5 sm:p-7 shadow-xl border border-gray-200/70 w-full relative overflow-hidden transition-all" id="cart-container">
-    
-    <!-- Header -->
-    <div class="flex items-center justify-between pb-3 border-b border-gray-200/60 mb-4">
-        <div class="flex items-center gap-3">
-            <a href="{{ route('cart') }}" class="w-9 h-9 rounded-xl bg-white border border-gray-200 shadow-2xs flex items-center justify-center text-gray-700 hover:bg-gray-50 transition" title="Kembali">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
-                </svg>
-            </a>
-            <h1 class="text-lg sm:text-xl font-bold text-gray-900 tracking-tight">Keranjang</h1>
-        </div>
-
-        <!-- Table Badge (Pesan Mandiri | Meja 05) -->
-        <div class="inline-flex items-center gap-2 bg-[#D8EBE1] text-[#1D4939] px-3 py-1.5 rounded-xl text-xs font-semibold shadow-2xs">
-            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+<div class="flex flex-col flex-1 min-h-screen bg-cream-50" id="cart-container">
+    {{-- Top Bar (Figma 03 Keranjang) --}}
+    <header class="px-5 pt-4 pb-3 flex items-center gap-3 sticky top-0 bg-cream-50/95 backdrop-blur-sm z-30">
+        <a href="{{ route('customer.menu', ['table' => $tableNumber]) }}"
+           class="w-10 h-10 rounded-xl bg-white border border-line flex items-center justify-center text-ink shadow-2xs hover:bg-gray-50 transition shrink-0"
+           title="Kembali ke Menu">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
             </svg>
-            <span class="hidden sm:inline">Pesan mandiri</span>
-            <span class="hidden sm:inline text-[#1D4939]/40">|</span>
-            <span>Meja {{ $tableNumber ?? '05' }}</span>
-        </div>
-    </div>
+        </a>
+        <h1 class="text-lg font-bold text-ink tracking-tight">Keranjang</h1>
+    </header>
 
-    <form action="{{ route('orders.store') }}" method="POST" id="order-form">
+    <form action="{{ route('orders.store') }}" method="POST" id="order-form" class="flex-1 flex flex-col">
         @csrf
-        <input type="hidden" name="table_number" value="{{ $tableNumber ?? '05' }}">
+        <input type="hidden" name="table_number" value="{{ $tableNumber }}">
 
-        <!-- Layout Wrapper: 1 Column on Mobile/Mockup, 2 Columns on Desktop when not in mockup -->
-        <div class="{{ $inMockup ? 'space-y-4' : 'grid grid-cols-1 lg:grid-cols-12 gap-6' }}">
-            
-            <!-- Left Column: Items List & Inputs -->
-            <div class="{{ $inMockup ? '' : 'lg:col-span-7 space-y-4' }}">
-                <!-- Item List Header -->
-                <div class="flex items-center justify-between text-xs text-gray-500 font-semibold mb-2 px-1">
-                    <span>Menu yang Dipesan</span>
-                    <span class="text-[11px] text-gray-400 font-normal">Harga & Kuantitas</span>
+        <div class="px-5 space-y-4 flex-1 pb-6">
+            @if (session('error'))
+                <div class="rounded-xl bg-danger-bg px-3.5 py-2.5 text-xs font-medium text-danger border border-danger/20">
+                    {{ session('error') }}
                 </div>
+            @endif
 
-                <!-- Daftar Menu di Keranjang -->
-                <div class="space-y-3" id="cart-items-wrapper">
-                    @forelse($cart as $id => $item)
-                        <div class="bg-white rounded-2xl p-3.5 border border-gray-100 shadow-2xs flex items-center justify-between gap-3 cart-item-card transition hover:border-[#1D4939]/20" data-menu-id="{{ $id }}" data-price="{{ $item['price'] }}">
-                            <div class="flex items-center gap-3 min-w-0">
-                                <!-- Icon Thumbnail -->
-                                <div class="w-12 h-12 rounded-xl bg-[#F6EFE6] flex items-center justify-center shrink-0 text-[#B58A57]">
-                                    @if(($item['icon'] ?? 'coffee') === 'coffee')
-                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3" />
-                                        </svg>
-                                    @else
-                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 21a9 9 0 0 0 9-9c0-3.5-2-6-5-7.5-1.5-.7-3.5-.7-5 0C8 6 6 8.5 6 12a9 9 0 0 0 6 9z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 13c1 1.5 4 1.5 6 0" />
-                                        </svg>
-                                    @endif
-                                </div>
+            {{-- Info Meja Banner (Figma 2:209) --}}
+            <div class="bg-brand-100 text-brand-900 rounded-xl px-3.5 py-2.5 text-xs font-semibold flex items-center gap-2">
+                <x-lucide.qr-code class="w-4 h-4 shrink-0" />
+                <span>Pesan mandiri  |  Meja {{ $tableNumber }}</span>
+            </div>
 
-                                <!-- Item Details -->
-                                <div class="truncate">
-                                    <h2 class="font-bold text-gray-900 text-sm truncate leading-snug">{{ $item['name'] }}</h2>
-                                    <p class="text-xs text-gray-400 font-medium mt-0.5">Rp {{ number_format($item['price'], 0, ',', '.') }}</p>
-                                </div>
+            {{-- Daftar Item Card (Figma 2:243) --}}
+            <div class="bg-white border border-line rounded-2xl px-4 divide-y divide-line shadow-2xs" id="cart-items-wrapper">
+                @forelse($cart as $id => $item)
+                    <div class="py-3.5 flex items-center justify-between gap-3 cart-item-card" data-menu-id="{{ $id }}" data-price="{{ $item['price'] }}">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-14 h-14 rounded-xl bg-cream flex items-center justify-center shrink-0 text-gold overflow-hidden">
+                                @if (! empty($item['image']))
+                                    <img src="{{ asset('storage/' . $item['image']) }}" alt="{{ $item['name'] }}" class="w-full h-full object-cover">
+                                @else
+                                    <x-lucide.coffee class="w-5 h-5" />
+                                @endif
                             </div>
 
-                            <!-- Quantity Stepper -->
-                            <div class="flex items-center gap-2.5 shrink-0">
-                                <button type="button" 
-                                        onclick="updateQuantity('{{ $id }}', 'decrease')" 
-                                        class="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-100 hover:border-gray-400 transition cursor-pointer active:scale-95" 
-                                        title="Kurangi">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20 12H4" />
-                                    </svg>
-                                </button>
-                                <span class="font-semibold text-gray-900 text-sm w-4 text-center qty-display">{{ $item['quantity'] }}</span>
-                                <button type="button" 
-                                        onclick="updateQuantity('{{ $id }}', 'increase')" 
-                                        class="w-7 h-7 rounded-full bg-[#1D4939] text-white flex items-center justify-center hover:bg-[#143529] transition cursor-pointer active:scale-95 shadow-2xs" 
-                                        title="Tambah">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
-                                    </svg>
-                                </button>
+                            <div class="min-w-0">
+                                <h2 class="font-bold text-ink text-[13px] truncate leading-snug">{{ $item['name'] }}</h2>
+                                <p class="text-xs text-muted font-medium mt-0.5">Rp {{ number_format($item['price'], 0, ',', '.') }}</p>
                             </div>
                         </div>
-                    @empty
-                        <div class="bg-white rounded-2xl p-6 text-center text-gray-400 text-sm border border-gray-100">
-                            Keranjang belanja kosong
-                        </div>
-                    @endforelse
-                </div>
 
-                <!-- Form Inputs Section -->
-                <div class="pt-2 space-y-3.5">
-                    <!-- Form Input: Nama pemesan (opsional) -->
-                    <div>
-                        <label for="customer_name" class="block text-xs font-medium text-gray-500 mb-1.5">
-                            Nama pemesan (opsional)
-                        </label>
-                        <div class="relative bg-white border border-gray-200 rounded-xl focus-within:border-[#1D4939] focus-within:ring-1 focus-within:ring-[#1D4939] transition">
-                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        {{-- Stepper --}}
+                        <div class="flex items-center gap-2.5 shrink-0">
+                            <button type="button"
+                                    onclick="updateQuantity('{{ $id }}', 'decrease')"
+                                    class="w-7 h-7 rounded-full border border-line bg-white flex items-center justify-center text-ink hover:bg-gray-50 transition cursor-pointer active:scale-95"
+                                    title="Kurangi">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20 12H4" />
                                 </svg>
-                            </div>
-                            <input type="text" 
-                                   id="customer_name" 
-                                   name="customer_name" 
-                                   value="{{ old('customer_name') }}"
-                                   placeholder="Contoh: Rina" 
-                                   class="w-full pl-9 pr-3.5 py-2.5 text-sm text-gray-800 placeholder-gray-400 bg-transparent rounded-xl focus:outline-hidden">
+                            </button>
+                            <span class="font-bold text-ink text-[13px] w-4 text-center qty-display">{{ $item['quantity'] }}</span>
+                            <button type="button"
+                                    onclick="updateQuantity('{{ $id }}', 'increase')"
+                                    class="w-7 h-7 rounded-full bg-brand-900 text-white flex items-center justify-center hover:bg-brand-700 transition cursor-pointer active:scale-95"
+                                    title="Tambah">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+                                </svg>
+                            </button>
                         </div>
                     </div>
+                @empty
+                    <div class="py-8 text-center space-y-3" id="empty-cart-message">
+                        <p class="text-sm font-medium text-muted">Keranjang belanja masih kosong.</p>
+                        <a href="{{ route('customer.menu', ['table' => $tableNumber]) }}"
+                           class="inline-flex items-center justify-center rounded-xl bg-brand-900 px-4 py-2 text-xs font-semibold text-white hover:bg-brand-700 transition">
+                            Lihat Menu
+                        </a>
+                    </div>
+                @endforelse
+            </div>
 
-                    <!-- Form Input: Catatan untuk barista -->
-                    <div>
-                        <label for="notes" class="block text-xs font-medium text-gray-500 mb-1.5">
-                            Catatan untuk barista
-                        </label>
-                        <div class="bg-white border border-gray-200 rounded-xl focus-within:border-[#1D4939] focus-within:ring-1 focus-within:ring-[#1D4939] transition">
-                            <input type="text" 
-                                   id="notes" 
-                                   name="notes" 
-                                   value="{{ old('notes') }}"
-                                   placeholder="Contoh: gula sedikit" 
-                                   class="w-full px-3.5 py-2.5 text-sm text-gray-800 placeholder-gray-400 bg-transparent rounded-xl focus:outline-hidden">
+            {{-- Form Inputs (Figma 2:250 & 2:254) --}}
+            <div class="space-y-3.5">
+                <div>
+                    <label for="customer_name" class="block text-xs font-medium text-muted mb-1.5">
+                        Nama pemesan (opsional)
+                    </label>
+                    <div class="relative bg-white border border-line rounded-xl focus-within:border-brand-900 focus-within:ring-1 focus-within:ring-brand-900 transition">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-muted">
+                            <x-lucide.user class="w-4 h-4" />
                         </div>
+                        <input type="text"
+                               id="customer_name"
+                               name="customer_name"
+                               value="{{ old('customer_name', auth()->user()?->nama) }}"
+                               placeholder="Contoh: Rina"
+                               class="w-full pl-10 pr-3.5 py-2.5 text-sm text-ink placeholder:text-[#9AA59E] bg-transparent rounded-xl focus:outline-hidden">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="notes" class="block text-xs font-medium text-muted mb-1.5">
+                        Catatan untuk barista
+                    </label>
+                    <div class="bg-white border border-line rounded-xl focus-within:border-brand-900 focus-within:ring-1 focus-within:ring-brand-900 transition">
+                        <input type="text"
+                               id="notes"
+                               name="notes"
+                               value="{{ old('notes') }}"
+                               placeholder="Contoh: gula sedikit"
+                               class="w-full px-3.5 py-2.5 text-sm text-ink placeholder:text-[#9AA59E] bg-transparent rounded-xl focus:outline-hidden">
                     </div>
                 </div>
             </div>
 
-            <!-- Right Column: Ringkasan & Checkout -->
-            <div class="{{ $inMockup ? 'pt-2' : 'lg:col-span-5 lg:sticky lg:top-20 space-y-4' }}">
-                <div class="bg-white rounded-2xl p-4 sm:p-5 border border-gray-100 shadow-2xs space-y-3.5">
-                    <h2 class="text-xs font-bold text-gray-700 uppercase tracking-wider">Ringkasan Pembayaran</h2>
-
-                    <!-- Subtotal & Total -->
-                    <div class="space-y-2 pt-1 border-t border-gray-100">
-                        <div class="flex items-center justify-between text-xs text-gray-500 font-medium">
-                            <span id="subtotal-label">Subtotal (<span id="total-items-count">{{ $totalItems ?? 3 }}</span> item)</span>
-                            <span id="subtotal-amount">Rp {{ number_format($subtotal ?? 42000, 0, ',', '.') }}</span>
-                        </div>
-                        <div class="flex items-center justify-between pt-1 border-t border-dashed border-gray-200">
-                            <span class="text-sm font-bold text-gray-900">Total</span>
-                            <span class="text-base sm:text-lg font-bold text-[#1D4939]" id="total-amount">Rp {{ number_format($subtotal ?? 42000, 0, ',', '.') }}</span>
-                        </div>
-                    </div>
-
-                    <!-- Banner Info: Pembayaran di kasir -->
-                    <div class="bg-[#FCF4DF] rounded-xl p-3 flex items-start gap-2.5 text-xs text-[#8D5B28] leading-relaxed">
-                        <div class="mt-0.5 shrink-0 text-[#8D5B28]">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                            </svg>
-                        </div>
-                        <span>Pembayaran dilakukan di kasir setelah pesanan dikirim.</span>
-                    </div>
-
-                    <!-- Button: Kirim Pesanan -->
-                    <button type="submit" 
-                            id="btn-submit-order"
-                            class="w-full py-3.5 rounded-xl bg-[#1D4939] hover:bg-[#143529] text-white font-semibold text-sm shadow-md hover:shadow-lg transition cursor-pointer active:scale-[0.99] flex items-center justify-center gap-2">
-                        <span>Kirim Pesanan</span>
-                    </button>
+            {{-- Ringkasan (Figma 2:264) --}}
+            <div class="space-y-2.5 pt-1">
+                <div class="flex items-center justify-between text-xs text-muted font-medium">
+                    <span id="subtotal-label">Subtotal (<span id="total-items-count">{{ $totalItems }}</span> item)</span>
+                    <span id="subtotal-amount" class="text-ink font-semibold">Rp {{ number_format($subtotal, 0, ',', '.') }}</span>
+                </div>
+                <div class="border-t border-line"></div>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm font-bold text-ink">Total</span>
+                    <span class="text-[17px] font-extrabold text-brand-900" id="total-amount">Rp {{ number_format($subtotal, 0, ',', '.') }}</span>
                 </div>
             </div>
 
+            {{-- Banner Info Pembayaran (Figma 2:269) --}}
+            <div class="bg-warn-bg rounded-xl px-3.5 py-3 flex items-start gap-2.5 text-xs text-warn-fg leading-relaxed">
+                <x-lucide.wallet class="w-4 h-4 mt-0.5 shrink-0" />
+                <span>Pembayaran dilakukan di kasir setelah pesanan dikirim.</span>
+            </div>
+        </div>
+
+        {{-- Bottom Sticky CTA (Figma 2:273) --}}
+        <div class="sticky bottom-0 bg-cream-50 border-t border-line/60 px-5 py-3.5 mt-auto">
+            <button type="submit"
+                    id="btn-submit-order"
+                    {{ $totalItems === 0 ? 'disabled' : '' }}
+                    class="w-full h-12 rounded-xl bg-brand-900 hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm shadow-md transition cursor-pointer active:scale-[0.99] flex items-center justify-center">
+                Kirim Pesanan
+            </button>
         </div>
     </form>
 </div>
@@ -195,10 +173,8 @@
             qtyEl.innerText = currentQty;
         }
 
-        // Recalculate Subtotal locally
         recalculateTotals();
 
-        // Sync with backend via fetch
         fetch("{{ route('cart.update') }}", {
             method: 'POST',
             headers: {
@@ -217,6 +193,20 @@
                 document.getElementById('total-items-count').innerText = data.totalItems;
                 document.getElementById('subtotal-amount').innerText = data.formattedSubtotal;
                 document.getElementById('total-amount').innerText = data.formattedSubtotal;
+                if (data.totalItems === 0) {
+                    const wrapper = document.getElementById('cart-items-wrapper');
+                    if (wrapper && !document.getElementById('empty-cart-message')) {
+                        wrapper.innerHTML = `
+                            <div class="py-8 text-center space-y-3" id="empty-cart-message">
+                                <p class="text-sm font-medium text-muted">Keranjang belanja masih kosong.</p>
+                                <a href="{{ route('customer.menu', ['table' => $tableNumber]) }}"
+                                   class="inline-flex items-center justify-center rounded-xl bg-brand-900 px-4 py-2 text-xs font-semibold text-white hover:bg-brand-700 transition">
+                                    Lihat Menu
+                                </a>
+                            </div>
+                        `;
+                    }
+                }
             }
         })
         .catch(err => console.error('Cart update error:', err));
@@ -236,23 +226,17 @@
 
         const totalItemsEl = document.getElementById('total-items-count');
         if (totalItemsEl) totalItemsEl.innerText = totalItems;
-        
+
         const formatted = 'Rp ' + totalAmount.toLocaleString('id-ID');
         const subtotalEl = document.getElementById('subtotal-amount');
         if (subtotalEl) subtotalEl.innerText = formatted;
-        
+
         const totalEl = document.getElementById('total-amount');
         if (totalEl) totalEl.innerText = formatted;
 
         const submitBtn = document.getElementById('btn-submit-order');
         if (submitBtn) {
-            if (totalItems === 0) {
-                submitBtn.disabled = true;
-                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
-            } else {
-                submitBtn.disabled = false;
-                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-            }
+            submitBtn.disabled = totalItems === 0;
         }
     }
 </script>
