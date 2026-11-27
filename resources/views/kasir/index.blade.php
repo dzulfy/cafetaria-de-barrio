@@ -137,7 +137,7 @@
                                 <div class="font-bold text-slate-800 text-sm">
                                     <span x-text="order.order_code"></span>
                                     <span class="text-slate-400 font-normal mx-1">|</span>
-                                    <span x-text="order.table_number"></span>
+                                    <span x-text="formatTableLabel(order.table_number)"></span>
                                 </div>
 
                                 <!-- Status Badge -->
@@ -195,7 +195,7 @@
                                     <h2 class="text-2xl font-extrabold text-slate-900">
                                         <span x-text="selectedOrder.order_code"></span>
                                         <span class="text-slate-300 font-light mx-1">|</span>
-                                        <span x-text="selectedOrder.table_number"></span>
+                                        <span x-text="formatTableLabel(selectedOrder.table_number)"></span>
                                     </h2>
                                     <!-- Badge -->
                                     <template x-if="selectedOrder.status === 'menunggu'">
@@ -476,7 +476,7 @@
                             <tr class="hover:bg-slate-50 transition-colors">
                                 <td class="py-3.5 font-bold text-slate-900" x-text="h.order_code"></td>
                                 <td class="py-3.5">
-                                    <div class="font-semibold text-slate-800" x-text="h.table_number"></div>
+                                    <div class="font-semibold text-slate-800" x-text="formatTableLabel(h.table_number)"></div>
                                     <div class="text-[11px] text-slate-400" x-text="h.customer_name || '-'"></div>
                                 </td>
                                 <td class="py-3.5" x-text="(h.items ? h.items.length : 0) + ' item'"></td>
@@ -655,7 +655,7 @@
                         <p class="text-xs text-slate-400 mt-0.5">
                             <span x-text="paymentOrder ? paymentOrder.order_code : ''"></span>
                             <span class="mx-1">|</span>
-                            <span x-text="paymentOrder ? paymentOrder.table_number : ''"></span>
+                            <span x-text="paymentOrder ? formatTableLabel(paymentOrder.table_number) : ''"></span>
                         </p>
                     </div>
                     <button @click="showPaymentModal = false" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors">
@@ -765,7 +765,7 @@
                 
                 <div class="p-3 bg-slate-50 rounded-xl text-left text-xs font-mono border space-y-1">
                     <div class="flex justify-between"><span>No Order:</span><strong x-text="receiptData?.order_code"></strong></div>
-                    <div class="flex justify-between"><span>Meja:</span><strong x-text="receiptData?.table_number"></strong></div>
+                    <div class="flex justify-between"><span>Meja:</span><strong x-text="formatTableLabel(receiptData?.table_number)"></strong></div>
                     <div class="flex justify-between"><span>Metode:</span><strong class="uppercase" x-text="receiptData?.payment_method"></strong></div>
                     <div class="flex justify-between"><span>Total:</span><strong x-text="formatRupiah(receiptData?.total_amount)"></strong></div>
                     <div class="flex justify-between"><span>Bayar:</span><strong x-text="formatRupiah(receiptData?.amount_paid)"></strong></div>
@@ -1095,6 +1095,12 @@
                     if (min < 60) return `${min} menit lalu`;
                     const hours = Math.floor(min / 60);
                     return `${hours} jam lalu`;
+                },
+
+                formatTableLabel(tbl) {
+                    if (!tbl) return '-';
+                    const s = String(tbl).trim();
+                    return /^meja\s+/i.test(s) ? s : 'Meja ' + s;
                 },
 
                 formatTime(dateStr) {

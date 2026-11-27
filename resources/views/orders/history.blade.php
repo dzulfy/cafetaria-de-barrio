@@ -4,7 +4,8 @@
 
 @section('content')
 @php
-    $tableNumber = $tableNumber ?? session('active_table', '05');
+    $tableNumber = $tableNumber ?? session('active_table');
+    $tableParams = $tableNumber ? ['table' => $tableNumber] : [];
     $activeStatus = $activeStatus ?? 'semua';
     $routeName = request()->route()?->getName() === 'pelanggan.beranda' ? 'pelanggan.beranda' : 'orders.history';
 @endphp
@@ -13,15 +14,15 @@
     {{-- Top Bar Title --}}
     <div class="flex items-center justify-between animate-fade-up">
         <h1 class="text-[22px] sm:text-2xl font-bold text-ink tracking-tight">Pesanan Saya</h1>
-        <span class="rounded-full bg-brand-100 px-3 py-1 text-[11px] font-semibold text-brand-900">
-            Meja {{ $tableNumber }}
+        <span class="rounded-full {{ $tableNumber ? 'bg-brand-100 text-brand-900' : 'bg-white border border-line text-muted' }} px-3 py-1 text-[11px] font-semibold">
+            {{ $tableNumber ? 'Meja ' . $tableNumber : 'Semua Meja' }}
         </span>
     </div>
 
     {{-- Status Filter Chips --}}
     <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
         @foreach (['semua' => 'Semua', 'menunggu' => 'Menunggu', 'diproses' => 'Diproses', 'selesai' => 'Selesai'] as $key => $label)
-            <a href="{{ route($routeName, ['table' => $tableNumber, 'status' => $key]) }}"
+            <a href="{{ route($routeName, array_filter(['table' => $tableNumber, 'status' => $key])) }}"
                class="px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition active:scale-95 {{ $activeStatus === $key ? 'bg-brand-900 text-white shadow-2xs' : 'bg-white border border-line text-ink hover:bg-brand-100/60' }}">
                 {{ $label }}
             </a>
@@ -40,6 +41,7 @@
                 };
                 $itemsSummary = $order->items->map(fn ($item) => "{$item->quantity}x {$item->menu_name}")->implode(', ');
                 $totalAmount = $order->total_price ?: $order->total_amount ?: 0;
+                $orderTable = trim((string) preg_replace('/^Meja\s+/i', '', (string) ($order->table_number ?? '')));
             @endphp
             <a href="{{ route('orders.status', ['order_code' => $order->order_code]) }}"
                style="animation-delay: {{ min($loop->index * 45, 270) }}ms;"
@@ -53,11 +55,11 @@
                     </div>
 
                     <p class="text-[11px] text-muted mt-1">
-                        {{ $order->created_at?->format('d M Y, H.i') }}
+                        {{ $order->created_at?->format('d M Y, H.i') }}@if($orderTable) &bull; Meja {{ $orderTable }}@endif
                     </p>
 
                     <p class="text-xs text-ink mt-2.5 line-clamp-2 leading-relaxed">
-                        {{ $itemsSummary ?: 'Pesanan Meja ' . $tableNumber }}
+                        {{ $itemsSummary ?: ($orderTable ? 'Pesanan Meja ' . $orderTable : 'Pesanan Warkop') }}
                     </p>
                 </div>
 
@@ -83,7 +85,7 @@
                     Yuk pilih menu favoritmu dan kirim pesanan langsung dari meja.
                 </p>
                 <div class="pt-2">
-                    <a href="{{ route('customer.menu', ['table' => $tableNumber]) }}"
+                    <a href="{{ route('customer.menu', $tableParams) }}"
                        class="inline-flex items-center justify-center rounded-xl bg-brand-900 px-5 py-2.5 text-xs font-semibold text-white hover:bg-brand-700 transition active:scale-95">
                         Lihat Menu
                     </a>

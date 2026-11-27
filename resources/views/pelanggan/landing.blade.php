@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Warkop De Barrio — Meja {{ $tableNumber ?? '05' }}</title>
+    <title>Warkop De Barrio{{ !empty($tableNumber) ? ' — Meja ' . $tableNumber : '' }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -12,8 +12,10 @@
 </head>
 <body class="bg-cream-50 font-sans text-ink antialiased flex flex-col min-h-screen">
 @php
-    $tableNumber = $tableNumber ?? session('active_table', '05');
+    $tableNumber = $tableNumber ?? null;
+    $tableParams = $tableNumber ? ['table' => $tableNumber] : [];
     $isTableInactive = $isTableInactive ?? false;
+    $activeTables = $activeTables ?? collect();
     $favoriteMenus = $favoriteMenus ?? collect();
     $minPrice = $minPrice ?? 6000;
     $cartCount = $cartCount ?? 0;
@@ -23,7 +25,7 @@
     {{-- Responsive Sticky Top Bar --}}
     <header class="sticky top-0 z-40 bg-cream-50/95 backdrop-blur-md border-b border-line/60">
         <div class="max-w-6xl mx-auto h-16 px-5 md:px-8 flex items-center justify-between gap-4">
-            <a href="{{ route('landing', ['table' => $tableNumber]) }}" class="flex items-center gap-2.5 group">
+            <a href="{{ route('landing', $tableParams) }}" class="flex items-center gap-2.5 group">
                 <div class="size-9 rounded-full bg-brand-900 text-cream flex items-center justify-center shadow-2xs transition-transform duration-300 group-hover:-rotate-6">
                     <x-lucide.coffee class="size-5" />
                 </div>
@@ -31,22 +33,22 @@
             </a>
 
             <nav class="hidden md:flex items-center gap-1.5">
-                <a href="{{ route('landing', ['table' => $tableNumber]) }}"
+                <a href="{{ route('landing', $tableParams) }}"
                    class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-brand-100 text-brand-900 transition">
                     Beranda
                 </a>
-                <a href="{{ route('customer.menu', ['table' => $tableNumber]) }}"
+                <a href="{{ route('customer.menu', $tableParams) }}"
                    class="px-3.5 py-2 rounded-xl text-xs font-medium text-muted hover:text-ink hover:bg-white/80 transition">
                     Menu
                 </a>
-                <a href="{{ route('orders.history', ['table' => $tableNumber]) }}"
+                <a href="{{ route('orders.history', $tableParams) }}"
                    class="px-3.5 py-2 rounded-xl text-xs font-medium text-muted hover:text-ink hover:bg-white/80 transition">
                     Pesanan
                 </a>
             </nav>
 
             <div class="flex items-center gap-2.5">
-                <a href="{{ route('cart', ['table' => $tableNumber]) }}"
+                <a href="{{ route('cart', $tableParams) }}"
                    class="hidden md:inline-flex items-center gap-1.5 rounded-[10px] border border-line bg-white px-3.5 py-1.5 text-xs font-semibold text-ink shadow-2xs transition hover:bg-brand-100 active:scale-95">
                     <svg class="size-3.5 text-brand-900" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -85,7 +87,11 @@
             <div class="lg:col-span-7 animate-fade-up">
                 <div class="inline-flex items-center gap-1.5 rounded-full bg-brand-700/90 px-3 py-1.5 text-xs font-medium text-white shadow-2xs">
                     <x-lucide.qr-code class="size-3.5 shrink-0" />
-                    <span>Kamu memesan dari Meja {{ $tableNumber }}</span>
+                    @if ($tableNumber)
+                        <span>Kamu memesan dari Meja {{ $tableNumber }}</span>
+                    @else
+                        <span>Scan QR di meja untuk memesan</span>
+                    @endif
                 </div>
 
                 @if ($isTableInactive)
@@ -103,13 +109,13 @@
                 </p>
 
                 <div class="mt-6 grid grid-cols-2 sm:flex sm:items-center gap-2.5 sm:gap-3">
-                    <a href="{{ route('customer.menu', ['table' => $tableNumber]) }}"
+                    <a href="{{ route('customer.menu', $tableParams) }}"
                        class="h-11 sm:px-6 rounded-xl bg-cream text-brand-900 font-semibold text-[13px] sm:text-sm flex items-center justify-center gap-2 shadow-xs transition-all duration-200 hover:bg-[#efe6ca] hover:-translate-y-0.5 active:scale-[0.98]">
                         <x-lucide.coffee class="size-[18px]" />
                         <span>Lihat Menu</span>
                     </a>
 
-                    <a href="{{ route('cart', ['table' => $tableNumber]) }}"
+                    <a href="{{ route('cart', $tableParams) }}"
                        class="h-11 sm:px-6 rounded-xl bg-brand-700 text-white font-semibold text-[13px] sm:text-sm flex items-center justify-center gap-2 border border-white/10 transition-all duration-200 hover:bg-brand-700/80 hover:-translate-y-0.5 active:scale-[0.98] relative">
                         <svg class="size-[18px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -122,14 +128,28 @@
                         @endif
                     </a>
                 </div>
+
+                @if (! $tableNumber && $activeTables->isNotEmpty())
+                    <div class="mt-5 pt-4 border-t border-white/10">
+                        <p class="text-[11px] font-medium text-[#D7E5DC] mb-2">Atau pilih meja secara langsung:</p>
+                        <div class="flex flex-wrap gap-1.5">
+                            @foreach ($activeTables as $tbl)
+                                <a href="{{ $tbl->qr_url }}"
+                                   class="px-2.5 py-1 rounded-lg bg-brand-700/80 hover:bg-cream hover:text-brand-900 text-white text-[11px] font-semibold transition active:scale-95">
+                                    {{ $tbl->name }}
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </div>
 
             {{-- Desktop Decorative Ordering Guide Card --}}
             <div class="hidden lg:flex lg:col-span-5 justify-end animate-fade-up" style="animation-delay: 120ms;">
                 <div class="w-full max-w-sm rounded-3xl bg-brand-700/45 border border-white/15 backdrop-blur-sm p-6 shadow-xl space-y-5">
-                    <div class="flex items-center justify-between">
+                    <div class="flex items-center justify-between gap-2">
                         <div class="flex items-center gap-3">
-                            <div class="size-11 rounded-2xl bg-cream text-brand-900 flex items-center justify-center shadow-sm animate-float-soft">
+                            <div class="size-11 rounded-2xl bg-cream text-brand-900 flex items-center justify-center shadow-sm animate-float-soft shrink-0">
                                 <x-lucide.coffee class="size-6" />
                             </div>
                             <div>
@@ -137,8 +157,8 @@
                                 <h2 class="text-sm font-bold text-white">Pesan Langsung dari Meja</h2>
                             </div>
                         </div>
-                        <span class="rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-semibold text-cream">
-                            Meja {{ $tableNumber }}
+                        <span class="rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-semibold text-cream shrink-0">
+                            {{ $tableNumber ? 'Meja ' . $tableNumber : 'Belum pilih meja' }}
                         </span>
                     </div>
 
@@ -189,7 +209,7 @@
     <section class="max-w-6xl mx-auto w-full px-5 md:px-8 pt-7 md:pt-10 reveal-on-scroll">
         <div class="flex items-center justify-between">
             <h2 class="text-[15px] sm:text-lg font-bold text-ink">Menu Favorit</h2>
-            <a href="{{ route('customer.menu', ['table' => $tableNumber]) }}"
+            <a href="{{ route('customer.menu', $tableParams) }}"
                class="inline-flex items-center gap-1 text-xs sm:text-sm font-semibold text-brand-900 hover:underline group">
                 <span>Lihat semua</span>
                 <span class="transition-transform duration-200 group-hover:translate-x-0.5">&rarr;</span>
@@ -198,7 +218,7 @@
 
         <div class="mt-3.5 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             @forelse ($favoriteMenus as $fav)
-                <a href="{{ route('customer.menu', ['table' => $tableNumber]) }}"
+                <a href="{{ route('customer.menu', $tableParams) }}"
                    class="group bg-white border border-line rounded-2xl p-2.5 sm:p-3 flex flex-col shadow-2xs transition-all duration-200 hover:-translate-y-1 hover:shadow-md hover:border-brand-900/35 active:scale-[0.98]">
                     <div class="h-24 sm:h-28 rounded-xl bg-cream flex items-center justify-center text-gold overflow-hidden mb-2.5">
                         @if ($fav->image)
@@ -211,7 +231,7 @@
                     <p class="text-[13px] sm:text-sm font-bold text-brand-900 mt-1">{{ $fav->formatted_price }}</p>
                 </a>
             @empty
-                <a href="{{ route('customer.menu', ['table' => $tableNumber]) }}"
+                <a href="{{ route('customer.menu', $tableParams) }}"
                    class="group bg-white border border-line rounded-2xl p-2.5 sm:p-3 flex flex-col shadow-2xs transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
                     <div class="h-24 sm:h-28 rounded-xl bg-cream flex items-center justify-center text-gold mb-2.5">
                         <x-lucide.coffee class="size-8 transition-transform duration-300 group-hover:scale-110" />
@@ -219,7 +239,7 @@
                     <h3 class="text-[13px] sm:text-sm font-bold text-ink leading-tight truncate">Kopi Susu Gula Aren</h3>
                     <p class="text-[13px] sm:text-sm font-bold text-brand-900 mt-1">Rp 16.000</p>
                 </a>
-                <a href="{{ route('customer.menu', ['table' => $tableNumber]) }}"
+                <a href="{{ route('customer.menu', $tableParams) }}"
                    class="group bg-white border border-line rounded-2xl p-2.5 sm:p-3 flex flex-col shadow-2xs transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
                     <div class="h-24 sm:h-28 rounded-xl bg-cream flex items-center justify-center text-gold mb-2.5">
                         <x-lucide.coffee class="size-8 transition-transform duration-300 group-hover:scale-110" />

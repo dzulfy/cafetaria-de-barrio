@@ -29,7 +29,7 @@
 
         {{-- Account Menu List --}}
         <div class="md:col-span-7 rounded-2xl border border-line bg-white px-4 divide-y divide-line shadow-2xs animate-fade-up" style="animation-delay: 80ms;">
-            <a href="{{ route('orders.history', ['table' => session('active_table', '05')]) }}"
+            <a href="{{ route('orders.history', session('active_table') ? ['table' => session('active_table')] : []) }}"
                class="group flex items-center justify-between py-3.5 text-xs sm:text-[13px] font-semibold text-ink transition hover:text-brand-900">
                 <div class="flex items-center gap-3">
                     <svg class="size-5 text-muted transition group-hover:text-brand-900" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">

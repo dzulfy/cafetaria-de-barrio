@@ -12,13 +12,14 @@
 </head>
 <body class="bg-cream-50 font-sans text-ink antialiased flex flex-col min-h-screen">
 @php
-    $activeTable = session('active_table', '05');
+    $activeTable = session('active_table');
+    $tableParams = $activeTable ? ['table' => $activeTable] : [];
 @endphp
 <div class="w-full min-h-screen flex flex-col bg-cream-50 pb-[76px] md:pb-0 relative">
     {{-- Desktop / Tablet Top Navbar --}}
     <header class="hidden md:block sticky top-0 z-40 bg-cream-50/95 backdrop-blur-md border-b border-line">
         <div class="max-w-5xl mx-auto h-16 px-6 flex items-center justify-between gap-4">
-            <a href="{{ route('landing', ['table' => $activeTable]) }}" class="flex items-center gap-2.5 group">
+            <a href="{{ route('landing', $tableParams) }}" class="flex items-center gap-2.5 group">
                 <div class="size-9 rounded-full bg-brand-900 text-cream flex items-center justify-center shadow-2xs transition-transform duration-300 group-hover:-rotate-6">
                     <x-lucide.coffee class="size-5" />
                 </div>
@@ -26,15 +27,15 @@
             </a>
 
             <nav class="flex items-center gap-1.5">
-                <a href="{{ route('landing', ['table' => $activeTable]) }}"
+                <a href="{{ route('landing', $tableParams) }}"
                    class="px-3.5 py-2 rounded-xl text-xs transition {{ request()->routeIs('landing') ? 'bg-brand-100 text-brand-900 font-semibold' : 'font-medium text-muted hover:text-ink hover:bg-white/70' }}">
                     Beranda
                 </a>
-                <a href="{{ route('customer.menu', ['table' => $activeTable]) }}"
+                <a href="{{ route('customer.menu', $tableParams) }}"
                    class="px-3.5 py-2 rounded-xl text-xs transition {{ request()->routeIs('customer.menu') ? 'bg-brand-100 text-brand-900 font-semibold' : 'font-medium text-muted hover:text-ink hover:bg-white/70' }}">
                     Menu
                 </a>
-                <a href="{{ route('orders.history', ['table' => $activeTable]) }}"
+                <a href="{{ route('orders.history', $tableParams) }}"
                    class="px-3.5 py-2 rounded-xl text-xs transition {{ request()->routeIs('orders.history', 'pelanggan.beranda') ? 'bg-brand-100 text-brand-900 font-semibold' : 'font-medium text-muted hover:text-ink hover:bg-white/70' }}">
                     Pesanan
                 </a>
@@ -44,9 +45,9 @@
                 </a>
             </nav>
 
-            <span class="inline-flex items-center gap-1.5 rounded-full bg-brand-100 px-3 py-1.5 text-xs font-semibold text-brand-900">
+            <span class="inline-flex items-center gap-1.5 rounded-full {{ $activeTable ? 'bg-brand-100 text-brand-900' : 'bg-white border border-line text-muted' }} px-3 py-1.5 text-xs font-semibold">
                 <x-lucide.qr-code class="size-3.5 shrink-0" />
-                <span>Meja {{ $activeTable }}</span>
+                <span>{{ $activeTable ? 'Meja ' . $activeTable : 'Scan QR Meja' }}</span>
             </span>
         </div>
     </header>
@@ -64,7 +65,7 @@
 
     {{-- Mobile Bottom Navigation (4 Tab Figma) --}}
     <nav class="md:hidden fixed inset-x-0 bottom-0 flex h-[72px] items-center border-t border-line bg-white/95 backdrop-blur-md px-2 shadow-md z-40">
-        <a href="{{ route('landing', ['table' => $activeTable]) }}"
+        <a href="{{ route('landing', $tableParams) }}"
            class="flex flex-1 flex-col items-center justify-center gap-1 py-1.5 rounded-xl transition-transform active:scale-95 {{ request()->routeIs('landing') ? 'font-bold text-brand-900' : 'font-medium text-muted hover:text-ink' }}">
             <svg class="size-[22px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
@@ -72,12 +73,12 @@
             </svg>
             <span class="text-[11px]">Beranda</span>
         </a>
-        <a href="{{ route('customer.menu', ['table' => $activeTable]) }}"
+        <a href="{{ route('customer.menu', $tableParams) }}"
            class="flex flex-1 flex-col items-center justify-center gap-1 py-1.5 rounded-xl transition-transform active:scale-95 {{ request()->routeIs('customer.menu') ? 'font-bold text-brand-900' : 'font-medium text-muted hover:text-ink' }}">
             <x-lucide.coffee class="size-[22px]" />
             <span class="text-[11px]">Menu</span>
         </a>
-        <a href="{{ route('orders.history', ['table' => $activeTable]) }}"
+        <a href="{{ route('orders.history', $tableParams) }}"
            class="flex flex-1 flex-col items-center justify-center gap-1 py-1.5 rounded-xl transition-transform active:scale-95 {{ request()->routeIs('orders.history', 'pelanggan.beranda') ? 'font-bold text-brand-900' : 'font-medium text-muted hover:text-ink' }}">
             <svg class="size-[22px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" />

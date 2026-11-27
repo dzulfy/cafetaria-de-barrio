@@ -15,6 +15,10 @@ class CustomerQrFlowTest extends TestCase
 {
     use RefreshDatabase;
 
+    private CafeTable $tableOne;
+
+    private CafeTable $tableTwo;
+
     private CafeTable $activeTable;
 
     private CafeTable $inactiveTable;
@@ -26,6 +30,20 @@ class CustomerQrFlowTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        $this->tableOne = CafeTable::create([
+            'table_number' => '01',
+            'name' => 'Meja 01',
+            'token' => 'x7Kp9aLm2Q',
+            'status' => 'aktif',
+        ]);
+
+        $this->tableTwo = CafeTable::create([
+            'table_number' => '02',
+            'name' => 'Meja 02',
+            'token' => 'b3Td8vNq5R',
+            'status' => 'aktif',
+        ]);
 
         $this->activeTable = CafeTable::create([
             'table_number' => '05',
@@ -65,6 +83,21 @@ class CustomerQrFlowTest extends TestCase
         ]);
     }
 
+    public function test_bare_landing_without_qr_does_not_default_to_meja_05_and_clears_stale_session(): void
+    {
+        // Simulate earlier session on Meja 05
+        $this->get($this->activeTable->qr_url)->assertStatus(200);
+
+        // Visiting bare '/' resets table context instead of defaulting to Meja 05
+        $response = $this->get(route('landing'));
+
+        $response->assertStatus(200);
+        $response->assertSee('Scan QR di meja untuk memesan');
+        $response->assertDontSee('Kamu memesan dari Meja 05');
+        $response->assertSee('Meja 01');
+        $this->assertNull(session('active_table'));
+    }
+
     public function test_cafe_table_qr_url_resolves_to_customer_landing_with_table_and_token(): void
     {
         $expected = route('landing', [
@@ -92,6 +125,31 @@ class CustomerQrFlowTest extends TestCase
         $response->assertSee('Lokasi');
     }
 
+    public function test_carts_are_isolated_between_different_tables(): void
+    {
+        // Scan QR Meja 01 and add Kopi Susu Gula Aren
+        $this->get($this->tableOne->qr_url)->assertSee('Kamu memesan dari Meja 01');
+
+        $this->postJson(route('cart.update'), [
+            'menu_id' => (string) $this->kopi->id,
+            'action' => 'increase',
+            'table_number' => '01',
+        ])->assertStatus(200)->assertJson(['totalItems' => 1]);
+
+        // Switch to Meja 02 in same browser: cart must start empty
+        $this->get($this->tableTwo->qr_url)->assertSee('Kamu memesan dari Meja 02');
+        $cartTwo = $this->get(route('cart', ['table' => '02']));
+        $cartTwo->assertStatus(200);
+        $cartTwo->assertSee('Pesan mandiri  |  Meja 02');
+        $cartTwo->assertSee('Keranjang belanja masih kosong.');
+
+        // Switching back to Meja 01 retains its item
+        $cartOne = $this->get(route('cart', ['table' => '01']));
+        $cartOne->assertStatus(200);
+        $cartOne->assertSee('Pesan mandiri  |  Meja 01');
+        $cartOne->assertSee('Kopi Susu Gula Aren');
+    }
+
     public function test_short_qr_route_redirects_to_customer_landing_with_table(): void
     {
         $response = $this->get(route('customer.qr.scan', ['token' => $this->activeTable->token]));
@@ -102,13 +160,28 @@ class CustomerQrFlowTest extends TestCase
         ]));
     }
 
-    public function test_scanning_inactive_table_qr_displays_warning_banner(): void
+    public function test_scanning_inactive_table_qr_displays_warning_banner_and_blocks_ordering(): void
     {
         $response = $this->get($this->inactiveTable->qr_url);
 
         $response->assertStatus(200);
         $response->assertSee('Kamu memesan dari Meja 08');
         $response->assertSee('Meja ini sedang nonaktif. Silakan hubungi kasir.');
+
+        // Block cart updates on inactive table
+        $this->postJson(route('cart.update'), [
+            'menu_id' => (string) $this->kopi->id,
+            'action' => 'increase',
+            'table_number' => '08',
+        ])->assertStatus(422)->assertJson(['success' => false]);
+
+        // Block order submission on inactive table
+        $this->post(route('orders.store'), [
+            'table_number' => '08',
+            'customer_name' => 'Rina',
+        ])->assertSessionHas('error');
+
+        $this->assertDatabaseCount('orders', 0);
     }
 
     public function test_end_to_end_qr_flow_from_landing_to_menu_cart_status_and_history(): void
@@ -125,6 +198,7 @@ class CustomerQrFlowTest extends TestCase
         $addResponse = $this->postJson(route('cart.update'), [
             'menu_id' => (string) $this->kopi->id,
             'action' => 'increase',
+            'table_number' => '05',
         ]);
         $addResponse->assertStatus(200);
         $addResponse->assertJson([

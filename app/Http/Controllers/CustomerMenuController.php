@@ -15,35 +15,41 @@ class CustomerMenuController extends Controller
     /**
      * Resolve active table from request token, table query param, or session.
      *
-     * @return array{tableNumber: string, cafeTable: CafeTable|null, isTableInactive: bool}
+     * @return array{tableNumber: string|null, cafeTable: CafeTable|null, isTableInactive: bool}
      */
-    private function resolveTable(Request $request): array
+    private function resolveTable(Request $request, bool $resetWhenBare = false): array
     {
         $cafeTable = null;
+        $tableNumber = null;
         $rawTable = $request->query('table');
         $token = $request->query('token');
 
         if (! empty($token)) {
             $cafeTable = CafeTable::where('token', $token)->first();
-        }
-
-        if ($cafeTable) {
-            $tableNumber = $cafeTable->table_number;
+            $tableNumber = $cafeTable?->table_number ?? $this->normalizeTableNumber((string) $rawTable);
         } elseif (! empty($rawTable)) {
             $tableNumber = $this->normalizeTableNumber((string) $rawTable);
-            $cafeTable = CafeTable::where('table_number', $tableNumber)->first();
+            if ($tableNumber !== null) {
+                $cafeTable = CafeTable::where('table_number', $tableNumber)->first();
+            }
+        } elseif ($resetWhenBare) {
+            session()->forget(['active_table', 'active_table_token']);
         } else {
-            $tableNumber = $this->normalizeTableNumber((string) session('active_table', '05'));
-            $sessionToken = session('active_table_token');
-            $cafeTable = $sessionToken
-                ? CafeTable::where('token', $sessionToken)->first()
-                : CafeTable::where('table_number', $tableNumber)->first();
+            $tableNumber = $this->normalizeTableNumber((string) session('active_table'));
+            if ($tableNumber !== null) {
+                $sessionToken = session('active_table_token');
+                $cafeTable = $sessionToken
+                    ? CafeTable::where('token', $sessionToken)->first()
+                    : CafeTable::where('table_number', $tableNumber)->first();
+            }
         }
 
-        session([
-            'active_table' => $tableNumber,
-            'active_table_token' => $cafeTable?->token,
-        ]);
+        if ($tableNumber !== null) {
+            session([
+                'active_table' => $tableNumber,
+                'active_table_token' => $cafeTable?->token,
+            ]);
+        }
 
         return [
             'tableNumber' => $tableNumber,
@@ -52,12 +58,12 @@ class CustomerMenuController extends Controller
         ];
     }
 
-    private function normalizeTableNumber(?string $raw): string
+    private function normalizeTableNumber(?string $raw): ?string
     {
         $cleaned = trim((string) preg_replace('/^Meja\s+/i', '', (string) $raw));
 
         if ($cleaned === '') {
-            return '05';
+            return null;
         }
 
         if (ctype_digit($cleaned) && strlen($cleaned) === 1) {
@@ -65,6 +71,11 @@ class CustomerMenuController extends Controller
         }
 
         return $cleaned;
+    }
+
+    private function cartSessionKey(?string $tableNumber): string
+    {
+        return $tableNumber ? 'cart_table_'.$tableNumber : 'cart';
     }
 
     /**
@@ -91,11 +102,13 @@ class CustomerMenuController extends Controller
      */
     public function landing(Request $request): View
     {
-        $tableData = $this->resolveTable($request);
+        $tableData = $this->resolveTable($request, resetWhenBare: true);
+        $tableNumber = $tableData['tableNumber'];
 
         session()->put('qr_flow', true);
-        if (! session()->has('cart')) {
-            session()->put('cart', []);
+        $cartKey = $this->cartSessionKey($tableNumber);
+        if (! session()->has($cartKey)) {
+            session()->put($cartKey, []);
         }
 
         $availableMenus = Menu::where('is_available', true)->orderBy('id', 'asc')->get();
@@ -119,13 +132,15 @@ class CustomerMenuController extends Controller
         }
 
         $minPrice = (int) (Menu::where('is_available', true)->min('price') ?? 6000);
-        $cart = session()->get('cart', []);
+        $cart = session()->get($cartKey, []);
         $cartCount = (int) array_sum(array_column($cart, 'quantity'));
+        $activeTables = CafeTable::where('status', 'aktif')->orderBy('table_number')->get();
 
         return view('pelanggan.landing', [
-            'tableNumber' => $tableData['tableNumber'],
+            'tableNumber' => $tableNumber,
             'cafeTable' => $tableData['cafeTable'],
             'isTableInactive' => $tableData['isTableInactive'],
+            'activeTables' => $activeTables,
             'favoriteMenus' => $favoriteMenus,
             'minPrice' => $minPrice,
             'cartCount' => $cartCount,
@@ -137,11 +152,13 @@ class CustomerMenuController extends Controller
      */
     public function index(Request $request): View
     {
-        $tableData = $this->resolveTable($request);
+        $tableData = $this->resolveTable($request, resetWhenBare: false);
+        $tableNumber = $tableData['tableNumber'];
 
         session()->put('qr_flow', true);
-        if (! session()->has('cart')) {
-            session()->put('cart', []);
+        $cartKey = $this->cartSessionKey($tableNumber);
+        if (! session()->has($cartKey)) {
+            session()->put($cartKey, []);
         }
 
         $selectedCategory = $request->query('kategori', 'semua');
@@ -162,15 +179,17 @@ class CustomerMenuController extends Controller
         }
 
         $menus = $menusQuery->get();
+        $activeTables = CafeTable::where('status', 'aktif')->orderBy('table_number')->get();
 
         return view('customer.menu', [
             'categories' => $categories,
             'menus' => $menus,
             'selectedCategory' => $selectedCategory,
             'search' => $search ?? '',
-            'cart' => session()->get('cart', []),
-            'tableNumber' => $tableData['tableNumber'],
+            'cart' => session()->get($cartKey, []),
+            'tableNumber' => $tableNumber,
             'isTableInactive' => $tableData['isTableInactive'],
+            'activeTables' => $activeTables,
         ]);
     }
 

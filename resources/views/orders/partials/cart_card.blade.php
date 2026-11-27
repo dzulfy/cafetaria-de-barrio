@@ -1,8 +1,12 @@
 @php
     $inMockup = $inMockup ?? false;
-    $tableNumber = $tableNumber ?? '05';
+    $tableNumber = $tableNumber ?? null;
+    $tableParams = $tableNumber ? ['table' => $tableNumber] : [];
+    $isTableInactive = $isTableInactive ?? false;
+    $activeTables = $activeTables ?? collect();
     $totalItems = $totalItems ?? 0;
     $subtotal = $subtotal ?? 0;
+    $canOrder = ! $isTableInactive && $totalItems > 0;
 @endphp
 
 <div class="flex flex-col flex-1 min-h-screen bg-cream-50" id="cart-container">
@@ -10,7 +14,7 @@
     <header class="sticky top-0 z-30 bg-cream-50/95 backdrop-blur-md border-b border-line/60">
         <div class="{{ $inMockup ? 'px-5' : 'max-w-5xl mx-auto px-5 md:px-8' }} py-3.5 flex items-center justify-between gap-3">
             <div class="flex items-center gap-3">
-                <a href="{{ route('customer.menu', ['table' => $tableNumber]) }}"
+                <a href="{{ route('customer.menu', $tableParams) }}"
                    class="w-10 h-10 rounded-xl bg-white border border-line flex items-center justify-center text-ink shadow-2xs hover:bg-gray-50 hover:-translate-x-0.5 active:scale-95 transition shrink-0"
                    title="Kembali ke Menu">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -20,7 +24,7 @@
                 <h1 class="text-lg sm:text-xl font-bold text-ink tracking-tight">Keranjang</h1>
             </div>
 
-            <a href="{{ route('customer.menu', ['table' => $tableNumber]) }}"
+            <a href="{{ route('customer.menu', $tableParams) }}"
                class="text-xs font-semibold text-brand-900 hover:underline transition">
                 + Tambah Menu
             </a>
@@ -29,7 +33,6 @@
 
     <form action="{{ route('orders.store') }}" method="POST" id="order-form" onsubmit="handleOrderSubmit(event)" class="flex-1 flex flex-col">
         @csrf
-        <input type="hidden" name="table_number" value="{{ $tableNumber }}">
 
         <div class="{{ $inMockup ? 'px-5 py-4 space-y-4' : 'max-w-5xl mx-auto w-full px-5 md:px-8 py-5 md:py-8' }} flex-1">
             @if (session('error'))
@@ -38,14 +41,41 @@
                 </div>
             @endif
 
+            @if ($isTableInactive)
+                <div class="mb-4 rounded-xl bg-danger-bg px-3.5 py-2.5 text-xs font-semibold text-danger border border-danger/20 animate-fade-up">
+                    Meja ini sedang nonaktif. Pemesanan tidak dapat diproses.
+                </div>
+            @endif
+
             <div class="{{ $inMockup ? 'space-y-4' : 'grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start' }}">
                 {{-- Left Column: Table Banner, Cart Items & Customer Form --}}
                 <div class="{{ $inMockup ? 'space-y-4' : 'lg:col-span-7 space-y-4 animate-fade-up' }}">
-                    {{-- Info Meja Banner --}}
-                    <div class="bg-brand-100 text-brand-900 rounded-xl px-3.5 py-2.5 text-xs font-semibold flex items-center gap-2">
-                        <x-lucide.qr-code class="w-4 h-4 shrink-0" />
-                        <span>Pesan mandiri  |  Meja {{ $tableNumber }}</span>
-                    </div>
+                    {{-- Info Meja Banner / Picker --}}
+                    @if ($tableNumber)
+                        <input type="hidden" name="table_number" value="{{ $tableNumber }}">
+                        <div class="bg-brand-100 text-brand-900 rounded-xl px-3.5 py-2.5 text-xs font-semibold flex items-center gap-2">
+                            <x-lucide.qr-code class="w-4 h-4 shrink-0" />
+                            <span>Pesan mandiri  |  Meja {{ $tableNumber }}</span>
+                        </div>
+                    @else
+                        <div class="bg-brand-100 text-brand-900 rounded-xl px-3.5 py-2.5 text-xs font-semibold flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-2">
+                                <x-lucide.qr-code class="w-4 h-4 shrink-0" />
+                                <span>Pesan mandiri</span>
+                            </div>
+                            <select name="table_number"
+                                    required
+                                    aria-label="Pilih Nomor Meja"
+                                    class="rounded-lg border border-brand-900/20 bg-white px-2.5 py-1 text-xs font-semibold text-ink focus:border-brand-900 focus:outline-hidden">
+                                <option value="">Pilih Meja...</option>
+                                @foreach ($activeTables as $tbl)
+                                    <option value="{{ $tbl->table_number }}" {{ old('table_number') === $tbl->table_number ? 'selected' : '' }}>
+                                        {{ $tbl->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
 
                     {{-- Daftar Item Card --}}
                     <div class="bg-white border border-line rounded-2xl px-4 divide-y divide-line shadow-2xs" id="cart-items-wrapper">
@@ -90,7 +120,7 @@
                         @empty
                             <div class="py-8 text-center space-y-3" id="empty-cart-message">
                                 <p class="text-sm font-medium text-muted">Keranjang belanja masih kosong.</p>
-                                <a href="{{ route('customer.menu', ['table' => $tableNumber]) }}"
+                                <a href="{{ route('customer.menu', $tableParams) }}"
                                    class="inline-flex items-center justify-center rounded-xl bg-brand-900 px-4 py-2 text-xs font-semibold text-white hover:bg-brand-700 transition">
                                     Lihat Menu
                                 </a>
@@ -158,7 +188,7 @@
 
                         @if (! $inMockup)
                             <button type="submit"
-                                    {{ $totalItems === 0 ? 'disabled' : '' }}
+                                    {{ $canOrder ? '' : 'disabled' }}
                                     class="btn-submit-order hidden lg:flex w-full h-12 rounded-xl bg-brand-900 hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm shadow-md transition-all hover:-translate-y-0.5 active:scale-[0.99] items-center justify-center cursor-pointer">
                                 Kirim Pesanan
                             </button>
@@ -171,7 +201,7 @@
         {{-- Mobile / Mockup Sticky Bottom CTA --}}
         <div class="{{ $inMockup ? '' : 'lg:hidden' }} sticky bottom-0 bg-cream-50/95 backdrop-blur-md border-t border-line/60 px-5 py-3.5 mt-auto">
             <button type="submit"
-                    {{ $totalItems === 0 ? 'disabled' : '' }}
+                    {{ $canOrder ? '' : 'disabled' }}
                     class="btn-submit-order w-full h-12 rounded-xl bg-brand-900 hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm shadow-md transition cursor-pointer active:scale-[0.99] flex items-center justify-center">
                 Kirim Pesanan
             </button>
@@ -181,6 +211,9 @@
 
 @push('scripts')
 <script>
+    const ACTIVE_CART_TABLE = @json($tableNumber);
+    const IS_TABLE_INACTIVE = @json($isTableInactive);
+
     function triggerCartPop(el) {
         if (!el) return;
         el.classList.remove('animate-pop');
@@ -236,7 +269,8 @@
             },
             body: JSON.stringify({
                 menu_id: menuId,
-                action: action
+                action: action,
+                table_number: ACTIVE_CART_TABLE
             })
         })
         .then(res => res.json())
@@ -257,7 +291,7 @@
                         wrapper.innerHTML = `
                             <div class="py-8 text-center space-y-3 animate-fade-up" id="empty-cart-message">
                                 <p class="text-sm font-medium text-muted">Keranjang belanja masih kosong.</p>
-                                <a href="{{ route('customer.menu', ['table' => $tableNumber]) }}"
+                                <a href="{{ route('customer.menu', $tableParams) }}"
                                    class="inline-flex items-center justify-center rounded-xl bg-brand-900 px-4 py-2 text-xs font-semibold text-white hover:bg-brand-700 transition">
                                     Lihat Menu
                                 </a>
@@ -296,7 +330,7 @@
         }
 
         document.querySelectorAll('.btn-submit-order').forEach((btn) => {
-            btn.disabled = totalItems === 0;
+            btn.disabled = IS_TABLE_INACTIVE || totalItems === 0;
         });
     }
 </script>

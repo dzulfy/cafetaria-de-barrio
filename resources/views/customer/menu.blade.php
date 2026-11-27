@@ -18,8 +18,10 @@
 </head>
 <body class="bg-cream-50 text-ink antialiased min-h-screen flex flex-col">
 @php
-    $tableNumber = $tableNumber ?? session('active_table', '05');
-    $cart = $cart ?? session()->get('cart', []);
+    $tableNumber = $tableNumber ?? null;
+    $tableParams = $tableNumber ? ['table' => $tableNumber] : [];
+    $activeTables = $activeTables ?? collect();
+    $cart = $cart ?? [];
     $isTableInactive = $isTableInactive ?? false;
     $totalCartItems = (int) array_sum(array_column($cart, 'quantity'));
     $totalCartPrice = 0;
@@ -33,7 +35,7 @@
     {{-- Sticky Responsive Top Bar --}}
     <header class="sticky top-0 z-30 bg-cream-50/95 backdrop-blur-md border-b border-line/60">
         <div class="max-w-6xl mx-auto px-5 md:px-8 py-3.5 flex items-center gap-3">
-            <a href="{{ route('landing', ['table' => $tableNumber]) }}"
+            <a href="{{ route('landing', $tableParams) }}"
                class="w-10 h-10 rounded-xl bg-white border border-line flex items-center justify-center text-ink shadow-2xs hover:bg-gray-50 hover:-translate-x-0.5 active:scale-95 transition shrink-0"
                title="Kembali">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -43,12 +45,25 @@
 
             <div class="flex items-center gap-2.5 flex-1 min-w-0">
                 <h1 class="text-lg sm:text-xl font-bold text-ink tracking-tight">Menu</h1>
-                <span class="inline-flex items-center gap-1 rounded-full bg-brand-100 px-2.5 py-0.5 text-[11px] font-semibold text-brand-900 shrink-0">
-                    Meja {{ $tableNumber }}
-                </span>
+                @if ($tableNumber)
+                    <span class="inline-flex items-center gap-1 rounded-full bg-brand-100 px-2.5 py-0.5 text-[11px] font-semibold text-brand-900 shrink-0">
+                        Meja {{ $tableNumber }}
+                    </span>
+                @elseif ($activeTables->isNotEmpty())
+                    <select onchange="if (this.value) window.location.href = this.value"
+                            aria-label="Pilih Meja"
+                            class="rounded-full bg-white border border-line px-2.5 py-1 text-[11px] font-semibold text-ink focus:border-brand-900 focus:outline-hidden cursor-pointer">
+                        <option value="">Pilih Meja</option>
+                        @foreach ($activeTables as $tbl)
+                            <option value="{{ route('customer.menu', array_filter(['table' => $tbl->table_number, 'kategori' => $selectedCategory !== 'semua' ? $selectedCategory : null, 'q' => $search ?: null])) }}">
+                                {{ $tbl->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                @endif
             </div>
 
-            <a href="{{ route('cart', ['table' => $tableNumber]) }}"
+            <a href="{{ route('cart', $tableParams) }}"
                class="w-10 h-10 md:w-auto md:px-4 rounded-xl bg-white border border-line flex items-center justify-center gap-2 text-ink shadow-2xs hover:bg-brand-100/60 active:scale-95 transition relative shrink-0"
                title="Keranjang">
                 <svg class="w-5 h-5 text-ink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,7 +89,9 @@
     {{-- Search & Category Controls Row --}}
     <div class="max-w-6xl mx-auto w-full px-5 md:px-8 pt-4 pb-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <form action="{{ route('customer.menu') }}" method="GET" class="relative w-full md:w-80 shrink-0">
-            <input type="hidden" name="table" value="{{ $tableNumber }}">
+            @if ($tableNumber)
+                <input type="hidden" name="table" value="{{ $tableNumber }}">
+            @endif
             @if ($selectedCategory !== 'semua')
                 <input type="hidden" name="kategori" value="{{ $selectedCategory }}">
             @endif
@@ -100,13 +117,13 @@
         </form>
 
         <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5">
-            <a href="{{ route('customer.menu', ['table' => $tableNumber, 'q' => $search]) }}"
+            <a href="{{ route('customer.menu', array_filter(['table' => $tableNumber, 'q' => $search ?: null])) }}"
                class="px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition active:scale-95 {{ $selectedCategory === 'semua' ? 'bg-brand-900 text-white shadow-2xs' : 'bg-white text-ink border border-line hover:bg-brand-100/60' }}">
                 Semua
             </a>
 
             @foreach ($categories as $category)
-                <a href="{{ route('customer.menu', ['table' => $tableNumber, 'kategori' => $category->slug, 'q' => $search]) }}"
+                <a href="{{ route('customer.menu', array_filter(['table' => $tableNumber, 'kategori' => $category->slug, 'q' => $search ?: null])) }}"
                    class="px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition active:scale-95 {{ $selectedCategory === $category->slug ? 'bg-brand-900 text-white shadow-2xs' : 'bg-white text-ink border border-line hover:bg-brand-100/60' }}">
                     {{ $category->name }}
                 </a>
@@ -148,6 +165,15 @@
                             <span class="px-2.5 py-1 rounded-full bg-danger-bg text-danger text-[11px] font-semibold">
                                 Habis
                             </span>
+                        @elseif ($isTableInactive)
+                            <button type="button"
+                                    disabled
+                                    title="Meja sedang nonaktif"
+                                    class="w-[34px] h-[34px] rounded-full bg-line text-muted flex items-center justify-center cursor-not-allowed opacity-60">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                            </button>
                         @else
                             <div id="action-container-{{ $menu->id }}" data-menu-label="{{ $menu->name }}" class="flex items-center gap-2">
                                 @if ($itemQty > 0)
@@ -199,7 +225,7 @@
 
     {{-- Sticky Bottom Cart Bar --}}
     <div id="floating-cart-bar" class="{{ $totalCartItems > 0 ? '' : 'hidden' }} fixed bottom-4 inset-x-0 px-5 z-40 pointer-events-none animate-slide-up">
-        <a href="{{ route('cart', ['table' => $tableNumber]) }}"
+        <a href="{{ route('cart', $tableParams) }}"
            class="pointer-events-auto mx-auto max-w-md w-full h-12 bg-brand-900 hover:bg-brand-700 text-white px-4 rounded-2xl shadow-xl flex items-center justify-between transition-all hover:-translate-y-0.5 active:scale-[0.98]">
             <div class="flex items-center gap-2.5">
                 <svg class="w-5 h-5 text-cream" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -219,6 +245,7 @@
 </div>
 
 <script>
+    const ACTIVE_TABLE_NUMBER = @json($tableNumber);
     let toastTimer = null;
 
     function triggerPop(el) {
@@ -284,11 +311,13 @@
                 body: JSON.stringify({
                     menu_id: String(menuId),
                     action: action,
+                    table_number: ACTIVE_TABLE_NUMBER,
                 }),
             });
 
             const data = await response.json();
             if (!data.success) {
+                if (data.message) showMenuToast(data.message);
                 return;
             }
 

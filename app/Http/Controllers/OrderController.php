@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CafeTable;
 use App\Models\Category;
 use App\Models\Menu;
 use App\Models\MenuItem;
@@ -218,10 +219,23 @@ class OrderController extends Controller
             'notes' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $cart = session()->get('cart', []);
+        $cleanTable = $this->normalizeTableNumber($validated['table_number']);
+        $cafeTable = $cleanTable ? CafeTable::where('table_number', $cleanTable)->first() : null;
+
+        if ($cafeTable && $cafeTable->status !== 'aktif') {
+            return redirect()->back()->with('error', 'Meja ini sedang nonaktif. Pemesanan tidak dapat diproses.');
+        }
+
+        $cartKey = $this->cartSessionKey($cleanTable);
+        $cart = session()->get($cartKey);
+        if (empty($cart)) {
+            $cart = session()->get('cart', []);
+        }
 
         if (empty($cart)) {
-            return redirect()->route('cart')->with('error', 'Keranjang belanja masih kosong.');
+            return redirect()
+                ->route('cart', $cleanTable ? ['table' => $cleanTable] : [])
+                ->with('error', 'Keranjang belanja masih kosong.');
         }
 
         $subtotal = 0;
@@ -231,7 +245,7 @@ class OrderController extends Controller
 
         $order = Order::create([
             'order_code' => Order::generateOrderCode(),
-            'table_number' => $validated['table_number'] ?? '05',
+            'table_number' => $cleanTable ?? $validated['table_number'],
             'customer_name' => $validated['customer_name'] ?: null,
             'notes' => $validated['notes'] ?: null,
             'customer_notes' => $validated['notes'] ?: null,
@@ -254,18 +268,21 @@ class OrderController extends Controller
             ]);
         }
 
+        session()->put($cartKey, []);
         session()->put('cart', []);
-        session()->put('active_table', $this->normalizeTableNumber($validated['table_number'] ?? '05'));
+        if ($cleanTable !== null) {
+            session()->put('active_table', $cleanTable);
+        }
 
         return redirect()->route('orders.status', ['order_code' => $order->order_code]);
     }
 
-    private function normalizeTableNumber(?string $raw): string
+    private function normalizeTableNumber(?string $raw): ?string
     {
         $cleaned = trim((string) preg_replace('/^Meja\s+/i', '', (string) $raw));
 
         if ($cleaned === '') {
-            return '05';
+            return null;
         }
 
         if (ctype_digit($cleaned) && strlen($cleaned) === 1) {
@@ -275,27 +292,38 @@ class OrderController extends Controller
         return $cleaned;
     }
 
+    private function cartSessionKey(?string $tableNumber): string
+    {
+        return $tableNumber ? 'cart_table_'.$tableNumber : 'cart';
+    }
+
     /**
      * Display transaction/order history.
      */
     public function history(Request $request): View|JsonResponse|RedirectResponse
     {
         if ($request->routeIs('orders.history') || $request->routeIs('pelanggan.beranda')) {
-            $tableNumber = $this->normalizeTableNumber($request->query('table') ?? session('active_table', '05'));
-            session(['active_table' => $tableNumber]);
+            $tableNumber = $this->normalizeTableNumber($request->query('table') ?? session('active_table'));
+            if ($tableNumber !== null) {
+                session(['active_table' => $tableNumber]);
+            }
             $activeStatus = (string) $request->query('status', 'semua');
 
             $ordersQuery = Order::with('items')->latest();
 
             if ($request->routeIs('pelanggan.beranda')) {
                 $userName = auth()->user()?->nama;
-                $ordersQuery->where(function ($q) use ($tableNumber, $userName): void {
-                    $q->whereIn('table_number', [$tableNumber, 'Meja '.$tableNumber]);
-                    if (! empty($userName)) {
-                        $q->orWhere('customer_name', $userName);
-                    }
-                });
-            } else {
+                if ($tableNumber !== null || ! empty($userName)) {
+                    $ordersQuery->where(function ($q) use ($tableNumber, $userName): void {
+                        if ($tableNumber !== null) {
+                            $q->whereIn('table_number', [$tableNumber, 'Meja '.$tableNumber]);
+                        }
+                        if (! empty($userName)) {
+                            $q->orWhere('customer_name', $userName);
+                        }
+                    });
+                }
+            } elseif ($tableNumber !== null) {
                 $ordersQuery->whereIn('table_number', [$tableNumber, 'Meja '.$tableNumber]);
             }
 
@@ -335,11 +363,11 @@ class OrderController extends Controller
 
         // Return customer order history view if customer route or table provided
         if ($request->filled('table') || ! $request->is('kasir*')) {
-            $tableNumber = $this->normalizeTableNumber($request->query('table') ?? session('active_table', '05'));
+            $tableNumber = $this->normalizeTableNumber($request->query('table') ?? session('active_table'));
             $activeStatus = (string) $request->query('status', 'semua');
 
             $orders = Order::with('items')
-                ->when($request->filled('table'), function ($q) use ($tableNumber) {
+                ->when($tableNumber !== null, function ($q) use ($tableNumber) {
                     $q->whereIn('table_number', [$tableNumber, 'Meja '.$tableNumber]);
                 })
                 ->when(in_array($activeStatus, ['menunggu', 'diproses', 'selesai', 'dibatalkan'], true), function ($q) use ($activeStatus) {
@@ -359,13 +387,11 @@ class OrderController extends Controller
     }
 
     /**
-     * Customer self-service QR ordering page (redirects to unified Figma 01 Landing Page).
+     * Customer self-service QR ordering page (renders unified Figma 01 Landing Page).
      */
-    public function customerQr(Request $request): RedirectResponse
+    public function customerQr(Request $request): View
     {
-        $tableNumber = $this->normalizeTableNumber($request->query('table', '05'));
-
-        return redirect()->route('landing', ['table' => $tableNumber]);
+        return app(CustomerMenuController::class)->landing($request);
     }
 
     /**
@@ -373,10 +399,25 @@ class OrderController extends Controller
      */
     public function cart(Request $request): View
     {
-        $tableNumber = $this->normalizeTableNumber($request->query('table') ?? session('active_table', '05'));
-        session(['active_table' => $tableNumber]);
+        $requestedTable = $this->normalizeTableNumber($request->query('table'));
 
-        $cart = session()->get('cart');
+        if ($requestedTable !== null) {
+            $tableNumber = $requestedTable;
+            session(['active_table' => $tableNumber]);
+        } elseif (session()->has('active_table')) {
+            $tableNumber = $this->normalizeTableNumber((string) session('active_table'));
+        } elseif (! session()->get('qr_flow', false)) {
+            $tableNumber = '05';
+            session(['active_table' => '05']);
+        } else {
+            $tableNumber = null;
+        }
+
+        $cafeTable = $tableNumber ? CafeTable::where('table_number', $tableNumber)->first() : null;
+        $isTableInactive = $cafeTable !== null && $cafeTable->status !== 'aktif';
+
+        $cartKey = $this->cartSessionKey($tableNumber);
+        $cart = session()->get($cartKey);
 
         if ($cart === null && ! session()->get('qr_flow', false)) {
             $kopi = Menu::where('slug', 'kopi-susu-gula-aren')->first();
@@ -403,7 +444,7 @@ class OrderController extends Controller
                     'quantity' => 1,
                 ];
             }
-            session()->put('cart', $cart);
+            session()->put($cartKey, $cart);
         }
 
         $cart = $cart ?? [];
@@ -414,9 +455,13 @@ class OrderController extends Controller
             $subtotal += $item['price'] * $item['quantity'];
         }
 
+        $activeTables = CafeTable::where('status', 'aktif')->orderBy('table_number')->get();
+
         return view('orders.cart', [
             'cart' => $cart,
             'tableNumber' => $tableNumber,
+            'isTableInactive' => $isTableInactive,
+            'activeTables' => $activeTables,
             'totalItems' => $totalItems,
             'subtotal' => $subtotal,
         ]);
@@ -429,8 +474,24 @@ class OrderController extends Controller
     {
         $menuId = (string) $request->input('menu_id');
         $action = (string) $request->input('action');
+        $tableNumber = $this->normalizeTableNumber($request->input('table_number') ?? session('active_table'));
 
-        $cart = session()->get('cart', []);
+        if ($tableNumber !== null) {
+            $cafeTable = CafeTable::where('table_number', $tableNumber)->first();
+            if ($cafeTable && $cafeTable->status !== 'aktif') {
+                if ($request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Meja ini sedang nonaktif. Silakan hubungi kasir.',
+                    ], 422);
+                }
+
+                return redirect()->back()->with('error', 'Meja ini sedang nonaktif. Silakan hubungi kasir.');
+            }
+        }
+
+        $cartKey = $this->cartSessionKey($tableNumber);
+        $cart = session()->get($cartKey, []);
 
         if (($action === 'increase' || $action === 'add') && ! isset($cart[$menuId])) {
             $menu = Menu::find($menuId);
@@ -457,7 +518,7 @@ class OrderController extends Controller
             }
         }
 
-        session()->put('cart', $cart);
+        session()->put($cartKey, $cart);
 
         $totalItems = array_sum(array_column($cart, 'quantity'));
         $subtotal = 0;
