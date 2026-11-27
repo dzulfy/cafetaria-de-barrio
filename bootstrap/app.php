@@ -17,6 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => RoleMiddleware::class,
         ]);
 
+        $middleware->validateCsrfTokens(except: [
+            'api/midtrans/notification',
+        ]);
+
         $middleware->redirectUsersTo(fn () => route(auth()->user()->homeRoute()));
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -8,6 +8,7 @@ use App\Models\Menu;
 use App\Models\Order;
 use App\Models\OrderItem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class OrderTest extends TestCase
@@ -51,7 +52,7 @@ class OrderTest extends TestCase
         $response->assertSee('Kopi Susu Gula Aren');
         $response->assertSee('Pisang Goreng');
         $response->assertSee('42.000');
-        $response->assertSee('Kirim Pesanan');
+        $response->assertSee('Kirim & Bayar via Midtrans', false);
     }
 
     public function test_can_update_cart_quantity(): void
@@ -75,6 +76,13 @@ class OrderTest extends TestCase
 
     public function test_can_submit_order_and_persists_to_database(): void
     {
+        Http::fake([
+            'https://app.sandbox.midtrans.com/snap/v1/transactions' => Http::response([
+                'token' => 'snap-test-order-01',
+                'redirect_url' => 'https://app.sandbox.midtrans.com/snap/v4/redirection/snap-test-order-01',
+            ], 201),
+        ]);
+
         // First visit cart to initialize items
         $this->get(route('cart'));
 
@@ -132,7 +140,7 @@ class OrderTest extends TestCase
         $response = $this->get(route('orders.status', ['order_code' => 'DB-0124']));
 
         $response->assertStatus(200);
-        $response->assertSee('Pesanan terkirim!');
+        $response->assertSee('Menunggu Pembayaran');
         $response->assertSee('DB-0124');
         $response->assertSee('Meja 05');
         $response->assertSee('Status pesanan');
@@ -141,7 +149,7 @@ class OrderTest extends TestCase
         $response->assertSee('2x Kopi Susu Gula Aren');
         $response->assertSee('1x Pisang Goreng');
         $response->assertSee('42.000');
-        $response->assertSee('Silakan bayar di kasir');
+        $response->assertSee('Bayar Sekarang via Midtrans');
         $response->assertSee('Pesan Lagi');
         $response->assertSee('Lihat Riwayat Pesanan');
     }
@@ -154,6 +162,7 @@ class OrderTest extends TestCase
             'customer_name' => 'Budi',
             'total_price' => 16000,
             'status' => 'menunggu',
+            'payment_status' => 'unpaid',
         ]);
 
         // Check API status
@@ -162,9 +171,17 @@ class OrderTest extends TestCase
         $statusResponse->assertJson([
             'order_code' => 'DB-0125',
             'status' => 'menunggu',
+            'payment_status' => 'unpaid',
         ]);
 
-        // Update status to diproses
+        // Unpaid order cannot move to diproses
+        $this->postJson(route('orders.update-status', ['order_code' => 'DB-0125']), [
+            'status' => 'diproses',
+        ])->assertStatus(422);
+
+        // Once paid via Midtrans, order can move to diproses
+        $order->update(['payment_status' => 'paid', 'paid_at' => now()]);
+
         $updateResponse = $this->postJson(route('orders.update-status', ['order_code' => 'DB-0125']), [
             'status' => 'diproses',
         ]);

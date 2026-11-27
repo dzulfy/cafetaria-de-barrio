@@ -10,14 +10,18 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\RestaurantTable;
 use App\Models\SyncQueue;
+use App\Services\MidtransService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class OrderController extends Controller
 {
+    public function __construct(public MidtransService $midtrans) {}
+
     /**
      * Display the main cashier (tablet) view with real-time orders data.
      */
@@ -87,7 +91,7 @@ class OrderController extends Controller
     }
 
     /**
-     * Update order status to 'diproses'.
+     * Update order status to 'diproses' (requires successful Midtrans payment).
      */
     public function process(Order $order): JsonResponse
     {
@@ -98,11 +102,46 @@ class OrderController extends Controller
             ], 422);
         }
 
+        if (! $order->isPaid()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pembayaran Midtrans belum berhasil. Pesanan baru dapat diproses setelah pembayaran lunas.',
+            ], 422);
+        }
+
         $order->update(['status' => 'diproses']);
 
         return response()->json([
             'success' => true,
             'message' => "Pesanan {$order->order_code} sedang diproses.",
+            'order' => $order->fresh(['items.menuItem']),
+        ]);
+    }
+
+    /**
+     * Mark a paid order as completed ('selesai').
+     */
+    public function complete(Order $order): JsonResponse
+    {
+        if (! $order->isPaid()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pembayaran Midtrans belum berhasil. Pesanan belum dapat diselesaikan.',
+            ], 422);
+        }
+
+        if (! in_array($order->status, ['diproses', 'menunggu'], true)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pesanan tidak dapat diselesaikan dari status saat ini.',
+            ], 422);
+        }
+
+        $order->update(['status' => 'selesai']);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Pesanan {$order->order_code} selesai!",
             'order' => $order->fresh(['items.menuItem']),
         ]);
     }
@@ -122,32 +161,41 @@ class OrderController extends Controller
     }
 
     /**
-     * Process payment for an order.
+     * Initiate or resume Midtrans Snap payment for an order.
      */
     public function pay(Request $request, Order $order): JsonResponse
     {
-        $totalAmount = $order->total_amount ?? $order->total_price ?? 0;
+        if ($order->isPaid()) {
+            return response()->json([
+                'success' => true,
+                'already_paid' => true,
+                'message' => 'Pesanan sudah dibayar melalui Midtrans.',
+                'order' => $order->fresh(['items.menuItem']),
+            ]);
+        }
 
-        $validated = $request->validate([
-            'payment_method' => 'required|in:tunai,qris,transfer',
-            'amount_paid' => 'required|numeric|min:'.$totalAmount,
-        ]);
+        if ($order->status === 'dibatalkan') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pesanan yang sudah dibatalkan tidak dapat dibayar.',
+            ], 422);
+        }
 
-        $amountPaid = (int) $validated['amount_paid'];
-        $changeAmount = $amountPaid - $totalAmount;
-
-        $order->update([
-            'status' => 'selesai',
-            'payment_status' => 'paid',
-            'payment_method' => $validated['payment_method'],
-            'amount_paid' => $amountPaid,
-            'change_amount' => $changeAmount,
-            'paid_at' => Carbon::now(),
-        ]);
+        try {
+            $snap = $this->midtrans->createSnapTransaction($order, $request->boolean('force_new'));
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 502);
+        }
 
         return response()->json([
             'success' => true,
-            'message' => "Pembayaran {$order->order_code} berhasil!",
+            'snap_token' => $snap['token'],
+            'redirect_url' => $snap['redirect_url'],
+            'client_key' => $this->midtrans->clientKey(),
+            'message' => "Transaksi Midtrans siap untuk {$order->order_code}.",
             'order' => $order->fresh(['items.menuItem']),
         ]);
     }
@@ -182,6 +230,8 @@ class OrderController extends Controller
                 'customer_name' => $validated['customer_name'] ?? 'Pelanggan',
                 'source' => $validated['source'] ?? 'QR Meja',
                 'status' => 'menunggu',
+                'payment_status' => 'unpaid',
+                'midtrans_order_id' => $orderCode,
                 'customer_notes' => $validated['customer_notes'] ?? null,
                 'total_amount' => 0,
             ]);
@@ -205,10 +255,20 @@ class OrderController extends Controller
 
             $order->update(['total_amount' => $total, 'total_price' => $total, 'subtotal' => $total]);
 
+            try {
+                $this->midtrans->createSnapTransaction($order);
+            } catch (\Throwable $e) {
+                Log::warning('Midtrans Snap creation failed for POS order '.$order->order_code.': '.$e->getMessage());
+            }
+
+            $freshOrder = $order->fresh(['items.menuItem']);
+
             return response()->json([
                 'success' => true,
-                'message' => "Pesanan baru {$orderCode} berhasil dibuat!",
-                'order' => $order->fresh(['items.menuItem']),
+                'message' => "Pesanan baru {$orderCode} berhasil dibuat! Silakan lanjutkan pembayaran via Midtrans.",
+                'snap_token' => $freshOrder->snap_token,
+                'snap_redirect_url' => $freshOrder->snap_redirect_url,
+                'order' => $freshOrder,
             ], 201);
         }
 
@@ -243,8 +303,10 @@ class OrderController extends Controller
             $subtotal += $item['price'] * $item['quantity'];
         }
 
+        $orderCode = Order::generateOrderCode();
+
         $order = Order::create([
-            'order_code' => Order::generateOrderCode(),
+            'order_code' => $orderCode,
             'table_number' => $cleanTable ?? $validated['table_number'],
             'customer_name' => $validated['customer_name'] ?: null,
             'notes' => $validated['notes'] ?: null,
@@ -255,6 +317,7 @@ class OrderController extends Controller
             'source' => 'QR Meja',
             'status' => 'menunggu',
             'payment_status' => 'unpaid',
+            'midtrans_order_id' => $orderCode,
         ]);
 
         foreach ($cart as $item) {
@@ -266,6 +329,12 @@ class OrderController extends Controller
                 'quantity' => $item['quantity'],
                 'subtotal' => $item['price'] * $item['quantity'],
             ]);
+        }
+
+        try {
+            $this->midtrans->createSnapTransaction($order);
+        } catch (\Throwable $e) {
+            Log::warning('Midtrans Snap creation failed for QR order '.$order->order_code.': '.$e->getMessage());
         }
 
         session()->put($cartKey, []);
@@ -474,6 +543,7 @@ class OrderController extends Controller
     {
         $menuId = (string) $request->input('menu_id');
         $action = (string) $request->input('action');
+        $quantity = max(1, min(99, (int) $request->input('quantity', 1)));
         $tableNumber = $this->normalizeTableNumber($request->input('table_number') ?? session('active_table'));
 
         if ($tableNumber !== null) {
@@ -502,12 +572,12 @@ class OrderController extends Controller
                     'price' => (int) $menu->price,
                     'icon' => $menu->icon ?? 'coffee',
                     'image' => $menu->image,
-                    'quantity' => 1,
+                    'quantity' => $quantity,
                 ];
             }
         } elseif (isset($cart[$menuId])) {
             if ($action === 'increase' || $action === 'add') {
-                $cart[$menuId]['quantity']++;
+                $cart[$menuId]['quantity'] += $quantity;
             } elseif ($action === 'decrease') {
                 $cart[$menuId]['quantity']--;
                 if ($cart[$menuId]['quantity'] <= 0) {
@@ -549,6 +619,9 @@ class OrderController extends Controller
 
         return view('orders.status', [
             'order' => $order,
+            'midtransClientKey' => $this->midtrans->clientKey(),
+            'midtransSnapJsUrl' => $this->midtrans->snapJsUrl(),
+            'midtransIsProduction' => $this->midtrans->isProduction(),
         ]);
     }
 
@@ -563,16 +636,32 @@ class OrderController extends Controller
             'order_code' => $order->order_code,
             'status' => $order->status,
             'payment_status' => $order->payment_status,
+            'payment_method' => $order->payment_method,
+            'midtrans_transaction_status' => $order->midtrans_transaction_status,
+            'paid_at' => $order->paid_at?->toIso8601String(),
         ]);
     }
 
     /**
-     * Advance order status.
+     * Advance order status (requires successful Midtrans payment for processing/completion).
      */
     public function updateStatus(Request $request, string $order_code): JsonResponse|RedirectResponse
     {
         $order = Order::where('order_code', $order_code)->firstOrFail();
         $newStatus = (string) $request->input('status');
+
+        if (in_array($newStatus, ['diproses', 'selesai'], true) && ! $order->isPaid()) {
+            $message = 'Pembayaran Midtrans belum berhasil. Pesanan baru dapat diproses setelah pembayaran lunas.';
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $message,
+                ], 422);
+            }
+
+            return redirect()->back()->with('error', $message);
+        }
 
         if (in_array($newStatus, ['menunggu', 'diproses', 'selesai', 'dibatalkan'], true)) {
             $order->update(['status' => $newStatus]);

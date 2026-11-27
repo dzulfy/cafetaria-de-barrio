@@ -27,6 +27,11 @@ class Order extends Model
         'status',
         'payment_status',
         'payment_method',
+        'midtrans_order_id',
+        'snap_token',
+        'snap_redirect_url',
+        'midtrans_transaction_id',
+        'midtrans_transaction_status',
         'amount_paid',
         'change_amount',
         'paid_at',
@@ -44,6 +49,11 @@ class Order extends Model
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function isPaid(): bool
+    {
+        return $this->payment_status === 'paid';
     }
 
     public function getFormattedTotalAttribute(): string

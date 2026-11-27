@@ -5,10 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\CafeTable;
 use App\Models\Category;
 use App\Models\Menu;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Services\MidtransService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class CustomerMenuController extends Controller
@@ -80,7 +84,7 @@ class CustomerMenuController extends Controller
     }
 
     /**
-     * Handle short QR route /meja/{token} and redirect to customer landing page.
+     * Handle short QR route /meja/{token} and redirect directly to customer menu page.
      */
     public function scanQr(string $token): RedirectResponse
     {
@@ -92,7 +96,7 @@ class CustomerMenuController extends Controller
             'qr_flow' => true,
         ]);
 
-        return redirect()->route('landing', [
+        return redirect()->route('customer.menu', [
             'table' => $table->table_number,
             'token' => $table->token,
         ]);
@@ -195,7 +199,56 @@ class CustomerMenuController extends Controller
     }
 
     /**
-     * Handle checkout order simulation.
+     * Display the product detail page for a specific menu item.
+     */
+    public function show(Request $request, Menu $menu): View
+    {
+        $tableData = $this->resolveTable($request, resetWhenBare: false);
+        $tableNumber = $tableData['tableNumber'];
+
+        session()->put('qr_flow', true);
+        $cartKey = $this->cartSessionKey($tableNumber);
+        if (! session()->has($cartKey)) {
+            session()->put($cartKey, []);
+        }
+
+        $menu->load('category');
+        $menuCategory = $menu->getRelationValue('category');
+        $categorySlug = $menuCategory?->slug ?? (string) $menu->getRawOriginal('category');
+        $cart = session()->get($cartKey, []);
+
+        $addOnMenus = $categorySlug !== 'add-on'
+            ? Menu::with('category')
+                ->where('is_available', true)
+                ->whereHas('category', fn ($q) => $q->where('slug', 'add-on'))
+                ->orderBy('id')
+                ->get()
+            : collect();
+
+        $relatedMenus = Menu::with('category')
+            ->where('category_id', $menu->category_id)
+            ->where('id', '!=', $menu->id)
+            ->where('is_available', true)
+            ->orderBy('id')
+            ->limit(4)
+            ->get();
+
+        $activeTables = CafeTable::where('status', 'aktif')->orderBy('table_number')->get();
+
+        return view('customer.menu-detail', [
+            'menu' => $menu,
+            'menuCategory' => $menuCategory,
+            'cart' => $cart,
+            'tableNumber' => $tableNumber,
+            'isTableInactive' => $tableData['isTableInactive'],
+            'activeTables' => $activeTables,
+            'addOnMenus' => $addOnMenus,
+            'relatedMenus' => $relatedMenus,
+        ]);
+    }
+
+    /**
+     * Handle checkout order and initiate Midtrans Snap payment.
      */
     public function checkout(Request $request): JsonResponse
     {
@@ -207,10 +260,56 @@ class CustomerMenuController extends Controller
             'table_number' => ['nullable', 'string', 'max:20'],
         ]);
 
+        $cleanTable = $this->normalizeTableNumber($validated['table_number'] ?? session('active_table')) ?? '05';
+        $orderCode = Order::generateOrderCode();
+
+        $total = 0;
+        $resolvedItems = [];
+        foreach ($validated['items'] as $entry) {
+            $menu = Menu::findOrFail($entry['id']);
+            $qty = (int) $entry['quantity'];
+            $lineTotal = (int) $menu->price * $qty;
+            $total += $lineTotal;
+            $resolvedItems[] = [
+                'menu_id' => $menu->id,
+                'menu_name' => $menu->name,
+                'price' => (int) $menu->price,
+                'quantity' => $qty,
+                'subtotal' => $lineTotal,
+            ];
+        }
+
+        $order = Order::create([
+            'order_code' => $orderCode,
+            'table_number' => $cleanTable,
+            'customer_name' => $validated['customer_name'] ?? null,
+            'subtotal' => $total,
+            'total_price' => $total,
+            'total_amount' => $total,
+            'source' => 'QR Meja',
+            'status' => 'menunggu',
+            'payment_status' => 'unpaid',
+            'midtrans_order_id' => $orderCode,
+        ]);
+
+        foreach ($resolvedItems as $itemRow) {
+            OrderItem::create(array_merge(['order_id' => $order->id], $itemRow));
+        }
+
+        try {
+            app(MidtransService::class)->createSnapTransaction($order);
+        } catch (\Throwable $e) {
+            Log::warning('Midtrans Snap creation failed for checkout '.$order->order_code.': '.$e->getMessage());
+        }
+
+        $freshOrder = $order->fresh();
+
         return response()->json([
             'success' => true,
             'message' => 'Pesanan berhasil dibuat!',
-            'order_id' => 'ORD-'.strtoupper(uniqid()),
+            'order_id' => $order->order_code,
+            'snap_token' => $freshOrder?->snap_token,
+            'snap_redirect_url' => $freshOrder?->snap_redirect_url,
         ]);
     }
 

@@ -8,6 +8,7 @@ use App\Http\Controllers\BahanController;
 use App\Http\Controllers\CustomerMenuController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MenuController;
+use App\Http\Controllers\MidtransController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PengeluaranController;
 use App\Http\Controllers\ProfileController;
@@ -25,6 +26,9 @@ Route::get('/', [CustomerMenuController::class, 'landing'])->name('landing');
 Route::get('/meja/{token}', [CustomerMenuController::class, 'scanQr'])->name('customer.qr.scan');
 Route::get('/menu', [CustomerMenuController::class, 'index'])->name('customer.menu');
 Route::get('/menu/download', [CustomerMenuController::class, 'downloadMenu'])->name('customer.menu.download');
+Route::get('/menu/{menu}', [CustomerMenuController::class, 'show'])
+    ->whereNumber('menu')
+    ->name('customer.menu.show');
 Route::post('/checkout', [CustomerMenuController::class, 'checkout'])->name('customer.checkout');
 
 // Customer Cart & QR Order Status (qr-ordering)
@@ -36,6 +40,11 @@ Route::get('/pesanan/{order_code}', [OrderController::class, 'status'])->name('o
 Route::get('/api/pesanan/{order_code}/status', [OrderController::class, 'checkStatus'])->name('orders.check-status');
 Route::post('/pesanan/{order_code}/update-status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
 Route::get('/riwayat-pesanan', [OrderController::class, 'history'])->name('orders.history');
+
+// Midtrans Payment Gateway
+Route::post('/api/midtrans/notification', [MidtransController::class, 'notification'])->name('midtrans.notification');
+Route::post('/api/midtrans/orders/{order_code}/token', [MidtransController::class, 'token'])->name('midtrans.token');
+Route::post('/api/midtrans/orders/{order_code}/verify', [MidtransController::class, 'verify'])->name('midtrans.verify');
 
 // Guest routes (not logged in)
 Route::middleware('guest')->group(function () {
@@ -120,6 +129,7 @@ Route::prefix('orders')->name('orders.')->group(function () {
     Route::post('/', [OrderController::class, 'store'])->name('store');
     Route::get('/{order}', [OrderController::class, 'show'])->name('show');
     Route::post('/{order}/process', [OrderController::class, 'process'])->name('process');
+    Route::post('/{order}/complete', [OrderController::class, 'complete'])->name('complete');
     Route::post('/{order}/reject', [OrderController::class, 'reject'])->name('reject');
     Route::post('/{order}/pay', [OrderController::class, 'pay'])->name('pay');
 });

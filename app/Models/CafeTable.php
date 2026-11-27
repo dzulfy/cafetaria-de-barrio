@@ -34,7 +34,7 @@ class CafeTable extends Model
     protected function qrUrl(): Attribute
     {
         return Attribute::make(
-            get: fn (): string => route('landing', ['table' => $this->table_number, 'token' => $this->token])
+            get: fn (): string => route('customer.menu', ['table' => $this->table_number, 'token' => $this->token])
         );
     }
 }

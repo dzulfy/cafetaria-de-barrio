@@ -140,8 +140,11 @@
                                     <span x-text="formatTableLabel(order.table_number)"></span>
                                 </div>
 
-                                <!-- Status Badge -->
-                                <div>
+                                <!-- Status & Payment Badge -->
+                                <div class="flex items-center space-x-1.5">
+                                    <span :class="order.payment_status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'"
+                                          class="px-2 py-0.5 rounded-full text-[10px] font-semibold border"
+                                          x-text="order.payment_status === 'paid' ? 'Lunas' : 'Belum Bayar'"></span>
                                     <template x-if="order.status === 'menunggu'">
                                         <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-800 border border-amber-200">Menunggu</span>
                                     </template>
@@ -197,7 +200,10 @@
                                         <span class="text-slate-300 font-light mx-1">|</span>
                                         <span x-text="formatTableLabel(selectedOrder.table_number)"></span>
                                     </h2>
-                                    <!-- Badge -->
+                                    <!-- Badges -->
+                                    <span :class="selectedOrder.payment_status === 'paid' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'"
+                                          class="px-3 py-1 rounded-full text-xs font-bold border"
+                                          x-text="selectedOrder.payment_status === 'paid' ? 'Lunas • Midtrans' : 'Belum Dibayar'"></span>
                                     <template x-if="selectedOrder.status === 'menunggu'">
                                         <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">Menunggu</span>
                                     </template>
@@ -259,14 +265,25 @@
                                 </div>
                             </template>
 
-                            <!-- Payment details if already completed -->
-                            <template x-if="selectedOrder.status === 'selesai' && selectedOrder.payment_method">
+                            <!-- Unpaid Midtrans Warning Banner -->
+                            <template x-if="selectedOrder.status === 'menunggu' && selectedOrder.payment_status !== 'paid'">
+                                <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 flex items-start space-x-3">
+                                    <i data-lucide="shield-alert" class="w-5 h-5 text-amber-700 shrink-0 mt-0.5"></i>
+                                    <div class="text-xs leading-relaxed">
+                                        <p class="font-bold text-amber-900">Menunggu Pembayaran Midtrans</p>
+                                        <p class="mt-0.5 text-amber-800">Pesanan baru dapat diproses oleh kasir setelah pembayaran via Midtrans berstatus lunas.</p>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <!-- Payment details if already paid -->
+                            <template x-if="selectedOrder.payment_status === 'paid'">
                                 <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-900">
-                                    <h4 class="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-2">Informasi Pembayaran</h4>
+                                    <h4 class="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-2">Informasi Pembayaran Midtrans</h4>
                                     <div class="grid grid-cols-2 gap-2 text-xs">
-                                        <div>Metode: <strong class="capitalize" x-text="selectedOrder.payment_method"></strong></div>
-                                        <div>Dibayar: <strong x-text="formatRupiah(selectedOrder.amount_paid)"></strong></div>
-                                        <div>Kembalian: <strong x-text="formatRupiah(selectedOrder.change_amount)"></strong></div>
+                                        <div>Metode: <strong class="uppercase" x-text="selectedOrder.payment_method || 'midtrans'"></strong></div>
+                                        <div>Dibayar: <strong x-text="formatRupiah(selectedOrder.amount_paid || selectedOrder.total_amount)"></strong></div>
+                                        <div>Status: <strong class="text-emerald-700">Lunas</strong></div>
                                         <div>Waktu Bayar: <strong x-text="formatDate(selectedOrder.paid_at)"></strong></div>
                                     </div>
                                 </div>
@@ -291,20 +308,32 @@
                                     </button>
                                 </template>
 
-                                <!-- Proses Pesanan Button -->
+                                <!-- Proses Pesanan Button (Only active once paid via Midtrans) -->
                                 <template x-if="selectedOrder.status === 'menunggu'">
                                     <button @click="processOrder(selectedOrder)"
-                                            class="px-5 py-2.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-sm font-bold transition-colors shadow-sm">
+                                            :disabled="selectedOrder.payment_status !== 'paid'"
+                                            :class="selectedOrder.payment_status === 'paid' ? 'bg-[#154734] hover:bg-[#0f3828] text-white shadow-md hover:shadow-lg cursor-pointer' : 'bg-slate-200 text-slate-400 cursor-not-allowed'"
+                                            :title="selectedOrder.payment_status === 'paid' ? 'Proses pesanan ke dapur' : 'Pembayaran Midtrans harus lunas terlebih dahulu'"
+                                            class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all">
                                         Proses Pesanan
                                     </button>
                                 </template>
 
-                                <!-- Bayar Button (Triggers K4 Modal) -->
-                                <template x-if="selectedOrder.status !== 'selesai' && selectedOrder.status !== 'dibatalkan'">
+                                <!-- Selesaikan Pesanan Button -->
+                                <template x-if="selectedOrder.status === 'diproses' && selectedOrder.payment_status === 'paid'">
+                                    <button @click="completeOrder(selectedOrder)"
+                                            class="px-6 py-2.5 rounded-xl bg-[#154734] hover:bg-[#0f3828] text-white text-sm font-bold shadow-md hover:shadow-lg transition-all flex items-center space-x-2 cursor-pointer">
+                                        <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                                        <span>Selesaikan Pesanan</span>
+                                    </button>
+                                </template>
+
+                                <!-- Bayar via Midtrans Button (Triggers K4 Modal when unpaid) -->
+                                <template x-if="selectedOrder.payment_status !== 'paid' && selectedOrder.status !== 'dibatalkan'">
                                     <button @click="openPaymentModal(selectedOrder)"
-                                            class="px-8 py-2.5 rounded-xl bg-[#154734] hover:bg-[#0f3828] text-white text-sm font-bold shadow-md hover:shadow-lg transition-all flex items-center space-x-2">
+                                            class="px-7 py-2.5 rounded-xl bg-[#154734] hover:bg-[#0f3828] text-white text-sm font-bold shadow-md hover:shadow-lg transition-all flex items-center space-x-2 cursor-pointer">
                                         <i data-lucide="wallet" class="w-4 h-4"></i>
-                                        <span>Bayar</span>
+                                        <span>Bayar Midtrans</span>
                                     </button>
                                 </template>
                             </div>
@@ -436,7 +465,7 @@
                     <button @click="submitPosOrder()" 
                             :disabled="posOrder.items.length === 0 || isSubmitting"
                             class="w-full py-3 rounded-xl bg-[#154734] hover:bg-[#0f3828] disabled:bg-slate-200 text-white disabled:text-slate-400 font-bold text-sm shadow transition-all flex items-center justify-center space-x-2">
-                        <span x-text="isSubmitting ? 'Memproses...' : 'Simpan Pesanan'"></span>
+                        <span x-text="isSubmitting ? 'Memproses...' : 'Simpan & Bayar Midtrans'"></span>
                     </button>
                 </div>
             </section>
@@ -666,87 +695,50 @@
                 <div class="px-6 pb-6 space-y-5">
                     <!-- Total Tagihan Box (Dark Green Card from Figma) -->
                     <div class="p-5 rounded-2xl bg-[#154734] text-white flex flex-col justify-center shadow-inner">
-                        <span class="text-xs font-medium text-emerald-200">Total tagihan</span>
+                        <span class="text-xs font-medium text-emerald-200">Total tagihan Midtrans</span>
                         <div class="text-3xl font-black mt-1 tracking-tight" x-text="paymentOrder ? formatRupiah(paymentOrder.total_amount) : 'Rp 0'"></div>
                     </div>
 
-                    <!-- Metode Pembayaran: Tunai | QRIS | Transfer -->
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-2">Metode pembayaran</label>
-                        <div class="grid grid-cols-3 gap-2.5">
-                            <!-- Tunai -->
-                            <button @click="paymentMethod = 'tunai'"
-                                    :class="paymentMethod === 'tunai' ? 'border-2 border-[#154734] bg-emerald-50/50 text-[#154734] font-bold shadow-sm' : 'border border-slate-200 text-slate-600 hover:bg-slate-50'"
-                                    class="py-3 px-2 rounded-2xl flex flex-col items-center justify-center space-y-1.5 transition-all">
-                                <i data-lucide="banknote" class="w-5 h-5"></i>
-                                <span class="text-xs">Tunai</span>
-                            </button>
-
-                            <!-- QRIS -->
-                            <button @click="paymentMethod = 'qris'"
-                                    :class="paymentMethod === 'qris' ? 'border-2 border-[#154734] bg-emerald-50/50 text-[#154734] font-bold shadow-sm' : 'border border-slate-200 text-slate-600 hover:bg-slate-50'"
-                                    class="py-3 px-2 rounded-2xl flex flex-col items-center justify-center space-y-1.5 transition-all">
-                                <i data-lucide="qr-code" class="w-5 h-5"></i>
-                                <span class="text-xs">QRIS</span>
-                            </button>
-
-                            <!-- Transfer -->
-                            <button @click="paymentMethod = 'transfer'"
-                                    :class="paymentMethod === 'transfer' ? 'border-2 border-[#154734] bg-emerald-50/50 text-[#154734] font-bold shadow-sm' : 'border border-slate-200 text-slate-600 hover:bg-slate-50'"
-                                    class="py-3 px-2 rounded-2xl flex flex-col items-center justify-center space-y-1.5 transition-all">
-                                <i data-lucide="building-2" class="w-5 h-5"></i>
-                                <span class="text-xs">Transfer</span>
-                            </button>
+                    <!-- Info Metode Gateway -->
+                    <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-slate-800">Payment Gateway</span>
+                            <span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[11px]">Midtrans Snap</span>
                         </div>
+                        <p class="leading-relaxed">
+                            Mendukung QRIS, GoPay, ShopeePay, OVO, dan Virtual Account. Setelah pembayaran berhasil, pesanan otomatis siap diproses oleh kasir.
+                        </p>
+                        <template x-if="paymentOrder && paymentOrder.snap_redirect_url">
+                            <a :href="paymentOrder.snap_redirect_url" target="_blank" rel="noopener noreferrer" class="inline-block font-bold text-[#154734] hover:underline pt-1">
+                                Buka halaman pembayaran Midtrans di tab baru &rarr;
+                            </a>
+                        </template>
                     </div>
 
-                    <!-- Nominal Diterima Section -->
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 mb-1.5">Nominal diterima</label>
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-sm font-bold text-slate-400">Rp</span>
-                            <input type="number" x-model.number="amountPaid" 
-                                   class="w-full pl-11 pr-4 py-2.5 rounded-xl border border-slate-200 text-base font-bold text-slate-900 focus:ring-2 focus:ring-[#154734] focus:border-transparent">
-                        </div>
-
-                        <!-- Quick Nominal Chips (Figma style) -->
-                        <div class="grid grid-cols-4 gap-2 mt-2">
-                            <button @click="amountPaid = paymentOrder ? paymentOrder.total_amount : 0" 
-                                    class="py-1.5 px-2 rounded-xl border border-slate-200 hover:border-[#154734] bg-slate-50 hover:bg-emerald-50 text-[11px] font-semibold text-slate-700 transition-colors">
-                                Uang pas
-                            </button>
-                            <button @click="amountPaid = 20000" 
-                                    class="py-1.5 px-2 rounded-xl border border-slate-200 hover:border-[#154734] bg-slate-50 hover:bg-emerald-50 text-[11px] font-semibold text-slate-700 transition-colors">
-                                Rp 20.000
-                            </button>
-                            <button @click="amountPaid = 50000" 
-                                    class="py-1.5 px-2 rounded-xl border border-slate-200 hover:border-[#154734] bg-slate-50 hover:bg-emerald-50 text-[11px] font-semibold text-slate-700 transition-colors">
-                                Rp 50.000
-                            </button>
-                            <button @click="amountPaid = 100000" 
-                                    class="py-1.5 px-2 rounded-xl border border-slate-200 hover:border-[#154734] bg-slate-50 hover:bg-emerald-50 text-[11px] font-semibold text-slate-700 transition-colors">
-                                Rp 100.000
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Kembalian Box (Mint Green Box from Figma) -->
-                    <div class="p-4 rounded-2xl bg-[#DCFCE7] border border-emerald-200 flex items-center justify-between">
-                        <span class="text-xs font-bold text-emerald-800">Kembalian</span>
-                        <span class="text-lg font-black text-emerald-900" x-text="formatRupiah(calculateKembalian())"></span>
-                    </div>
+                    <template x-if="paymentMessage">
+                        <div class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs font-semibold text-amber-900" x-text="paymentMessage"></div>
+                    </template>
 
                     <!-- Actions Buttons -->
-                    <div class="flex items-center space-x-3 pt-2">
-                        <button @click="showPaymentModal = false" 
-                                class="flex-1 py-3 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-sm transition-colors">
-                            Batal
+                    <div class="flex flex-col space-y-2.5 pt-1">
+                        <button @click="payWithMidtrans(paymentOrder)" 
+                                :disabled="isProcessingPayment"
+                                class="w-full py-3 rounded-xl bg-[#154734] hover:bg-[#0f3828] disabled:bg-slate-300 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center space-x-2 cursor-pointer">
+                            <i data-lucide="wallet" class="w-4 h-4"></i>
+                            <span x-text="isProcessingPayment ? 'Menghubungkan Midtrans...' : 'Buka Midtrans Snap'"></span>
                         </button>
-                        <button @click="confirmPayment()" 
-                                :disabled="calculateKembalian() < 0 || isProcessingPayment"
-                                class="flex-1 py-3 rounded-xl bg-[#154734] hover:bg-[#0f3828] disabled:bg-slate-300 text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center space-x-2">
-                            <span x-text="isProcessingPayment ? 'Memproses...' : 'Konfirmasi Pembayaran'"></span>
-                        </button>
+
+                        <div class="flex items-center space-x-2.5">
+                            <button @click="showPaymentModal = false" 
+                                    class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-xs transition-colors cursor-pointer">
+                                Tutup
+                            </button>
+                            <button @click="verifyKasirPayment(paymentOrder)"
+                                    :disabled="isProcessingPayment"
+                                    class="flex-1 py-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100 font-bold text-xs transition-colors cursor-pointer">
+                                Cek Status Midtrans
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -808,11 +800,10 @@
                 },
                 isSubmitting: false,
 
-                // Payment Modal State (K4)
+                // Payment Modal State (K4 Midtrans)
                 showPaymentModal: false,
                 paymentOrder: null,
-                paymentMethod: 'tunai',
-                amountPaid: 50000,
+                paymentMessage: '',
                 isProcessingPayment: false,
 
                 // Receipt Modal
@@ -929,11 +920,14 @@
                             // Reset cart
                             this.posOrder.items = [];
                             this.posOrder.customer_notes = '';
-                            // Refresh and switch to QR Pesanan Masuk
+                            // Refresh and switch to QR Pesanan Masuk, then prompt Midtrans payment
                             await this.syncData();
                             this.currentView = 'qr';
                             this.activeTab = 'menunggu';
                             this.selectedOrder = data.order;
+                            if (data.order && data.order.payment_status !== 'paid') {
+                                this.openPaymentModal(data.order);
+                            }
                         } else {
                             alert(data.message || 'Gagal membuat pesanan');
                         }
@@ -946,6 +940,10 @@
                 },
 
                 async processOrder(order) {
+                    if (order.payment_status !== 'paid') {
+                        alert('Pembayaran Midtrans belum berhasil. Pesanan baru dapat diproses setelah lunas.');
+                        return;
+                    }
                     try {
                         const res = await fetch(`/orders/${order.id}/process`, {
                             method: 'POST',
@@ -960,6 +958,33 @@
                             await this.syncData();
                             this.activeTab = 'diproses';
                             this.selectedOrder = data.order;
+                        } else {
+                            alert(data.message || 'Pesanan belum dapat diproses.');
+                        }
+                    } catch (e) {
+                        console.error(e);
+                    }
+                },
+
+                async completeOrder(order) {
+                    try {
+                        const res = await fetch(`/orders/${order.id}/complete`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            }
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            await this.syncData();
+                            this.activeTab = 'selesai';
+                            this.selectedOrder = data.order;
+                            this.receiptData = data.order;
+                            this.showReceiptModal = true;
+                        } else {
+                            alert(data.message || 'Gagal menyelesaikan pesanan.');
                         }
                     } catch (e) {
                         console.error(e);
@@ -988,25 +1013,20 @@
 
                 openPaymentModal(order) {
                     this.paymentOrder = order;
-                    this.amountPaid = order.total_amount;
-                    this.paymentMethod = 'tunai';
+                    this.paymentMessage = '';
                     this.showPaymentModal = true;
                     this.$nextTick(() => {
                         if (window.lucide) lucide.createIcons();
                     });
                 },
 
-                calculateKembalian() {
-                    if (!this.paymentOrder) return 0;
-                    return (this.amountPaid || 0) - this.paymentOrder.total_amount;
-                },
-
-                async confirmPayment() {
-                    if (!this.paymentOrder || this.calculateKembalian() < 0) return;
+                async payWithMidtrans(order) {
+                    if (!order) return;
                     this.isProcessingPayment = true;
+                    this.paymentMessage = '';
 
                     try {
-                        const res = await fetch(`/orders/${this.paymentOrder.id}/pay`, {
+                        const res = await fetch(`/orders/${order.id}/pay`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -1014,25 +1034,80 @@
                                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                             },
                             body: JSON.stringify({
-                                payment_method: this.paymentMethod,
-                                amount_paid: this.amountPaid
+                                force_new: order.payment_status === 'failed' || order.payment_status === 'expired'
                             })
                         });
 
                         const data = await res.json();
-                        if (data.success) {
-                            this.receiptData = data.order;
-                            this.showPaymentModal = false;
-                            this.showReceiptModal = true;
+                        if (data.already_paid) {
                             await this.syncData();
                             this.selectedOrder = data.order;
-                            this.activeTab = 'selesai';
+                            this.showPaymentModal = false;
+                            return;
+                        }
+
+                        if (!res.ok || !data.success) {
+                            this.paymentMessage = data.message || 'Gagal menyiapkan transaksi Midtrans.';
+                            return;
+                        }
+
+                        if (data.order) {
+                            this.paymentOrder = data.order;
+                        }
+
+                        if (window.snap && data.snap_token) {
+                            this.showPaymentModal = false;
+                            window.snap.pay(data.snap_token, {
+                                onSuccess: () => this.verifyKasirPayment(order),
+                                onPending: () => this.verifyKasirPayment(order),
+                                onError: () => {
+                                    this.paymentMessage = 'Pembayaran Midtrans gagal. Silakan coba lagi.';
+                                    this.showPaymentModal = true;
+                                },
+                                onClose: () => this.verifyKasirPayment(order),
+                            });
+                        } else if (data.redirect_url) {
+                            window.open(data.redirect_url, '_blank');
+                            this.paymentMessage = 'Silakan selesaikan pembayaran di tab Midtrans lalu klik Cek Status Midtrans.';
                         } else {
-                            alert(data.message || 'Pembayaran gagal');
+                            this.paymentMessage = 'Midtrans Snap belum tersedia.';
                         }
                     } catch (err) {
                         console.error(err);
-                        alert('Terjadi kesalahan pembayaran.');
+                        this.paymentMessage = 'Terjadi kesalahan saat menghubungi Midtrans.';
+                    } finally {
+                        this.isProcessingPayment = false;
+                    }
+                },
+
+                async verifyKasirPayment(order) {
+                    if (!order) return;
+                    this.isProcessingPayment = true;
+
+                    try {
+                        const res = await fetch(`/api/midtrans/orders/${order.order_code}/verify`, {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            }
+                        });
+
+                        const data = await res.json();
+                        if (data.paid) {
+                            this.showPaymentModal = false;
+                            this.receiptData = data.order;
+                            await this.syncData();
+                            this.selectedOrder = data.order;
+                            this.paymentMessage = '';
+                            alert(data.message || 'Pembayaran Midtrans lunas! Pesanan sekarang dapat diproses.');
+                        } else {
+                            await this.syncData();
+                            this.paymentMessage = data.message || 'Pembayaran belum selesai di Midtrans.';
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        this.paymentMessage = 'Gagal memeriksa status pembayaran Midtrans.';
                     } finally {
                         this.isProcessingPayment = false;
                     }

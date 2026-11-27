@@ -253,7 +253,7 @@ class WarkopDeBarrioSeeder extends Seeder
         }
 
         // 4. Figma mockup Orders
-        // Order 1: DB-0124 (Selected in Figma)
+        // Order 1: DB-0124 (Paid via Midtrans QRIS, ready for cashier processing)
         $order1 = Order::updateOrCreate(
             ['order_code' => 'DB-0124'],
             [
@@ -261,6 +261,13 @@ class WarkopDeBarrioSeeder extends Seeder
                 'customer_name' => 'Bima',
                 'source' => 'QR Meja',
                 'status' => 'menunggu',
+                'payment_status' => 'paid',
+                'payment_method' => 'qris',
+                'midtrans_order_id' => 'DB-0124',
+                'midtrans_transaction_status' => 'settlement',
+                'amount_paid' => 42000,
+                'change_amount' => 0,
+                'paid_at' => Carbon::now()->subMinute(),
                 'customer_notes' => 'Gula sedikit, karna perasaan bisa berubah tapi kopi harus tetap manis.',
                 'total_amount' => 42000,
                 'created_at' => Carbon::now()->subMinutes(2),
@@ -284,7 +291,7 @@ class WarkopDeBarrioSeeder extends Seeder
             ],
         ]);
 
-        // Order 2: DB-0123
+        // Order 2: DB-0123 (Unpaid - waiting Midtrans payment)
         $order2 = Order::updateOrCreate(
             ['order_code' => 'DB-0123'],
             [
@@ -292,6 +299,8 @@ class WarkopDeBarrioSeeder extends Seeder
                 'customer_name' => 'Andi',
                 'source' => 'QR Meja',
                 'status' => 'menunggu',
+                'payment_status' => 'unpaid',
+                'midtrans_order_id' => 'DB-0123',
                 'customer_notes' => 'Dingin, es batu dibanyakin ya kak.',
                 'total_amount' => 25000,
                 'created_at' => Carbon::now()->subMinutes(6),
@@ -308,7 +317,7 @@ class WarkopDeBarrioSeeder extends Seeder
             ],
         ]);
 
-        // Order 3: DB-0122
+        // Order 3: DB-0122 (Unpaid - waiting Midtrans payment)
         $order3 = Order::updateOrCreate(
             ['order_code' => 'DB-0122'],
             [
@@ -316,6 +325,8 @@ class WarkopDeBarrioSeeder extends Seeder
                 'customer_name' => 'Citra',
                 'source' => 'QR Meja',
                 'status' => 'menunggu',
+                'payment_status' => 'unpaid',
+                'midtrans_order_id' => 'DB-0122',
                 'customer_notes' => 'Mienya jangan terlalu pedas ya mas.',
                 'total_amount' => 61000,
                 'created_at' => Carbon::now()->subMinutes(12),
@@ -346,7 +357,7 @@ class WarkopDeBarrioSeeder extends Seeder
             ],
         ]);
 
-        // Order 4: DB-0121 (Diproses)
+        // Order 4: DB-0121 (Diproses - paid via Midtrans)
         $order4 = Order::updateOrCreate(
             ['order_code' => 'DB-0121'],
             [
@@ -354,6 +365,13 @@ class WarkopDeBarrioSeeder extends Seeder
                 'customer_name' => 'Fahri',
                 'source' => 'Kasir',
                 'status' => 'diproses',
+                'payment_status' => 'paid',
+                'payment_method' => 'qris',
+                'midtrans_order_id' => 'DB-0121',
+                'midtrans_transaction_status' => 'settlement',
+                'amount_paid' => 37000,
+                'change_amount' => 0,
+                'paid_at' => Carbon::now()->subMinutes(21),
                 'customer_notes' => 'Dibungkus terpisah ya.',
                 'total_amount' => 37000,
                 'created_at' => Carbon::now()->subMinutes(20),
@@ -377,7 +395,7 @@ class WarkopDeBarrioSeeder extends Seeder
             ],
         ]);
 
-        // Order 5: DB-0120 (Selesai)
+        // Order 5: DB-0120 (Selesai - paid via Midtrans)
         $order5 = Order::updateOrCreate(
             ['order_code' => 'DB-0120'],
             [
@@ -387,9 +405,12 @@ class WarkopDeBarrioSeeder extends Seeder
                 'status' => 'selesai',
                 'customer_notes' => 'Gula normal.',
                 'total_amount' => 38000,
-                'payment_method' => 'tunai',
-                'amount_paid' => 50000,
-                'change_amount' => 12000,
+                'payment_status' => 'paid',
+                'payment_method' => 'qris',
+                'midtrans_order_id' => 'DB-0120',
+                'midtrans_transaction_status' => 'settlement',
+                'amount_paid' => 38000,
+                'change_amount' => 0,
                 'paid_at' => Carbon::now()->subMinutes(45),
                 'created_at' => Carbon::now()->subMinutes(50),
             ]

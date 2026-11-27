@@ -228,7 +228,7 @@
 
         <div class="mt-3.5 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             @forelse ($favoriteMenus as $fav)
-                <a href="{{ route('customer.menu', $tableParams) }}"
+                <a href="{{ route('customer.menu.show', array_merge(['menu' => $fav->id], $tableParams)) }}"
                    class="group bg-white border border-line rounded-2xl p-2.5 sm:p-3 flex flex-col shadow-2xs transition-all duration-200 hover:-translate-y-1 hover:shadow-md hover:border-brand-900/35 active:scale-[0.98]">
                     <div class="h-24 sm:h-28 rounded-xl bg-cream flex items-center justify-center text-gold overflow-hidden mb-2.5">
                         @if ($fav->image)

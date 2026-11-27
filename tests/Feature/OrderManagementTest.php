@@ -6,6 +6,7 @@ use App\Models\MenuItem;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class OrderManagementTest extends TestCase
@@ -47,37 +48,77 @@ class OrderManagementTest extends TestCase
 
     public function test_can_process_waiting_order(): void
     {
-        $order = Order::where('order_code', 'DB-0124')->firstOrFail();
+        // DB-0124 is seeded as paid via Midtrans -> kasir can process
+        $paidOrder = Order::where('order_code', 'DB-0124')->firstOrFail();
 
-        $response = $this->postJson(route('orders.process', $order));
+        $response = $this->postJson(route('orders.process', $paidOrder));
 
         $response->assertStatus(200);
         $response->assertJson(['success' => true]);
+        $this->assertEquals('diproses', $paidOrder->fresh()->status);
 
-        $this->assertEquals('diproses', $order->fresh()->status);
+        // DB-0123 is seeded as unpaid -> kasir cannot process yet
+        $unpaidOrder = Order::where('order_code', 'DB-0123')->firstOrFail();
+
+        $this->postJson(route('orders.process', $unpaidOrder))
+            ->assertStatus(422)
+            ->assertJson(['success' => false]);
+        $this->assertEquals('menunggu', $unpaidOrder->fresh()->status);
     }
 
-    public function test_can_pay_order_and_calculate_change(): void
+    public function test_can_pay_order_via_midtrans_and_complete_after_verification(): void
     {
-        $order = Order::where('order_code', 'DB-0124')->firstOrFail();
-
-        $response = $this->postJson(route('orders.pay', $order), [
-            'payment_method' => 'tunai',
-            'amount_paid' => 50000,
+        Http::fake([
+            'https://app.sandbox.midtrans.com/snap/v1/transactions' => Http::response([
+                'token' => 'snap-kasir-0123',
+                'redirect_url' => 'https://app.sandbox.midtrans.com/snap/v4/redirection/snap-kasir-0123',
+            ], 201),
+            'https://api.sandbox.midtrans.com/v2/DB-0123/status' => Http::response([
+                'order_id' => 'DB-0123',
+                'status_code' => '200',
+                'gross_amount' => '25000.00',
+                'payment_type' => 'qris',
+                'transaction_id' => 'tx-kasir-0123',
+                'transaction_status' => 'settlement',
+            ], 200),
         ]);
 
-        $response->assertStatus(200);
-        $response->assertJson(['success' => true]);
+        $order = Order::where('order_code', 'DB-0123')->firstOrFail();
+
+        $payResponse = $this->postJson(route('orders.pay', $order));
+        $payResponse->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'snap_token' => 'snap-kasir-0123',
+            ]);
+
+        $this->postJson(route('midtrans.verify', ['order_code' => 'DB-0123']))
+            ->assertStatus(200)
+            ->assertJson(['paid' => true]);
+
+        $this->postJson(route('orders.process', $order))
+            ->assertStatus(200);
+
+        $this->postJson(route('orders.complete', $order))
+            ->assertStatus(200)
+            ->assertJson(['success' => true]);
 
         $fresh = $order->fresh();
         $this->assertEquals('selesai', $fresh->status);
-        $this->assertEquals('tunai', $fresh->payment_method);
-        $this->assertEquals(50000, $fresh->amount_paid);
-        $this->assertEquals(8000, $fresh->change_amount); // 50000 - 42000 = 8000
+        $this->assertEquals('paid', $fresh->payment_status);
+        $this->assertEquals('qris', $fresh->payment_method);
+        $this->assertEquals(25000, $fresh->amount_paid);
     }
 
     public function test_can_create_new_order_from_qr_or_counter(): void
     {
+        Http::fake([
+            'https://app.sandbox.midtrans.com/snap/v1/transactions' => Http::response([
+                'token' => 'snap-counter-01',
+                'redirect_url' => 'https://app.sandbox.midtrans.com/snap/v4/redirection/snap-counter-01',
+            ], 201),
+        ]);
+
         $menuItem = MenuItem::first();
 
         $response = $this->postJson(route('orders.store'), [

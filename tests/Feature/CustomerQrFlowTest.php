@@ -14,6 +14,7 @@ use Database\Seeders\MenuSeeder;
 use Database\Seeders\WarkopDeBarrioSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class CustomerQrFlowTest extends TestCase
@@ -103,9 +104,9 @@ class CustomerQrFlowTest extends TestCase
         $this->assertNull(session('active_table'));
     }
 
-    public function test_cafe_table_qr_url_resolves_to_customer_landing_with_table_and_token(): void
+    public function test_cafe_table_qr_url_resolves_to_customer_menu_with_table_and_token(): void
     {
-        $expected = route('landing', [
+        $expected = route('customer.menu', [
             'table' => '05',
             'token' => 'p8Gh3uJr1N',
         ]);
@@ -113,27 +114,21 @@ class CustomerQrFlowTest extends TestCase
         $this->assertSame($expected, $this->activeTable->qr_url);
     }
 
-    public function test_scanning_qr_opens_figma_customer_landing_for_the_table(): void
+    public function test_scanning_qr_opens_customer_menu_directly_for_the_table(): void
     {
         $response = $this->get($this->activeTable->qr_url);
 
         $response->assertStatus(200);
-        $response->assertSee('Kamu memesan dari Meja 05');
-        $response->assertSee('Ngopi manual brew,');
-        $response->assertSee('harga anak kos.');
-        $response->assertSee('Lihat Menu');
-        $response->assertSee('Keranjang');
-        $response->assertSee('Menu Favorit');
+        $response->assertSee('Meja 05');
         $response->assertSee('Kopi Susu Gula Aren');
         $response->assertSee('V60 Manual Brew');
-        $response->assertSee('Tentang Kami');
-        $response->assertSee('Lokasi');
+        $response->assertSee(route('customer.menu.show', ['menu' => $this->kopi->id, 'table' => '05']), false);
     }
 
     public function test_carts_are_isolated_between_different_tables(): void
     {
         // Scan QR Meja 01 and add Kopi Susu Gula Aren
-        $this->get($this->tableOne->qr_url)->assertSee('Kamu memesan dari Meja 01');
+        $this->get($this->tableOne->qr_url)->assertSee('Meja 01');
 
         $this->postJson(route('cart.update'), [
             'menu_id' => (string) $this->kopi->id,
@@ -142,7 +137,7 @@ class CustomerQrFlowTest extends TestCase
         ])->assertStatus(200)->assertJson(['totalItems' => 1]);
 
         // Switch to Meja 02 in same browser: cart must start empty
-        $this->get($this->tableTwo->qr_url)->assertSee('Kamu memesan dari Meja 02');
+        $this->get($this->tableTwo->qr_url)->assertSee('Meja 02');
         $cartTwo = $this->get(route('cart', ['table' => '02']));
         $cartTwo->assertStatus(200);
         $cartTwo->assertSee('Pesan mandiri  |  Meja 02');
@@ -155,11 +150,11 @@ class CustomerQrFlowTest extends TestCase
         $cartOne->assertSee('Kopi Susu Gula Aren');
     }
 
-    public function test_short_qr_route_redirects_to_customer_landing_with_table(): void
+    public function test_short_qr_route_redirects_to_customer_menu_with_table(): void
     {
         $response = $this->get(route('customer.qr.scan', ['token' => $this->activeTable->token]));
 
-        $response->assertRedirect(route('landing', [
+        $response->assertRedirect(route('customer.menu', [
             'table' => $this->activeTable->table_number,
             'token' => $this->activeTable->token,
         ]));
@@ -170,8 +165,8 @@ class CustomerQrFlowTest extends TestCase
         $response = $this->get($this->inactiveTable->qr_url);
 
         $response->assertStatus(200);
-        $response->assertSee('Kamu memesan dari Meja 08');
-        $response->assertSee('Meja ini sedang nonaktif. Silakan hubungi kasir.');
+        $response->assertSee('Meja 08');
+        $response->assertSee('Meja 08 sedang nonaktif. Silakan hubungi kasir.');
 
         // Block cart updates on inactive table
         $this->postJson(route('cart.update'), [
@@ -220,6 +215,13 @@ class CustomerQrFlowTest extends TestCase
         $cartResponse->assertSee('16.000');
 
         // 5. Submit order
+        Http::fake([
+            'https://app.sandbox.midtrans.com/snap/v1/transactions' => Http::response([
+                'token' => 'snap-qr-flow-01',
+                'redirect_url' => 'https://app.sandbox.midtrans.com/snap/v4/redirection/snap-qr-flow-01',
+            ], 201),
+        ]);
+
         $submitResponse = $this->post(route('orders.store'), [
             'table_number' => '05',
             'customer_name' => 'Rina',
@@ -233,7 +235,8 @@ class CustomerQrFlowTest extends TestCase
         // 6. Status page
         $statusResponse = $this->get(route('orders.status', ['order_code' => $order->order_code]));
         $statusResponse->assertStatus(200);
-        $statusResponse->assertSee('Pesanan terkirim!');
+        $statusResponse->assertSee('Menunggu Pembayaran');
+        $statusResponse->assertSee('Bayar Sekarang via Midtrans');
         $statusResponse->assertSee($order->order_code);
         $statusResponse->assertSee('Meja 05');
 
@@ -284,5 +287,62 @@ class CustomerQrFlowTest extends TestCase
         $this->assertDatabaseHas('menus', ['slug' => 'add-on-sosis', 'name' => 'Sosis', 'price' => 5000]);
         $this->assertDatabaseHas('menus', ['slug' => 'add-on-nugget', 'name' => 'Nugget', 'price' => 5000]);
         $this->assertDatabaseHas('menu_items', ['name' => 'Goodday Freeze', 'price' => 9000]);
+    }
+
+    public function test_customer_can_view_product_detail_page_for_each_menu(): void
+    {
+        $response = $this->get(route('customer.menu.show', [
+            'menu' => $this->kopi->id,
+            'table' => '05',
+        ]));
+
+        $response->assertStatus(200);
+        $response->assertSee('Kopi Susu Gula Aren');
+        $response->assertSee('Espresso, susu, gula aren');
+        $response->assertSee('Rp 16.000');
+        $response->assertSee('Kopi');
+        $response->assertSee('Meja 05');
+        $response->assertSee('V60 Manual Brew');
+        $response->assertSee('Tambah ke Keranjang');
+    }
+
+    public function test_customer_can_add_custom_quantity_from_product_detail_to_cart(): void
+    {
+        $response = $this->postJson(route('cart.update'), [
+            'menu_id' => (string) $this->kopi->id,
+            'action' => 'add',
+            'quantity' => 3,
+            'table_number' => '05',
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'itemQuantity' => 3,
+            'totalItems' => 3,
+        ]);
+
+        $cartResponse = $this->get(route('cart', ['table' => '05']));
+        $cartResponse->assertStatus(200);
+        $cartResponse->assertSee('Kopi Susu Gula Aren');
+        $cartResponse->assertSee('48.000');
+    }
+
+    public function test_unavailable_menu_shows_habis_state_on_product_detail_page(): void
+    {
+        $soldOutMenu = Menu::create([
+            'category_id' => $this->kopi->category_id,
+            'name' => 'Matcha Spesial',
+            'slug' => 'matcha-spesial',
+            'description' => 'Matcha creamy terbatas',
+            'price' => 15000,
+            'is_available' => false,
+        ]);
+
+        $response = $this->get(route('customer.menu.show', ['menu' => $soldOutMenu->id]));
+
+        $response->assertStatus(200);
+        $response->assertSee('Matcha Spesial');
+        $response->assertSee('Stok Habis');
     }
 }

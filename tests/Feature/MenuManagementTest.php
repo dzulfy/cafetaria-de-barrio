@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Menu;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class MenuManagementTest extends TestCase
@@ -78,6 +79,13 @@ class MenuManagementTest extends TestCase
      */
     public function test_customer_can_checkout_order(): void
     {
+        Http::fake([
+            'https://app.sandbox.midtrans.com/snap/v1/transactions' => Http::response([
+                'token' => 'snap-checkout-01',
+                'redirect_url' => 'https://app.sandbox.midtrans.com/snap/v4/redirection/snap-checkout-01',
+            ], 201),
+        ]);
+
         $category = Category::create(['name' => 'Kopi', 'slug' => 'kopi']);
         $menu = Menu::create([
             'category_id' => $category->id,
@@ -100,8 +108,15 @@ class MenuManagementTest extends TestCase
         $response->assertJson([
             'success' => true,
             'message' => 'Pesanan berhasil dibuat!',
+            'snap_token' => 'snap-checkout-01',
         ]);
-        $response->assertJsonStructure(['order_id']);
+        $response->assertJsonStructure(['order_id', 'snap_token', 'snap_redirect_url']);
+        $this->assertDatabaseHas('orders', [
+            'customer_name' => 'Budi',
+            'table_number' => '05',
+            'total_amount' => 30000,
+            'payment_status' => 'unpaid',
+        ]);
     }
 
     /**

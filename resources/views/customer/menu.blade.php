@@ -144,21 +144,27 @@
                      data-menu-desc="{{ strtolower($menu->description ?? '') }}"
                      style="animation-delay: {{ min($loop->index * 35, 280) }}ms;"
                      class="group bg-white rounded-2xl p-3 border border-line shadow-2xs hover:shadow-md hover:-translate-y-0.5 hover:border-brand-900/30 transition-all duration-200 flex items-center justify-between gap-3 animate-fade-up">
-                    {{-- Thumbnail --}}
-                    <div class="w-[72px] h-[72px] rounded-xl bg-cream flex items-center justify-center text-gold shrink-0 overflow-hidden">
-                        @if ($menu->image)
-                            <img src="{{ asset('storage/' . $menu->image) }}" alt="{{ $menu->name }}" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
-                        @else
-                            <x-lucide.coffee class="w-6 h-6 transition-transform duration-300 group-hover:scale-110" />
-                        @endif
-                    </div>
+                    <a href="{{ route('customer.menu.show', array_merge(['menu' => $menu->id], $tableParams)) }}"
+                       class="flex items-center gap-3 flex-1 min-w-0 group/link">
+                        {{-- Thumbnail --}}
+                        <div class="w-[72px] h-[72px] rounded-xl bg-cream flex items-center justify-center text-gold shrink-0 overflow-hidden">
+                            @if ($menu->image)
+                                <img src="{{ asset('storage/' . $menu->image) }}" alt="{{ $menu->name }}" class="w-full h-full object-cover transition-transform duration-300 group-hover/link:scale-105">
+                            @else
+                                <x-lucide.coffee class="w-6 h-6 transition-transform duration-300 group-hover/link:scale-110" />
+                            @endif
+                        </div>
 
-                    {{-- Details --}}
-                    <div class="flex-1 min-w-0">
-                        <h3 class="font-bold text-[13px] sm:text-sm text-ink truncate leading-tight">{{ $menu->name }}</h3>
-                        <p class="text-[11px] sm:text-xs text-muted truncate mt-0.5">{{ $menu->description ?? 'Nikmat dan segar' }}</p>
-                        <p class="font-bold text-[13px] sm:text-sm text-brand-900 mt-1">{{ $menu->formatted_price }}</p>
-                    </div>
+                        {{-- Details --}}
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-bold text-[13px] sm:text-sm text-ink group-hover/link:text-brand-900 truncate leading-tight transition-colors">{{ $menu->name }}</h3>
+                            <p class="text-[11px] sm:text-xs text-muted truncate mt-0.5">{{ $menu->description ?? 'Nikmat dan segar' }}</p>
+                            <div class="mt-1 flex items-center gap-2">
+                                <p class="font-bold text-[13px] sm:text-sm text-brand-900">{{ $menu->formatted_price }}</p>
+                                <span class="text-[10px] font-semibold text-brand-700/80 group-hover/link:text-brand-900 transition-colors">Lihat detail &rarr;</span>
+                            </div>
+                        </div>
+                    </a>
 
                     {{-- Action --}}
                     <div class="shrink-0 flex items-center justify-end pr-0.5">

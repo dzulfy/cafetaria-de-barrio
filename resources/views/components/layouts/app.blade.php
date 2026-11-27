@@ -18,6 +18,9 @@
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
 
+    <!-- Midtrans Snap -->
+    <script src="{{ app(\App\Services\MidtransService::class)->snapJsUrl() }}" data-client-key="{{ config('services.midtrans.client_key') }}"></script>
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>

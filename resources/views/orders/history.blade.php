@@ -49,9 +49,14 @@
                 <div>
                     <div class="flex items-center justify-between gap-2">
                         <span class="font-bold text-sm text-ink">{{ $order->order_code }}</span>
-                        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold {{ $badgeClasses }}">
-                            {{ ucfirst($order->status) }}
-                        </span>
+                        <div class="flex items-center gap-1.5">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold {{ $order->payment_status === 'paid' ? 'bg-ok-bg text-brand-900' : 'bg-amber-50 text-amber-700' }}">
+                                {{ $order->payment_status === 'paid' ? 'Lunas' : 'Belum Bayar' }}
+                            </span>
+                            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold {{ $badgeClasses }}">
+                                {{ ucfirst($order->status) }}
+                            </span>
+                        </div>
                     </div>
 
                     <p class="text-[11px] text-muted mt-1">

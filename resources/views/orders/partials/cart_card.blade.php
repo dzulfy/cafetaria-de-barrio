@@ -183,14 +183,14 @@
                         {{-- Banner Info Pembayaran --}}
                         <div class="bg-warn-bg rounded-xl px-3.5 py-3 flex items-start gap-2.5 text-xs text-warn-fg leading-relaxed">
                             <x-lucide.wallet class="w-4 h-4 mt-0.5 shrink-0" />
-                            <span>Pembayaran dilakukan di kasir setelah pesanan dikirim.</span>
+                            <span>Pembayaran dilakukan online via Midtrans (QRIS, GoPay, Virtual Account, e-Wallet). Pesanan diproses kasir setelah pembayaran berhasil.</span>
                         </div>
 
                         @if (! $inMockup)
                             <button type="submit"
                                     {{ $canOrder ? '' : 'disabled' }}
                                     class="btn-submit-order hidden lg:flex w-full h-12 rounded-xl bg-brand-900 hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm shadow-md transition-all hover:-translate-y-0.5 active:scale-[0.99] items-center justify-center cursor-pointer">
-                                Kirim Pesanan
+                                Kirim & Bayar via Midtrans
                             </button>
                         @endif
                     </div>
@@ -203,7 +203,7 @@
             <button type="submit"
                     {{ $canOrder ? '' : 'disabled' }}
                     class="btn-submit-order w-full h-12 rounded-xl bg-brand-900 hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm shadow-md transition cursor-pointer active:scale-[0.99] flex items-center justify-center">
-                Kirim Pesanan
+                Kirim & Bayar via Midtrans
             </button>
         </div>
     </form>
