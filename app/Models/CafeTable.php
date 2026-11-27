@@ -8,6 +8,7 @@ use Database\Factories\CafeTableFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 class CafeTable extends Model
@@ -21,6 +22,16 @@ class CafeTable extends Model
         'token',
         'status',
     ];
+
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class, 'table_id');
+    }
+
+    public function guestSessions(): HasMany
+    {
+        return $this->hasMany(GuestSession::class, 'table_id');
+    }
 
     public static function generateUniqueToken(): string
     {

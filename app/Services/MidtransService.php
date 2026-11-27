@@ -77,7 +77,7 @@ class MidtransService
         }
 
         if (! $this->isConfigured()) {
-            throw new RuntimeException('Konfigurasi Midtrans Server Key / Client Key belum lengkap.');
+            throw new RuntimeException('Konfigurasi pembayaran online belum lengkap.');
         }
 
         $order->loadMissing('items');
@@ -108,7 +108,7 @@ class MidtransService
             : (int) ($order->total_amount ?: $order->total_price ?: 0);
 
         if ($grossAmount <= 0) {
-            throw new RuntimeException('Total tagihan pesanan harus lebih dari Rp 0 untuk membuat transaksi Midtrans.');
+            throw new RuntimeException('Total tagihan pesanan harus lebih dari Rp 0 untuk melakukan pembayaran.');
         }
 
         $needsFreshOrderId = $forceNew
@@ -148,7 +148,7 @@ class MidtransService
                 ? implode(', ', (array) $errorBody['error_messages'])
                 : ($response->body() ?: 'HTTP '.$response->status());
 
-            throw new RuntimeException('Gagal membuat transaksi Midtrans: '.$errorMessage);
+            throw new RuntimeException('Gagal menyiapkan pembayaran QRIS / Transfer: '.$errorMessage);
         }
 
         $data = $response->json();
@@ -156,7 +156,7 @@ class MidtransService
         $redirectUrl = $data['redirect_url'] ?? null;
 
         if ($token === '') {
-            throw new RuntimeException('Midtrans tidak mengembalikan Snap token.');
+            throw new RuntimeException('Layanan pembayaran belum mengembalikan token transaksi.');
         }
 
         $updates = [
@@ -186,7 +186,7 @@ class MidtransService
     public function fetchTransactionStatus(string $midtransOrderId): array
     {
         if (! $this->isConfigured()) {
-            throw new RuntimeException('Konfigurasi Midtrans Server Key / Client Key belum lengkap.');
+            throw new RuntimeException('Konfigurasi pembayaran online belum lengkap.');
         }
 
         $response = Http::withBasicAuth($this->serverKey(), '')
@@ -195,7 +195,7 @@ class MidtransService
             ->get("{$this->coreApiUrl()}/{$midtransOrderId}/status");
 
         if (! $response->successful()) {
-            throw new RuntimeException('Status transaksi Midtrans belum tersedia (HTTP '.$response->status().').', $response->status());
+            throw new RuntimeException('Status pembayaran belum tersedia (HTTP '.$response->status().').', $response->status());
         }
 
         return (array) $response->json();

@@ -10,6 +10,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\RestaurantTable;
 use App\Models\SyncQueue;
+use App\Services\GuestSessionService;
 use App\Services\MidtransService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -20,7 +21,10 @@ use Illuminate\View\View;
 
 class OrderController extends Controller
 {
-    public function __construct(public MidtransService $midtrans) {}
+    public function __construct(
+        public MidtransService $midtrans,
+        public GuestSessionService $guestSessions,
+    ) {}
 
     /**
      * Display the main cashier (tablet) view with real-time orders data.
@@ -80,9 +84,10 @@ class OrderController extends Controller
     /**
      * Get a specific order details.
      */
-    public function show(Order $order): JsonResponse
+    public function show(Request $request, Order $order): JsonResponse
     {
-        $order->load('items.menuItem');
+        $this->guestSessions->authorizeOrder($request, $order);
+        $order->load(['items.menuItem', 'cafeTable']);
 
         return response()->json([
             'success' => true,
@@ -103,9 +108,13 @@ class OrderController extends Controller
         }
 
         if (! $order->isPaid()) {
+            $message = $order->payment_method === 'tunai'
+                ? 'Pembayaran tunai di kasir belum dikonfirmasi. Pesanan baru dapat diproses setelah pembayaran lunas.'
+                : 'Pembayaran QRIS / Transfer belum berhasil. Pesanan baru dapat diproses setelah pembayaran lunas.';
+
             return response()->json([
                 'success' => false,
-                'message' => 'Pembayaran Midtrans belum berhasil. Pesanan baru dapat diproses setelah pembayaran lunas.',
+                'message' => $message,
             ], 422);
         }
 
@@ -126,7 +135,7 @@ class OrderController extends Controller
         if (! $order->isPaid()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Pembayaran Midtrans belum berhasil. Pesanan belum dapat diselesaikan.',
+                'message' => 'Pembayaran belum lunas. Pesanan belum dapat diselesaikan.',
             ], 422);
         }
 
@@ -161,15 +170,17 @@ class OrderController extends Controller
     }
 
     /**
-     * Initiate or resume Midtrans Snap payment for an order.
+     * Confirm cash payment at cashier or initiate/resume Midtrans Snap payment.
      */
     public function pay(Request $request, Order $order): JsonResponse
     {
         if ($order->isPaid()) {
+            $paidLabel = $order->payment_method === 'tunai' ? 'Tunai di Kasir' : 'QRIS / Transfer';
+
             return response()->json([
                 'success' => true,
                 'already_paid' => true,
-                'message' => 'Pesanan sudah dibayar melalui Midtrans.',
+                'message' => "Pesanan sudah dibayar melalui {$paidLabel}.",
                 'order' => $order->fresh(['items.menuItem']),
             ]);
         }
@@ -179,6 +190,38 @@ class OrderController extends Controller
                 'success' => false,
                 'message' => 'Pesanan yang sudah dibatalkan tidak dapat dibayar.',
             ], 422);
+        }
+
+        $requestedMethod = strtolower((string) $request->input('payment_method', 'midtrans'));
+        if ($requestedMethod === 'cash') {
+            $requestedMethod = 'tunai';
+        }
+
+        if ($requestedMethod === 'tunai') {
+            $totalAmount = (int) ($order->total_amount ?: $order->total_price ?: 0);
+
+            $validated = $request->validate([
+                'amount_paid' => ['required', 'numeric', 'min:'.$totalAmount],
+            ]);
+
+            $amountPaid = (int) $validated['amount_paid'];
+            $changeAmount = $amountPaid - $totalAmount;
+
+            $order->update([
+                'payment_status' => 'paid',
+                'payment_method' => 'tunai',
+                'amount_paid' => $amountPaid,
+                'change_amount' => $changeAmount,
+                'paid_at' => Carbon::now(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'paid' => true,
+                'payment_method' => 'tunai',
+                'message' => "Pembayaran tunai untuk {$order->order_code} berhasil dikonfirmasi! Pesanan sekarang dapat diproses.",
+                'order' => $order->fresh(['items.menuItem']),
+            ]);
         }
 
         try {
@@ -195,7 +238,7 @@ class OrderController extends Controller
             'snap_token' => $snap['token'],
             'redirect_url' => $snap['redirect_url'],
             'client_key' => $this->midtrans->clientKey(),
-            'message' => "Transaksi Midtrans siap untuk {$order->order_code}.",
+            'message' => "Pembayaran QRIS / Transfer siap untuk {$order->order_code}.",
             'order' => $order->fresh(['items.menuItem']),
         ]);
     }
@@ -211,11 +254,30 @@ class OrderController extends Controller
                 'customer_name' => 'nullable|string|max:100',
                 'customer_notes' => 'nullable|string',
                 'source' => 'nullable|string',
+                'payment_method' => 'nullable|in:midtrans,tunai,cash',
                 'items' => 'required|array|min:1',
                 'items.*.menu_item_id' => 'required|exists:menu_items,id',
                 'items.*.quantity' => 'required|integer|min:1',
                 'items.*.notes' => 'nullable|string',
             ]);
+
+            $paymentMethod = in_array($validated['payment_method'] ?? null, ['tunai', 'cash'], true)
+                ? 'tunai'
+                : 'midtrans';
+
+            $cleanTable = $this->normalizeTableNumber($validated['table_number']);
+            $cafeTable = $cleanTable ? CafeTable::where('table_number', $cleanTable)->first() : null;
+            $isCashierOrder = $this->guestSessions->isStaff($request) && ($validated['source'] ?? null) === 'Kasir';
+
+            if (! $this->guestSessions->isStaff($request) && $cafeTable && $cafeTable->status !== 'aktif') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Meja ini sedang nonaktif. Pemesanan tidak dapat diproses.',
+                ], 422);
+            }
+
+            $owner = $this->guestSessions->resolveOrderOwner($request, $cafeTable, $isCashierOrder);
+            $registeredCustomer = $this->guestSessions->registeredCustomer($request);
 
             $latestOrder = Order::orderBy('id', 'desc')->first();
             $nextNumber = 125;
@@ -226,11 +288,15 @@ class OrderController extends Controller
 
             $order = Order::create([
                 'order_code' => $orderCode,
+                'user_id' => $owner['user_id'],
+                'guest_session_id' => $owner['guest_session_id'],
+                'table_id' => $cafeTable?->id,
                 'table_number' => $validated['table_number'],
-                'customer_name' => $validated['customer_name'] ?? 'Pelanggan',
+                'customer_name' => ($validated['customer_name'] ?? null) ?: ($isCashierOrder ? 'Pelanggan' : ($registeredCustomer?->nama ?? 'Pelanggan')),
                 'source' => $validated['source'] ?? 'QR Meja',
                 'status' => 'menunggu',
                 'payment_status' => 'unpaid',
+                'payment_method' => $paymentMethod,
                 'midtrans_order_id' => $orderCode,
                 'customer_notes' => $validated['customer_notes'] ?? null,
                 'total_amount' => 0,
@@ -255,17 +321,22 @@ class OrderController extends Controller
 
             $order->update(['total_amount' => $total, 'total_price' => $total, 'subtotal' => $total]);
 
-            try {
-                $this->midtrans->createSnapTransaction($order);
-            } catch (\Throwable $e) {
-                Log::warning('Midtrans Snap creation failed for POS order '.$order->order_code.': '.$e->getMessage());
+            if ($paymentMethod === 'midtrans') {
+                try {
+                    $this->midtrans->createSnapTransaction($order);
+                } catch (\Throwable $e) {
+                    Log::warning('Midtrans Snap creation failed for POS order '.$order->order_code.': '.$e->getMessage());
+                }
             }
 
             $freshOrder = $order->fresh(['items.menuItem']);
+            $successMessage = $paymentMethod === 'tunai'
+                ? "Pesanan baru {$orderCode} berhasil dibuat! Silakan konfirmasi pembayaran tunai di kasir."
+                : "Pesanan baru {$orderCode} berhasil dibuat! Silakan lanjutkan pembayaran via QRIS atau Transfer.";
 
             return response()->json([
                 'success' => true,
-                'message' => "Pesanan baru {$orderCode} berhasil dibuat! Silakan lanjutkan pembayaran via Midtrans.",
+                'message' => $successMessage,
                 'snap_token' => $freshOrder->snap_token,
                 'snap_redirect_url' => $freshOrder->snap_redirect_url,
                 'order' => $freshOrder,
@@ -277,7 +348,12 @@ class OrderController extends Controller
             'table_number' => ['required', 'string', 'max:20'],
             'customer_name' => ['nullable', 'string', 'max:100'],
             'notes' => ['nullable', 'string', 'max:255'],
+            'payment_method' => ['nullable', 'in:midtrans,tunai,cash'],
         ]);
+
+        $paymentMethod = in_array($validated['payment_method'] ?? null, ['tunai', 'cash'], true)
+            ? 'tunai'
+            : 'midtrans';
 
         $cleanTable = $this->normalizeTableNumber($validated['table_number']);
         $cafeTable = $cleanTable ? CafeTable::where('table_number', $cleanTable)->first() : null;
@@ -303,20 +379,26 @@ class OrderController extends Controller
             $subtotal += $item['price'] * $item['quantity'];
         }
 
+        $owner = $this->guestSessions->resolveOrderOwner($request, $cafeTable);
+        $registeredCustomer = $this->guestSessions->registeredCustomer($request);
         $orderCode = Order::generateOrderCode();
 
         $order = Order::create([
             'order_code' => $orderCode,
+            'user_id' => $owner['user_id'],
+            'guest_session_id' => $owner['guest_session_id'],
+            'table_id' => $cafeTable?->id,
             'table_number' => $cleanTable ?? $validated['table_number'],
-            'customer_name' => $validated['customer_name'] ?: null,
-            'notes' => $validated['notes'] ?: null,
-            'customer_notes' => $validated['notes'] ?: null,
+            'customer_name' => ($validated['customer_name'] ?? null) ?: $registeredCustomer?->nama,
+            'notes' => ($validated['notes'] ?? null) ?: null,
+            'customer_notes' => ($validated['notes'] ?? null) ?: null,
             'subtotal' => $subtotal,
             'total_price' => $subtotal,
             'total_amount' => $subtotal,
             'source' => 'QR Meja',
             'status' => 'menunggu',
             'payment_status' => 'unpaid',
+            'payment_method' => $paymentMethod,
             'midtrans_order_id' => $orderCode,
         ]);
 
@@ -331,10 +413,12 @@ class OrderController extends Controller
             ]);
         }
 
-        try {
-            $this->midtrans->createSnapTransaction($order);
-        } catch (\Throwable $e) {
-            Log::warning('Midtrans Snap creation failed for QR order '.$order->order_code.': '.$e->getMessage());
+        if ($paymentMethod === 'midtrans') {
+            try {
+                $this->midtrans->createSnapTransaction($order);
+            } catch (\Throwable $e) {
+                Log::warning('Midtrans Snap creation failed for QR order '.$order->order_code.': '.$e->getMessage());
+            }
         }
 
         session()->put($cartKey, []);
@@ -371,88 +455,62 @@ class OrderController extends Controller
      */
     public function history(Request $request): View|JsonResponse|RedirectResponse
     {
-        if ($request->routeIs('orders.history') || $request->routeIs('pelanggan.beranda')) {
-            $tableNumber = $this->normalizeTableNumber($request->query('table') ?? session('active_table'));
-            if ($tableNumber !== null) {
-                session(['active_table' => $tableNumber]);
-            }
-            $activeStatus = (string) $request->query('status', 'semua');
+        if ($request->routeIs('kasir.riwayat') || ($request->wantsJson() && $this->guestSessions->isStaff($request))) {
+            $query = Order::with(['items.menuItem', 'cafeTable'])
+                ->whereIn('status', ['selesai', 'dibatalkan'])
+                ->orderBy('updated_at', 'desc');
 
-            $ordersQuery = Order::with('items')->latest();
-
-            if ($request->routeIs('pelanggan.beranda')) {
-                $userName = auth()->user()?->nama;
-                if ($tableNumber !== null || ! empty($userName)) {
-                    $ordersQuery->where(function ($q) use ($tableNumber, $userName): void {
-                        if ($tableNumber !== null) {
-                            $q->whereIn('table_number', [$tableNumber, 'Meja '.$tableNumber]);
-                        }
-                        if (! empty($userName)) {
-                            $q->orWhere('customer_name', $userName);
-                        }
-                    });
-                }
-            } elseif ($tableNumber !== null) {
-                $ordersQuery->whereIn('table_number', [$tableNumber, 'Meja '.$tableNumber]);
+            if ($request->filled('search')) {
+                $s = $request->search;
+                $query->where(function ($q) use ($s): void {
+                    $q->where('order_code', 'like', "%{$s}%")
+                        ->orWhere('table_number', 'like', "%{$s}%")
+                        ->orWhere('customer_name', 'like', "%{$s}%");
+                });
             }
 
-            if (in_array($activeStatus, ['menunggu', 'diproses', 'selesai', 'dibatalkan'], true)) {
-                $ordersQuery->where('status', $activeStatus);
+            if ($request->filled('method') && $request->method !== 'semua') {
+                $query->where('payment_method', $request->method);
             }
 
-            return view('orders.history', [
-                'orders' => $ordersQuery->get(),
-                'tableNumber' => $tableNumber,
-                'activeStatus' => $activeStatus,
-            ]);
+            $historyOrders = $query->paginate(15);
+
+            if ($request->wantsJson()) {
+                return response()->json($historyOrders);
+            }
+
+            return redirect()->route('kasir.index');
         }
 
-        $query = Order::with('items.menuItem')
-            ->whereIn('status', ['selesai', 'dibatalkan'])
-            ->orderBy('updated_at', 'desc');
-
-        if ($request->filled('search')) {
-            $s = $request->search;
-            $query->where(function ($q) use ($s) {
-                $q->where('order_code', 'like', "%{$s}%")
-                    ->orWhere('table_number', 'like', "%{$s}%")
-                    ->orWhere('customer_name', 'like', "%{$s}%");
-            });
+        $tableNumber = $this->normalizeTableNumber($request->query('table') ?? session('active_table'));
+        if ($tableNumber !== null) {
+            session(['active_table' => $tableNumber]);
         }
 
-        if ($request->filled('method') && $request->method !== 'semua') {
-            $query->where('payment_method', $request->method);
+        $activeStatus = (string) $request->query('status', 'semua');
+
+        $ordersQuery = $this->guestSessions->scopeOrdersForRequester(
+            $request,
+            Order::with(['items', 'cafeTable'])->latest('created_at')->latest('id')
+        );
+
+        if (in_array($activeStatus, ['menunggu', 'diproses', 'selesai', 'dibatalkan'], true)) {
+            $ordersQuery->where('status', $activeStatus);
         }
 
-        $historyOrders = $query->paginate(15);
+        $orders = $ordersQuery->get();
 
         if ($request->wantsJson()) {
-            return response()->json($historyOrders);
-        }
-
-        // Return customer order history view if customer route or table provided
-        if ($request->filled('table') || ! $request->is('kasir*')) {
-            $tableNumber = $this->normalizeTableNumber($request->query('table') ?? session('active_table'));
-            $activeStatus = (string) $request->query('status', 'semua');
-
-            $orders = Order::with('items')
-                ->when($tableNumber !== null, function ($q) use ($tableNumber) {
-                    $q->whereIn('table_number', [$tableNumber, 'Meja '.$tableNumber]);
-                })
-                ->when(in_array($activeStatus, ['menunggu', 'diproses', 'selesai', 'dibatalkan'], true), function ($q) use ($activeStatus) {
-                    $q->where('status', $activeStatus);
-                })
-                ->latest()
-                ->get();
-
-            return view('orders.history', [
+            return response()->json([
                 'orders' => $orders,
-                'tableNumber' => $tableNumber,
-                'activeStatus' => $activeStatus,
             ]);
         }
 
-        return redirect()->route('kasir.index');
+        return view('orders.history', [
+            'orders' => $orders,
+            'tableNumber' => $tableNumber,
+            'activeStatus' => $activeStatus,
+        ]);
     }
 
     /**
@@ -613,9 +671,10 @@ class OrderController extends Controller
     /**
      * Display order status screen (04 Status Pesanan).
      */
-    public function status(string $order_code): View
+    public function status(Request $request, string $order_code): View
     {
-        $order = Order::with('items')->where('order_code', $order_code)->firstOrFail();
+        $order = Order::with(['items', 'cafeTable'])->where('order_code', $order_code)->firstOrFail();
+        $this->guestSessions->authorizeOrder($request, $order);
 
         return view('orders.status', [
             'order' => $order,
@@ -628,9 +687,10 @@ class OrderController extends Controller
     /**
      * Live status check API.
      */
-    public function checkStatus(string $order_code): JsonResponse
+    public function checkStatus(Request $request, string $order_code): JsonResponse
     {
         $order = Order::where('order_code', $order_code)->firstOrFail();
+        $this->guestSessions->authorizeOrder($request, $order);
 
         return response()->json([
             'order_code' => $order->order_code,
@@ -647,11 +707,15 @@ class OrderController extends Controller
      */
     public function updateStatus(Request $request, string $order_code): JsonResponse|RedirectResponse
     {
+        if (! $this->guestSessions->isStaff($request)) {
+            abort(403, 'Anda tidak memiliki hak akses untuk mengubah status pesanan.');
+        }
+
         $order = Order::where('order_code', $order_code)->firstOrFail();
         $newStatus = (string) $request->input('status');
 
         if (in_array($newStatus, ['diproses', 'selesai'], true) && ! $order->isPaid()) {
-            $message = 'Pembayaran Midtrans belum berhasil. Pesanan baru dapat diproses setelah pembayaran lunas.';
+            $message = 'Pembayaran belum lunas. Pesanan baru dapat diproses setelah pembayaran lunas.';
 
             if ($request->wantsJson()) {
                 return response()->json([

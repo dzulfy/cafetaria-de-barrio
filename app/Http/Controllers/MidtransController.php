@@ -3,13 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Services\GuestSessionService;
 use App\Services\MidtransService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class MidtransController extends Controller
 {
-    public function __construct(public MidtransService $midtrans) {}
+    public function __construct(
+        public MidtransService $midtrans,
+        public GuestSessionService $guestSessions,
+    ) {}
 
     /**
      * Handle incoming Midtrans payment notification webhook.
@@ -50,6 +54,7 @@ class MidtransController extends Controller
     public function token(Request $request, string $order_code): JsonResponse
     {
         $order = Order::with('items')->where('order_code', $order_code)->firstOrFail();
+        $this->guestSessions->authorizeOrder($request, $order);
 
         if ($order->isPaid()) {
             return response()->json([
@@ -86,9 +91,10 @@ class MidtransController extends Controller
     /**
      * Actively query Midtrans Core API to verify payment status.
      */
-    public function verify(string $order_code): JsonResponse
+    public function verify(Request $request, string $order_code): JsonResponse
     {
         $order = Order::with('items')->where('order_code', $order_code)->firstOrFail();
+        $this->guestSessions->authorizeOrder($request, $order);
 
         if ($order->isPaid()) {
             return response()->json([
@@ -110,7 +116,7 @@ class MidtransController extends Controller
                     'success' => true,
                     'paid' => false,
                     'payment_status' => $order->payment_status,
-                    'message' => 'Pembayaran belum diselesaikan di Midtrans.',
+                    'message' => 'Pembayaran QRIS / Transfer belum diselesaikan.',
                     'order' => $order,
                 ]);
             }
@@ -130,7 +136,7 @@ class MidtransController extends Controller
             'payment_status' => $order->payment_status,
             'midtrans_transaction_status' => $order->midtrans_transaction_status,
             'message' => $order->isPaid()
-                ? 'Pembayaran Midtrans berhasil dikonfirmasi!'
+                ? 'Pembayaran QRIS / Transfer berhasil dikonfirmasi!'
                 : 'Status pembayaran diperbarui.',
             'order' => $order,
         ]);

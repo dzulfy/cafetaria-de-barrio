@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>A7 Meja & QR Code - Panel Admin De Barrio</title>
+    <title>A7 Meja & QR Code - Panel Admin Cafetaria De Barrio</title>
     <link rel="icon" type="image/jpeg" href="{{ asset('images/logo-de-barrio.jpg') }}">
     
     <!-- Google Fonts -->
@@ -25,15 +25,28 @@
     <header class="md:hidden bg-[#1F4D3A] text-white p-4 flex items-center justify-between sticky top-0 z-40 shadow-sm">
         <div class="flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-full bg-[#F6EFD8] overflow-hidden border border-white/25 flex items-center justify-center shrink-0">
-                <img src="{{ asset('images/logo-de-barrio.jpg') }}" alt="Cafeteria De Barrio" class="w-full h-full object-cover">
+                <img src="{{ asset('images/logo-de-barrio.jpg') }}" alt="Cafetaria De Barrio" class="w-full h-full object-cover">
             </div>
             <div>
-                <span class="font-bold text-sm block">De Barrio</span>
+                <span class="font-bold text-sm block">Cafetaria De Barrio</span>
                 <span class="text-[10px] text-[#A9C4B5] block">Panel Admin</span>
             </div>
         </div>
         <div class="flex items-center gap-2">
-            <a href="{{ route('cart') }}" class="text-xs bg-[#2E6B52] px-2.5 py-1 rounded-lg text-white font-medium">Lihat Menu</a>
+            <a href="{{ route('cart') }}" class="text-xs bg-[#2E6B52] px-2.5 py-1.5 rounded-xl text-white font-medium">Lihat Menu</a>
+            @if(auth()->check())
+            <button type="button"
+                    onclick="openLogoutModal()"
+                    class="px-2.5 py-1.5 rounded-xl bg-rose-500/25 hover:bg-rose-600 border border-rose-300/40 text-rose-100 hover:text-white text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+                    title="Keluar / Logout">
+                <svg class="w-4 h-4 stroke-current fill-none" stroke-width="2.2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                <span>Keluar</span>
+            </button>
+            @endif
             <button type="button" onclick="document.getElementById('admin-sidebar').classList.toggle('hidden')" class="p-1.5 rounded-lg bg-[#2E6B52] text-white">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
@@ -47,10 +60,10 @@
         <!-- Logo / Brand -->
         <div class="flex items-center gap-3 pb-5 px-2 border-b border-[#2E6B52]">
             <div class="w-10 h-10 rounded-full bg-[#F6EFD8] overflow-hidden border border-white/25 flex items-center justify-center shrink-0">
-                <img src="{{ asset('images/logo-de-barrio.jpg') }}" alt="Cafeteria De Barrio" class="w-full h-full object-cover">
+                <img src="{{ asset('images/logo-de-barrio.jpg') }}" alt="Cafetaria De Barrio" class="w-full h-full object-cover">
             </div>
             <div>
-                <h1 class="font-bold text-base text-white tracking-tight leading-tight">De Barrio</h1>
+                <h1 class="font-bold text-sm text-white tracking-tight leading-tight">Cafetaria De Barrio</h1>
                 <p class="text-xs font-medium text-[#A9C4B5]">Panel Admin</p>
             </div>
         </div>
@@ -105,7 +118,7 @@
 
         <!-- Profile Section -->
         <div class="pt-4 border-t border-[#2E6B52]">
-            <div class="bg-[#2E6B52] p-3 rounded-xl flex items-center justify-between gap-2.5">
+            <div class="bg-[#2E6B52] p-3 rounded-2xl flex flex-col gap-2.5">
                 <div class="flex items-center gap-2.5 min-w-0">
                     <div class="w-9 h-9 rounded-full bg-[#F6EFD8] text-[#1F4D3A] flex items-center justify-center font-bold text-xs shrink-0">
                         {{ strtoupper(substr(auth()->user()->nama ?? auth()->user()->name ?? 'MF', 0, 2)) }}
@@ -115,16 +128,19 @@
                         <p class="text-[11px] text-[#BFD3C7] truncate">{{ auth()->user()->peran ?? 'Admin / Owner' }}</p>
                     </div>
                 </div>
-                <form method="POST" action="{{ route('logout') }}" class="inline shrink-0">
-                    @csrf
-                    <button type="submit" class="text-[#BFD3C7] hover:text-white p-1 rounded-lg transition" title="Keluar / Logout">
-                        <svg class="w-4 h-4 stroke-current stroke-2 fill-none" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                            <polyline points="16 17 21 12 16 7"></polyline>
-                            <line x1="21" y1="12" x2="9" y2="12"></line>
-                        </svg>
-                    </button>
-                </form>
+                @if(auth()->check())
+                <button type="button"
+                        onclick="openLogoutModal()"
+                        class="w-full py-2 px-3 rounded-xl bg-rose-500/20 hover:bg-rose-600 border border-rose-300/35 text-rose-100 hover:text-white text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer"
+                        title="Keluar / Logout">
+                    <svg class="w-[18px] h-[18px] stroke-current fill-none shrink-0" stroke-width="2.2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    <span>Keluar</span>
+                </button>
+                @endif
             </div>
         </div>
     </aside>
@@ -306,6 +322,8 @@
             </form>
         </div>
     </div>
+
+    <x-logout-modal />
 
 </body>
 </html>

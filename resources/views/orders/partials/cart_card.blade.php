@@ -180,17 +180,48 @@
                             </div>
                         </div>
 
+                        {{-- Pilihan Metode Pembayaran --}}
+                        <div class="space-y-2">
+                            <p class="text-xs font-bold text-ink">Metode Pembayaran</p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2">
+                                <label class="payment-method-card flex items-start gap-3 rounded-xl border-2 border-brand-900 bg-brand-100/40 p-3 cursor-pointer transition">
+                                    <input type="radio"
+                                           name="payment_method"
+                                           value="midtrans"
+                                           checked
+                                           onchange="onPaymentMethodChange(this.value)"
+                                           class="mt-0.5 text-brand-900 focus:ring-brand-900">
+                                    <div class="min-w-0">
+                                        <span class="block text-xs font-bold text-ink">Bayar via QRIS / Transfer</span>
+                                        <span class="block text-[11px] text-muted mt-0.5">QRIS, GoPay, Virtual Account, e-Wallet</span>
+                                    </div>
+                                </label>
+
+                                <label class="payment-method-card flex items-start gap-3 rounded-xl border border-line bg-white hover:border-brand-900/40 p-3 cursor-pointer transition">
+                                    <input type="radio"
+                                           name="payment_method"
+                                           value="tunai"
+                                           onchange="onPaymentMethodChange(this.value)"
+                                           class="mt-0.5 text-brand-900 focus:ring-brand-900">
+                                    <div class="min-w-0">
+                                        <span class="block text-xs font-bold text-ink">Bayar di Kasir (Cash / Tunai)</span>
+                                        <span class="block text-[11px] text-muted mt-0.5">Bayar tunai langsung ke kasir setelah pesan</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
                         {{-- Banner Info Pembayaran --}}
                         <div class="bg-warn-bg rounded-xl px-3.5 py-3 flex items-start gap-2.5 text-xs text-warn-fg leading-relaxed">
                             <x-lucide.wallet class="w-4 h-4 mt-0.5 shrink-0" />
-                            <span>Pembayaran dilakukan online via Midtrans (QRIS, GoPay, Virtual Account, e-Wallet). Pesanan diproses kasir setelah pembayaran berhasil.</span>
+                            <span id="payment-info-text">Pembayaran dilakukan online via QRIS atau Transfer (e-Wallet & Virtual Account). Pesanan diproses kasir setelah pembayaran berhasil.</span>
                         </div>
 
                         @if (! $inMockup)
                             <button type="submit"
                                     {{ $canOrder ? '' : 'disabled' }}
                                     class="btn-submit-order hidden lg:flex w-full h-12 rounded-xl bg-brand-900 hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm shadow-md transition-all hover:-translate-y-0.5 active:scale-[0.99] items-center justify-center cursor-pointer">
-                                Kirim & Bayar via Midtrans
+                                Kirim & Bayar via QRIS / Transfer
                             </button>
                         @endif
                     </div>
@@ -203,7 +234,7 @@
             <button type="submit"
                     {{ $canOrder ? '' : 'disabled' }}
                     class="btn-submit-order w-full h-12 rounded-xl bg-brand-900 hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm shadow-md transition cursor-pointer active:scale-[0.99] flex items-center justify-center">
-                Kirim & Bayar via Midtrans
+                Kirim & Bayar via QRIS / Transfer
             </button>
         </div>
     </form>
@@ -213,6 +244,33 @@
 <script>
     const ACTIVE_CART_TABLE = @json($tableNumber);
     const IS_TABLE_INACTIVE = @json($isTableInactive);
+
+    function onPaymentMethodChange(method) {
+        const cards = document.querySelectorAll('.payment-method-card');
+        cards.forEach((card) => {
+            const radio = card.querySelector('input[type="radio"]');
+            const isSelected = radio && radio.value === method;
+            card.classList.toggle('border-2', isSelected);
+            card.classList.toggle('border-brand-900', isSelected);
+            card.classList.toggle('bg-brand-100/40', isSelected);
+            card.classList.toggle('border', !isSelected);
+            card.classList.toggle('border-line', !isSelected);
+            card.classList.toggle('bg-white', !isSelected);
+        });
+
+        const infoEl = document.getElementById('payment-info-text');
+        if (infoEl) {
+            infoEl.textContent = method === 'tunai'
+                ? 'Silakan tunjukkan kode pesanan dan lakukan pembayaran tunai (cash) di kasir. Pesanan diproses setelah kasir mengonfirmasi pembayaran.'
+                : 'Pembayaran dilakukan online via QRIS atau Transfer (e-Wallet & Virtual Account). Pesanan diproses kasir setelah pembayaran berhasil.';
+        }
+
+        document.querySelectorAll('.btn-submit-order').forEach((btn) => {
+            btn.textContent = method === 'tunai'
+                ? 'Kirim Pesanan (Bayar di Kasir)'
+                : 'Kirim & Bayar via QRIS / Transfer';
+        });
+    }
 
     function triggerCartPop(el) {
         if (!el) return;

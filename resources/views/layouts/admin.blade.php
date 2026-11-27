@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Dashboard') - De Barrio</title>
+    <title>@yield('title', 'Dashboard') - Cafetaria De Barrio</title>
     <link rel="icon" type="image/jpeg" href="{{ asset('images/logo-de-barrio.jpg') }}">
 
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -85,10 +85,10 @@
 
             <div class="flex items-center gap-2.5">
                 <div class="w-8 h-8 rounded-full bg-[#FAF8F4] overflow-hidden border border-white/25 flex items-center justify-center shadow-xs shrink-0">
-                    <img src="{{ asset('images/logo-de-barrio.jpg') }}" alt="Cafeteria De Barrio" class="w-full h-full object-cover">
+                    <img src="{{ asset('images/logo-de-barrio.jpg') }}" alt="Cafetaria De Barrio" class="w-full h-full object-cover">
                 </div>
                 <div>
-                    <h1 class="font-bold text-base leading-tight tracking-tight text-white">De Barrio</h1>
+                    <h1 class="font-bold text-sm sm:text-base leading-tight tracking-tight text-white">Cafetaria De Barrio</h1>
                     <p class="text-[10px] text-[#8DAAA0] font-medium leading-none">Panel Admin</p>
                 </div>
             </div>
@@ -99,16 +99,17 @@
                 {{ strtoupper(substr(auth()->user()->nama ?? auth()->user()->name ?? 'AD', 0, 2)) }}
             </div>
             @if(auth()->check())
-            <form method="POST" action="{{ route('logout') }}" class="inline">
-                @csrf
-                <button type="submit" class="p-1.5 rounded-lg text-[#8DAAA0] hover:text-red-400 hover:bg-[#224E3D] transition flex items-center justify-center" title="Keluar / Logout">
-                    <svg class="w-4 h-4 stroke-current stroke-2 fill-none" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                        <polyline points="16 17 21 12 16 7"></polyline>
-                        <line x1="21" y1="12" x2="9" y2="12"></line>
-                    </svg>
-                </button>
-            </form>
+            <button type="button"
+                    onclick="openLogoutModal()"
+                    class="px-2.5 py-1.5 rounded-xl bg-rose-500/25 hover:bg-rose-600 border border-rose-300/40 text-rose-100 hover:text-white text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+                    title="Keluar / Logout">
+                <svg class="w-4 h-4 stroke-current fill-none" stroke-width="2.2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                <span>Keluar</span>
+            </button>
             @endif
         </div>
     </header>
@@ -132,10 +133,10 @@
                 <div class="flex items-center justify-between shrink-0 mb-6 lg:mb-7">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-full bg-[#FAF8F4] overflow-hidden border border-white/25 flex items-center justify-center shadow-sm shrink-0">
-                            <img src="{{ asset('images/logo-de-barrio.jpg') }}" alt="Cafeteria De Barrio" class="w-full h-full object-cover">
+                            <img src="{{ asset('images/logo-de-barrio.jpg') }}" alt="Cafetaria De Barrio" class="w-full h-full object-cover">
                         </div>
                         <div>
-                            <h1 class="font-bold text-lg leading-tight tracking-tight text-white">De Barrio</h1>
+                            <h1 class="font-bold text-base leading-tight tracking-tight text-white">Cafetaria De Barrio</h1>
                             <p class="text-xs text-[#8DAAA0] font-medium">Panel Admin</p>
                         </div>
                     </div>
@@ -222,8 +223,8 @@
                 </nav>
             </div>
 
-            <!-- User Profile Card -->
-            <div class="bg-[#224E3D] rounded-2xl p-3 flex items-center justify-between shadow-xs mt-auto shrink-0">
+            <!-- User Profile Card & Logout -->
+            <div class="bg-[#224E3D] rounded-2xl p-3 flex flex-col gap-2.5 shadow-xs mt-auto shrink-0">
                 <div class="flex items-center gap-3 min-w-0">
                     <div class="w-9 h-9 rounded-full bg-[#E5DFD3] text-[#184233] font-bold text-xs flex items-center justify-center tracking-wider shrink-0">
                         {{ strtoupper(substr(auth()->user()->nama ?? auth()->user()->name ?? 'MF', 0, 2)) }}
@@ -234,16 +235,17 @@
                     </div>
                 </div>
                 @if(auth()->check())
-                <form method="POST" action="{{ route('logout') }}" class="shrink-0">
-                    @csrf
-                    <button type="submit" class="p-1.5 rounded-lg text-[#8DAAA0] hover:text-red-400 hover:bg-[#1E4D3D] transition flex items-center justify-center cursor-pointer" title="Keluar / Logout">
-                        <svg class="w-4 h-4 stroke-current stroke-2 fill-none" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                            <polyline points="16 17 21 12 16 7"></polyline>
-                            <line x1="21" y1="12" x2="9" y2="12"></line>
-                        </svg>
-                    </button>
-                </form>
+                <button type="button"
+                        onclick="openLogoutModal()"
+                        class="w-full py-2 px-3 rounded-xl bg-rose-500/20 hover:bg-rose-600 border border-rose-300/35 text-rose-100 hover:text-white text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer"
+                        title="Keluar / Logout">
+                    <svg class="w-[18px] h-[18px] stroke-current fill-none shrink-0" stroke-width="2.2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    <span>Keluar</span>
+                </button>
                 @endif
             </div>
         </div>
@@ -338,6 +340,8 @@
             }, 3000);
         }
     </script>
+
+    <x-logout-modal />
 
     @stack('scripts')
 </body>

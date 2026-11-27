@@ -21,30 +21,40 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-// Public landing & customer menu
-Route::get('/', [CustomerMenuController::class, 'landing'])->name('landing');
-Route::get('/meja/{token}', [CustomerMenuController::class, 'scanQr'])->name('customer.qr.scan');
-Route::get('/menu', [CustomerMenuController::class, 'index'])->name('customer.menu');
+// Public landing & customer menu (isolated per device/browser guest session)
+Route::middleware('guest.session')->group(function () {
+    Route::get('/', [CustomerMenuController::class, 'landing'])->name('landing');
+    Route::get('/meja/{token}', [CustomerMenuController::class, 'scanQr'])->name('customer.qr.scan');
+    Route::post('/api/qr/resolve', [CustomerMenuController::class, 'resolveQrScan'])->name('customer.qr.resolve');
+    Route::get('/menu', [CustomerMenuController::class, 'index'])->name('customer.menu');
+    Route::get('/menu/{menu}', [CustomerMenuController::class, 'show'])
+        ->whereNumber('menu')
+        ->name('customer.menu.show');
+    Route::post('/checkout', [CustomerMenuController::class, 'checkout'])->name('customer.checkout');
+
+    // Customer Cart & QR Order Status (qr-ordering)
+    Route::get('/cart', [OrderController::class, 'cart'])->name('cart');
+    Route::get('/keranjang', [OrderController::class, 'cart'])->name('cart.keranjang');
+    Route::post('/keranjang/update', [OrderController::class, 'updateCart'])->name('cart.update');
+    Route::post('/pesanan', [OrderController::class, 'store'])->name('pesanan.store');
+    Route::get('/pesanan/{order_code}', [OrderController::class, 'status'])->name('orders.status');
+    Route::get('/api/pesanan/{order_code}/status', [OrderController::class, 'checkStatus'])->name('orders.check-status');
+    Route::get('/riwayat-pesanan', [OrderController::class, 'history'])->name('orders.history');
+    Route::get('/riwayat', [OrderController::class, 'history'])->name('riwayat');
+    Route::get('/pesan-qr', [OrderController::class, 'customerQr'])->name('customer.qr');
+
+    // Midtrans Payment Gateway (customer-scoped)
+    Route::post('/api/midtrans/orders/{order_code}/token', [MidtransController::class, 'token'])->name('midtrans.token');
+    Route::post('/api/midtrans/orders/{order_code}/verify', [MidtransController::class, 'verify'])->name('midtrans.verify');
+});
+
 Route::get('/menu/download', [CustomerMenuController::class, 'downloadMenu'])->name('customer.menu.download');
-Route::get('/menu/{menu}', [CustomerMenuController::class, 'show'])
-    ->whereNumber('menu')
-    ->name('customer.menu.show');
-Route::post('/checkout', [CustomerMenuController::class, 'checkout'])->name('customer.checkout');
+Route::post('/pesanan/{order_code}/update-status', [OrderController::class, 'updateStatus'])
+    ->middleware(['auth', 'role:kasir,admin'])
+    ->name('orders.update-status');
 
-// Customer Cart & QR Order Status (qr-ordering)
-Route::get('/cart', [OrderController::class, 'cart'])->name('cart');
-Route::get('/keranjang', [OrderController::class, 'cart'])->name('cart.keranjang');
-Route::post('/keranjang/update', [OrderController::class, 'updateCart'])->name('cart.update');
-Route::post('/pesanan', [OrderController::class, 'store'])->name('pesanan.store');
-Route::get('/pesanan/{order_code}', [OrderController::class, 'status'])->name('orders.status');
-Route::get('/api/pesanan/{order_code}/status', [OrderController::class, 'checkStatus'])->name('orders.check-status');
-Route::post('/pesanan/{order_code}/update-status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
-Route::get('/riwayat-pesanan', [OrderController::class, 'history'])->name('orders.history');
-
-// Midtrans Payment Gateway
+// Midtrans Payment Gateway Webhook (authenticated by SHA-512 signature)
 Route::post('/api/midtrans/notification', [MidtransController::class, 'notification'])->name('midtrans.notification');
-Route::post('/api/midtrans/orders/{order_code}/token', [MidtransController::class, 'token'])->name('midtrans.token');
-Route::post('/api/midtrans/orders/{order_code}/verify', [MidtransController::class, 'verify'])->name('midtrans.verify');
 
 // Guest routes (not logged in)
 Route::middleware('guest')->group(function () {
@@ -121,21 +131,27 @@ Route::middleware(['auth', 'role:kasir,admin'])->prefix('kasir')->name('kasir.')
 });
 
 // Shortcut route to kasir tablet
-Route::get('/pos', [OrderController::class, 'index'])->name('kasir.pos');
+Route::get('/pos', [OrderController::class, 'index'])
+    ->middleware(['auth', 'role:kasir,admin'])
+    ->name('kasir.pos');
 
 // Orders API & Actions
 Route::prefix('orders')->name('orders.')->group(function () {
-    Route::get('/', [OrderController::class, 'index'])->name('list');
-    Route::post('/', [OrderController::class, 'store'])->name('store');
-    Route::get('/{order}', [OrderController::class, 'show'])->name('show');
-    Route::post('/{order}/process', [OrderController::class, 'process'])->name('process');
-    Route::post('/{order}/complete', [OrderController::class, 'complete'])->name('complete');
-    Route::post('/{order}/reject', [OrderController::class, 'reject'])->name('reject');
-    Route::post('/{order}/pay', [OrderController::class, 'pay'])->name('pay');
+    Route::middleware('guest.session')->group(function () {
+        Route::post('/', [OrderController::class, 'store'])->name('store');
+        Route::get('/{order}', [OrderController::class, 'show'])->name('show');
+    });
+
+    Route::middleware(['auth', 'role:kasir,admin'])->group(function () {
+        Route::get('/', [OrderController::class, 'index'])->name('list');
+        Route::post('/{order}/process', [OrderController::class, 'process'])->name('process');
+        Route::post('/{order}/complete', [OrderController::class, 'complete'])->name('complete');
+        Route::post('/{order}/reject', [OrderController::class, 'reject'])->name('reject');
+        Route::post('/{order}/pay', [OrderController::class, 'pay'])->name('pay');
+    });
 });
 
-// Riwayat & Sinkron top-level routes
-Route::get('/riwayat', [OrderController::class, 'history'])->name('riwayat');
+// Sinkron top-level route
 Route::get('/sinkron', [SyncController::class, 'index'])->name('sinkron');
 
 // Offline Sync API
@@ -148,11 +164,9 @@ Route::prefix('sync')->name('sync.')->group(function () {
 });
 
 // Pelanggan routes
-Route::middleware(['auth', 'role:pelanggan'])->prefix('pelanggan')->name('pelanggan.')->group(function () {
+Route::middleware(['auth', 'role:pelanggan', 'guest.session'])->prefix('pelanggan')->name('pelanggan.')->group(function () {
     Route::get('/', [OrderController::class, 'history'])->name('beranda');
     Route::view('/akun', 'pelanggan.akun')->name('akun');
 });
 
-// Customer QR Ordering Simulation
-Route::get('/pesan-qr', [OrderController::class, 'customerQr'])->name('customer.qr');
 Route::get('/api/menu', [MenuController::class, 'index'])->name('api.menu');

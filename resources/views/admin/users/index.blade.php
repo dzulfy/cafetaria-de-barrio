@@ -19,7 +19,7 @@
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
             <h1 class="text-[26px] font-bold text-ink">Pengguna & Hak Akses</h1>
-            <p class="text-[13px] text-muted">Kelola akun dan peran (Admin, Kasir, Pelanggan) Warkop De Barrio.</p>
+            <p class="text-[13px] text-muted">Kelola akun dan peran (Admin, Kasir, Pelanggan) Cafetaria De Barrio.</p>
         </div>
         <a href="{{ route('admin.users.create') }}" class="inline-flex items-center gap-2 rounded-[10px] bg-brand-900 px-4 py-2.5 text-[13px] font-semibold text-white shadow transition hover:bg-brand-700">
             <x-lucide.plus class="size-4" />
@@ -134,7 +134,7 @@
     <div class="space-y-3 rounded-[14px] border border-line bg-white p-5 shadow-sm">
         <div>
             <h2 class="text-sm font-bold text-ink">Matriks Hak Akses Per Peran</h2>
-            <p class="text-xs text-muted">Ringkasan hak akses tiap fitur berdasarkan rancangan sistem Warkop De Barrio.</p>
+            <p class="text-xs text-muted">Ringkasan hak akses tiap fitur berdasarkan rancangan sistem Cafetaria De Barrio.</p>
         </div>
         <div class="overflow-x-auto rounded-xl border border-line">
             <table class="w-full text-left text-xs">

@@ -152,6 +152,6 @@ class OrderManagementTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Meja 05');
-        $response->assertSee('Warkop De Barrio');
+        $response->assertSee('Cafetaria De Barrio');
     }
 }

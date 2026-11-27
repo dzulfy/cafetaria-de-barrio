@@ -6,11 +6,13 @@ namespace Tests\Feature;
 
 use App\Models\CafeTable;
 use App\Models\Category;
+use App\Models\GuestSession;
 use App\Models\Menu;
 use App\Models\MenuItem;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\User;
+use App\Services\GuestSessionService;
 use App\Services\MidtransService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -108,7 +110,7 @@ class MidtransPaymentTest extends TestCase
         $statusResponse = $this->get(route('orders.status', ['order_code' => $order->order_code]));
         $statusResponse->assertStatus(200);
         $statusResponse->assertSee('Menunggu Pembayaran');
-        $statusResponse->assertSee('Bayar Sekarang via Midtrans');
+        $statusResponse->assertSee('Bayar Sekarang (QRIS / Transfer)');
         $statusResponse->assertSee('Cek Status Pembayaran');
     }
 
@@ -131,7 +133,7 @@ class MidtransPaymentTest extends TestCase
             ->assertStatus(422)
             ->assertJson([
                 'success' => false,
-                'message' => 'Pembayaran Midtrans belum berhasil. Pesanan baru dapat diproses setelah pembayaran lunas.',
+                'message' => 'Pembayaran QRIS / Transfer belum berhasil. Pesanan baru dapat diproses setelah pembayaran lunas.',
             ]);
 
         $this->actingAs($this->kasir)
@@ -237,8 +239,11 @@ class MidtransPaymentTest extends TestCase
 
     public function test_active_verify_endpoint_confirms_payment_via_midtrans_core_api_and_unlocks_kasir(): void
     {
+        $guestSession = GuestSession::create();
+
         $order = Order::create([
             'order_code' => 'DB-9004',
+            'guest_session_id' => $guestSession->id,
             'table_number' => '05',
             'subtotal' => 9000,
             'total_price' => 9000,
@@ -259,7 +264,8 @@ class MidtransPaymentTest extends TestCase
             ], 200),
         ]);
 
-        $verifyResponse = $this->postJson(route('midtrans.verify', ['order_code' => 'DB-9004']));
+        $verifyResponse = $this->withSession([GuestSessionService::SESSION_KEY => $guestSession->id])
+            ->postJson(route('midtrans.verify', ['order_code' => 'DB-9004']));
         $verifyResponse->assertStatus(200)
             ->assertJson([
                 'success' => true,
@@ -327,8 +333,11 @@ class MidtransPaymentTest extends TestCase
 
     public function test_failed_or_expired_midtrans_payment_blocks_kasir_and_allows_regenerating_snap_token(): void
     {
+        $guestSession = GuestSession::create();
+
         $order = Order::create([
             'order_code' => 'DB-9006',
+            'guest_session_id' => $guestSession->id,
             'table_number' => '05',
             'subtotal' => 9000,
             'total_price' => 9000,
@@ -361,9 +370,10 @@ class MidtransPaymentTest extends TestCase
             ], 201),
         ]);
 
-        $tokenResponse = $this->postJson(route('midtrans.token', ['order_code' => 'DB-9006']), [
-            'force_new' => true,
-        ]);
+        $tokenResponse = $this->withSession([GuestSessionService::SESSION_KEY => $guestSession->id])
+            ->postJson(route('midtrans.token', ['order_code' => 'DB-9006']), [
+                'force_new' => true,
+            ]);
 
         $tokenResponse->assertStatus(200)
             ->assertJson([

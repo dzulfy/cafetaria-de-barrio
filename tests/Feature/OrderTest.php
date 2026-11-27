@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\GuestSession;
 use App\Models\Menu;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\User;
+use App\Services\GuestSessionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -52,7 +55,7 @@ class OrderTest extends TestCase
         $response->assertSee('Kopi Susu Gula Aren');
         $response->assertSee('Pisang Goreng');
         $response->assertSee('42.000');
-        $response->assertSee('Kirim & Bayar via Midtrans', false);
+        $response->assertSee('Kirim & Bayar via QRIS / Transfer', false);
     }
 
     public function test_can_update_cart_quantity(): void
@@ -110,8 +113,11 @@ class OrderTest extends TestCase
 
     public function test_order_status_page_displays_order_details(): void
     {
+        $guestSession = GuestSession::create();
+
         $order = Order::create([
             'order_code' => 'DB-0124',
+            'guest_session_id' => $guestSession->id,
             'table_number' => '05',
             'customer_name' => 'Rina',
             'notes' => 'gula sedikit',
@@ -137,7 +143,8 @@ class OrderTest extends TestCase
             'subtotal' => 10000,
         ]);
 
-        $response = $this->get(route('orders.status', ['order_code' => 'DB-0124']));
+        $response = $this->withSession([GuestSessionService::SESSION_KEY => $guestSession->id])
+            ->get(route('orders.status', ['order_code' => 'DB-0124']));
 
         $response->assertStatus(200);
         $response->assertSee('Menunggu Pembayaran');
@@ -149,15 +156,19 @@ class OrderTest extends TestCase
         $response->assertSee('2x Kopi Susu Gula Aren');
         $response->assertSee('1x Pisang Goreng');
         $response->assertSee('42.000');
-        $response->assertSee('Bayar Sekarang via Midtrans');
+        $response->assertSee('Bayar Sekarang (QRIS / Transfer)');
         $response->assertSee('Pesan Lagi');
         $response->assertSee('Lihat Riwayat Pesanan');
     }
 
     public function test_can_check_and_update_order_status(): void
     {
+        $guestSession = GuestSession::create();
+        $kasir = User::factory()->create(['peran' => 'kasir']);
+
         $order = Order::create([
             'order_code' => 'DB-0125',
+            'guest_session_id' => $guestSession->id,
             'table_number' => '05',
             'customer_name' => 'Budi',
             'total_price' => 16000,
@@ -165,8 +176,9 @@ class OrderTest extends TestCase
             'payment_status' => 'unpaid',
         ]);
 
-        // Check API status
-        $statusResponse = $this->getJson(route('orders.check-status', ['order_code' => 'DB-0125']));
+        // Check API status from owning guest session
+        $statusResponse = $this->withSession([GuestSessionService::SESSION_KEY => $guestSession->id])
+            ->getJson(route('orders.check-status', ['order_code' => 'DB-0125']));
         $statusResponse->assertStatus(200);
         $statusResponse->assertJson([
             'order_code' => 'DB-0125',
@@ -175,14 +187,14 @@ class OrderTest extends TestCase
         ]);
 
         // Unpaid order cannot move to diproses
-        $this->postJson(route('orders.update-status', ['order_code' => 'DB-0125']), [
+        $this->actingAs($kasir)->postJson(route('orders.update-status', ['order_code' => 'DB-0125']), [
             'status' => 'diproses',
         ])->assertStatus(422);
 
-        // Once paid via Midtrans, order can move to diproses
+        // Once paid via Midtrans, kasir can move order to diproses
         $order->update(['payment_status' => 'paid', 'paid_at' => now()]);
 
-        $updateResponse = $this->postJson(route('orders.update-status', ['order_code' => 'DB-0125']), [
+        $updateResponse = $this->actingAs($kasir)->postJson(route('orders.update-status', ['order_code' => 'DB-0125']), [
             'status' => 'diproses',
         ]);
         $updateResponse->assertStatus(200);
@@ -194,15 +206,19 @@ class OrderTest extends TestCase
 
     public function test_order_history_page_lists_orders(): void
     {
+        $guestSession = GuestSession::create();
+
         Order::create([
             'order_code' => 'DB-0124',
+            'guest_session_id' => $guestSession->id,
             'table_number' => '05',
             'customer_name' => 'Rina',
             'total_price' => 42000,
             'status' => 'menunggu',
         ]);
 
-        $response = $this->get(route('orders.history', ['table' => '05']));
+        $response = $this->withSession([GuestSessionService::SESSION_KEY => $guestSession->id])
+            ->get(route('orders.history', ['table' => '05']));
 
         $response->assertStatus(200);
         $response->assertSee('Riwayat Pesanan');

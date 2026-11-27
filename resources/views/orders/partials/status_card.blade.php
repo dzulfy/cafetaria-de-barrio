@@ -4,6 +4,7 @@
     $cleanTable = $cleanTable !== '' ? $cleanTable : '05';
     $orderTotal = $order->total_price ?: $order->total_amount ?: 0;
     $isPaid = $order->payment_status === 'paid';
+    $isCashOrder = $order->payment_method === 'tunai';
     $midtransClientKey = $midtransClientKey ?? config('services.midtrans.client_key');
     $midtransSnapJsUrl = $midtransSnapJsUrl ?? app(\App\Services\MidtransService::class)->snapJsUrl();
 
@@ -51,12 +52,16 @@
             {{ $headline }}
         </h1>
         <p class="text-xs sm:text-sm text-muted font-medium mt-1.5">
-            Kode pesanan {{ $order->order_code }} <span class="mx-1">|</span> Meja {{ $cleanTable }}
+            Kode pesanan {{ $order->order_code }} <span class="mx-1">|</span> Meja {{ $cleanTable }}@if($order->created_at) <span class="mx-1">|</span> {{ $order->created_at->format('d M Y, H.i') }}@endif
         </p>
 
         @if (! $isPaid && $order->status !== 'dibatalkan')
             <p class="text-xs text-muted mt-1.5 max-w-md mx-auto">
-                Pesanan terkirim! Selesaikan pembayaran via Midtrans agar kasir dapat memproses pesanan.
+                @if ($isCashOrder)
+                    Pesanan terkirim! Silakan lakukan pembayaran tunai (cash) sebesar <strong class="text-ink">Rp {{ number_format($orderTotal, 0, ',', '.') }}</strong> di kasir agar pesanan dapat diproses.
+                @else
+                    Pesanan terkirim! Selesaikan pembayaran via QRIS atau Transfer agar kasir dapat memproses pesanan.
+                @endif
             </p>
         @endif
 
@@ -69,57 +74,97 @@
     </div>
 
     <div class="space-y-4 flex-1">
-        {{-- Kartu Pembayaran Midtrans --}}
+        {{-- Kartu Pembayaran (Bayar di Kasir / Midtrans) --}}
         @if ($order->status !== 'dibatalkan')
             @if (! $isPaid)
-                <div class="bg-white rounded-2xl p-4 sm:p-5 border-2 border-brand-900/20 shadow-sm space-y-4 animate-fade-up">
-                    <div class="flex flex-wrap items-center justify-between gap-2">
-                        <div>
-                            <h2 class="text-sm font-bold text-ink">Pembayaran Midtrans</h2>
-                            <p class="text-xs text-muted mt-0.5">Pilih QRIS, GoPay, Virtual Account, atau metode lainnya.</p>
-                        </div>
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold {{ $paymentBadgeClass }}">
-                            {{ $paymentLabel }}
-                        </span>
-                    </div>
-
-                    <div id="midtrans-feedback" class="hidden rounded-xl px-3.5 py-2.5 text-xs font-medium"></div>
-
-                    @if (! $inMockup)
-                        <div class="flex flex-col sm:flex-row gap-2.5">
-                            <button type="button"
-                                    id="btn-midtrans-pay"
-                                    onclick="openMidtransSnap()"
-                                    class="flex-1 h-12 rounded-xl bg-brand-900 hover:bg-brand-700 text-white font-bold text-sm shadow-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer">
-                                <x-lucide.wallet class="w-4 h-4 text-cream" />
-                                <span>Bayar Sekarang via Midtrans</span>
-                            </button>
-
-                            <button type="button"
-                                    id="btn-midtrans-verify"
-                                    onclick="verifyMidtransPayment(false)"
-                                    class="h-12 px-4 rounded-xl bg-cream hover:bg-[#efe6ca] border border-line text-brand-900 font-semibold text-xs sm:text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer">
-                                <span>Cek Status Pembayaran</span>
-                            </button>
+                @if ($isCashOrder)
+                    <div class="bg-white rounded-2xl p-4 sm:p-5 border-2 border-amber-400/50 shadow-sm space-y-4 animate-fade-up">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                                <h2 class="text-sm font-bold text-ink">Bayar di Kasir (Cash / Tunai)</h2>
+                                <p class="text-xs text-muted mt-0.5">Tunjukkan kode pesanan ini ke kasir untuk menyelesaikan pembayaran tunai.</p>
+                            </div>
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-warn-bg text-warn-fg">
+                                Belum Dibayar • Bayar di Kasir
+                            </span>
                         </div>
 
-                        @if ($order->snap_redirect_url)
-                            <div class="text-center sm:text-left">
-                                <a href="{{ $order->snap_redirect_url }}"
-                                   target="_blank"
-                                   rel="noopener noreferrer"
-                                   class="text-[11px] font-semibold text-brand-900 hover:underline">
-                                    Atau buka halaman pembayaran Midtrans di tab baru &rarr;
-                                </a>
+                        <div class="rounded-xl bg-cream-50 border border-line p-3.5 flex items-center justify-between gap-3">
+                            <div>
+                                <p class="text-[11px] font-medium text-muted">Kode Pesanan</p>
+                                <p class="text-base font-extrabold text-ink tracking-tight">{{ $order->order_code }}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[11px] font-medium text-muted">Total Tagihan</p>
+                                <p class="text-base font-extrabold text-brand-900">Rp {{ number_format($orderTotal, 0, ',', '.') }}</p>
+                            </div>
+                        </div>
+
+                        <div id="midtrans-feedback" class="hidden rounded-xl px-3.5 py-2.5 text-xs font-medium"></div>
+
+                        @if (! $inMockup)
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1">
+                                <p class="text-[11px] text-muted">Ingin ganti ke QRIS / Virtual Account?</p>
+                                <button type="button"
+                                        id="btn-midtrans-pay"
+                                        onclick="openMidtransSnap()"
+                                        class="h-10 px-4 rounded-xl bg-cream hover:bg-[#efe6ca] border border-line text-brand-900 font-semibold text-xs transition-all active:scale-[0.98] inline-flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <x-lucide.wallet class="w-3.5 h-3.5" />
+                                    <span>Ganti ke Bayar via QRIS / Transfer</span>
+                                </button>
                             </div>
                         @endif
-                    @endif
-                </div>
+                    </div>
+                @else
+                    <div class="bg-white rounded-2xl p-4 sm:p-5 border-2 border-brand-900/20 shadow-sm space-y-4 animate-fade-up">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                                <h2 class="text-sm font-bold text-ink">Pembayaran via QRIS / Transfer</h2>
+                                <p class="text-xs text-muted mt-0.5">Pilih QRIS, GoPay, Virtual Account, atau transfer bank lainnya.</p>
+                            </div>
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold {{ $paymentBadgeClass }}">
+                                {{ $paymentLabel }}
+                            </span>
+                        </div>
+
+                        <div id="midtrans-feedback" class="hidden rounded-xl px-3.5 py-2.5 text-xs font-medium"></div>
+
+                        @if (! $inMockup)
+                            <div class="flex flex-col sm:flex-row gap-2.5">
+                                <button type="button"
+                                        id="btn-midtrans-pay"
+                                        onclick="openMidtransSnap()"
+                                        class="flex-1 h-12 rounded-xl bg-brand-900 hover:bg-brand-700 text-white font-bold text-sm shadow-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer">
+                                    <x-lucide.wallet class="w-4 h-4 text-cream" />
+                                    <span>Bayar Sekarang (QRIS / Transfer)</span>
+                                </button>
+
+                                <button type="button"
+                                        id="btn-midtrans-verify"
+                                        onclick="verifyMidtransPayment(false)"
+                                        class="h-12 px-4 rounded-xl bg-cream hover:bg-[#efe6ca] border border-line text-brand-900 font-semibold text-xs sm:text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer">
+                                    <span>Cek Status Pembayaran</span>
+                                </button>
+                            </div>
+
+                            @if ($order->snap_redirect_url)
+                                <div class="text-center sm:text-left">
+                                    <a href="{{ $order->snap_redirect_url }}"
+                                       target="_blank"
+                                       rel="noopener noreferrer"
+                                       class="text-[11px] font-semibold text-brand-900 hover:underline">
+                                        Atau buka halaman pembayaran QRIS / Transfer di tab baru &rarr;
+                                    </a>
+                                </div>
+                            @endif
+                        @endif
+                    </div>
+                @endif
             @else
                 <div class="bg-ok-bg border border-brand-900/15 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-up">
                     <div class="space-y-1">
                         <div class="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-0.5 text-[11px] font-bold text-brand-900">
-                            <span>Pembayaran Lunas (Midtrans)</span>
+                            <span>{{ $isCashOrder ? 'Pembayaran Lunas (Tunai di Kasir)' : 'Pembayaran Lunas (QRIS / Transfer)' }}</span>
                         </div>
                         <p class="text-xs sm:text-[13px] font-medium text-brand-900 leading-relaxed">
                             Pembayaran berhasil! Pesanan diteruskan ke kasir untuk segera diproses.
@@ -127,7 +172,13 @@
                     </div>
                     <div class="text-left sm:text-right text-[11px] text-brand-900/80 shrink-0 space-y-0.5">
                         @if ($order->payment_method)
-                            <div>Metode: <strong class="uppercase text-brand-900">{{ $order->payment_method }}</strong></div>
+                            <div>Metode: <strong class="uppercase text-brand-900">{{ $order->payment_method === 'midtrans' ? 'QRIS / Transfer' : $order->payment_method }}</strong></div>
+                        @endif
+                        @if ($order->amount_paid)
+                            <div>Dibayar: <strong class="text-brand-900">Rp {{ number_format((int) $order->amount_paid, 0, ',', '.') }}</strong></div>
+                        @endif
+                        @if ($isCashOrder && (int) ($order->change_amount ?? 0) > 0)
+                            <div>Kembalian: <strong class="text-brand-900">Rp {{ number_format((int) $order->change_amount, 0, ',', '.') }}</strong></div>
                         @endif
                         @if ($order->paid_at)
                             <div>Waktu: <strong class="text-brand-900">{{ $order->paid_at->format('d M Y, H.i') }}</strong></div>
@@ -221,11 +272,20 @@
                     @endif
                 </div>
 
-                <div class="border-t border-line pt-3 flex items-center justify-between">
-                    <span class="text-sm font-bold text-ink">Total</span>
-                    <span class="text-[17px] font-extrabold text-brand-900">
-                        Rp {{ number_format($orderTotal, 0, ',', '.') }}
-                    </span>
+                @php
+                    $orderSubtotal = (int) ($order->subtotal ?: $order->items->sum('subtotal') ?: $orderTotal);
+                @endphp
+                <div class="border-t border-line pt-3 space-y-1.5">
+                    <div class="flex items-center justify-between text-xs text-muted">
+                        <span>Subtotal</span>
+                        <span class="font-medium">Rp {{ number_format($orderSubtotal, 0, ',', '.') }}</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-bold text-ink">Total</span>
+                        <span class="text-[17px] font-extrabold text-brand-900">
+                            Rp {{ number_format($orderTotal, 0, ',', '.') }}
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -275,7 +335,7 @@
 
         const data = await res.json();
         if (!res.ok || !data.success) {
-            throw new Error(data.message || 'Gagal menyiapkan pembayaran Midtrans.');
+            throw new Error(data.message || 'Gagal menyiapkan pembayaran QRIS / Transfer.');
         }
 
         activeSnapToken = data.snap_token;
@@ -298,7 +358,7 @@
             if (window.snap && activeSnapToken) {
                 window.snap.pay(activeSnapToken, {
                     onSuccess: function () {
-                        showMidtransFeedback('Pembayaran berhasil! Memverifikasi status dengan Midtrans...');
+                        showMidtransFeedback('Pembayaran berhasil! Memverifikasi status pembayaran...');
                         verifyMidtransPayment(true);
                     },
                     onPending: function () {
@@ -315,10 +375,10 @@
             } else if (redirectUrl) {
                 window.location.href = redirectUrl;
             } else {
-                showMidtransFeedback('Midtrans Snap tidak dapat dimuat. Silakan coba lagi.', true);
+                showMidtransFeedback('Halaman pembayaran belum dapat dimuat. Silakan coba lagi.', true);
             }
         } catch (err) {
-            showMidtransFeedback(err.message || 'Terjadi kesalahan saat membuka Midtrans.', true);
+            showMidtransFeedback(err.message || 'Terjadi kesalahan saat membuka halaman pembayaran.', true);
         } finally {
             if (btn) btn.disabled = false;
         }
@@ -348,7 +408,7 @@
             }
         } catch (err) {
             if (!silent) {
-                showMidtransFeedback('Gagal memeriksa status pembayaran ke Midtrans.', true);
+                showMidtransFeedback('Gagal memeriksa status pembayaran.', true);
             }
         } finally {
             if (btn && !silent) btn.disabled = false;
