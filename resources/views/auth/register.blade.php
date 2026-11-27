@@ -8,9 +8,9 @@
     {{-- Panel merek (tablet/desktop) - Figma K1 --}}
     <aside class="hidden w-[460px] shrink-0 flex-col justify-center gap-5 bg-brand-900 p-12 text-white md:flex">
         <div class="flex size-16 items-center justify-center rounded-full bg-cream overflow-hidden border-2 border-white/25 shadow">
-            <img src="{{ asset('images/logo-de-barrio.jpg') }}" alt="Cafeteria De Barrio" class="w-full h-full object-cover">
+            <img src="{{ asset('images/logo-de-barrio.jpg') }}" alt="Cafetaria De Barrio" class="w-full h-full object-cover">
         </div>
-        <h1 class="text-4xl font-bold tracking-tight">De Barrio</h1>
+        <h1 class="text-3xl font-bold tracking-tight">Cafetaria De Barrio</h1>
         <p class="text-[15px] leading-6 text-[#D7E5DC]">
             Daftar akun pelanggan untuk menikmati kemudahan pemesanan, melihat riwayat pesanan, dan mengumpulkan poin.
         </p>
@@ -35,12 +35,12 @@
         <div class="w-full max-w-[380px] space-y-5">
 
             <div class="flex size-[52px] items-center justify-center rounded-full bg-cream overflow-hidden border border-brand-900/20 shadow md:hidden">
-                <img src="{{ asset('images/logo-de-barrio.jpg') }}" alt="Cafeteria De Barrio" class="w-full h-full object-cover">
+                <img src="{{ asset('images/logo-de-barrio.jpg') }}" alt="Cafetaria De Barrio" class="w-full h-full object-cover">
             </div>
 
             <div class="space-y-2">
                 <h2 class="text-[26px] font-bold text-ink">Daftar Akun</h2>
-                <p class="text-sm text-muted">Daftar sebagai pelanggan Warkop Cafetaria De Barrio.</p>
+                <p class="text-sm text-muted">Daftar sebagai pelanggan Cafetaria De Barrio.</p>
             </div>
 
             {{-- Tab Masuk / Daftar --}}

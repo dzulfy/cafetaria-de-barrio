@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use Database\Factories\OrderFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Order extends Model
@@ -16,6 +18,9 @@ class Order extends Model
 
     protected $fillable = [
         'order_code',
+        'user_id',
+        'guest_session_id',
+        'table_id',
         'table_number',
         'customer_name',
         'source',
@@ -38,6 +43,8 @@ class Order extends Model
     ];
 
     protected $casts = [
+        'user_id' => 'integer',
+        'table_id' => 'integer',
         'subtotal' => 'integer',
         'total_price' => 'integer',
         'total_amount' => 'integer',
@@ -45,6 +52,31 @@ class Order extends Model
         'change_amount' => 'integer',
         'paid_at' => 'datetime',
     ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function guestSession(): BelongsTo
+    {
+        return $this->belongsTo(GuestSession::class, 'guest_session_id', 'id');
+    }
+
+    public function cafeTable(): BelongsTo
+    {
+        return $this->belongsTo(CafeTable::class, 'table_id');
+    }
+
+    public function scopeForUser(Builder $query, int $userId): Builder
+    {
+        return $query->where('user_id', $userId);
+    }
+
+    public function scopeForGuestSession(Builder $query, string $guestSessionId): Builder
+    {
+        return $query->where('guest_session_id', $guestSessionId);
+    }
 
     public function items(): HasMany
     {

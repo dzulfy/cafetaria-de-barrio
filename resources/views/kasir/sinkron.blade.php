@@ -7,8 +7,8 @@
         <aside class="w-20 md:w-24 bg-[#154734] flex flex-col items-center py-5 justify-between shrink-0 select-none shadow-xl z-20">
             <div class="flex flex-col items-center space-y-7 w-full">
                 <!-- Brand Logo / Emblem -->
-                <a href="{{ route('kasir.index') }}" class="w-12 h-12 rounded-full bg-[#FAF8F4] overflow-hidden border border-white/25 flex items-center justify-center shadow-md hover:scale-105 transition-transform" title="Warkop De Barrio">
-                    <img src="{{ asset('images/logo-de-barrio.jpg') }}" alt="Cafeteria De Barrio" class="w-full h-full object-cover">
+                <a href="{{ route('kasir.index') }}" class="w-12 h-12 rounded-full bg-[#FAF8F4] overflow-hidden border border-white/25 flex items-center justify-center shadow-md hover:scale-105 transition-transform" title="Cafetaria De Barrio">
+                    <img src="{{ asset('images/logo-de-barrio.jpg') }}" alt="Cafetaria De Barrio" class="w-full h-full object-cover">
                 </a>
 
                 <!-- Nav Menu Icons -->
@@ -50,20 +50,22 @@
             </div>
 
             <!-- Bottom Tools -->
-            <div class="flex flex-col items-center space-y-4 w-full">
-                <!-- User Avatar & Logout (KS) -->
-                <form method="POST" action="{{ route('logout') }}" class="w-full flex flex-col items-center">
-                    @csrf
-                    <button type="submit" class="flex flex-col items-center group cursor-pointer transition" title="Keluar / Logout">
-                        <div class="w-10 h-10 rounded-full bg-[#1b5e43] border border-emerald-400/30 text-white font-bold text-xs flex items-center justify-center shadow group-hover:bg-red-700/80 group-hover:border-red-400/50 transition">
-                            {{ strtoupper(substr(auth()->user()->nama ?? auth()->user()->name ?? 'KS', 0, 2)) }}
-                        </div>
-                        <span class="text-[9px] text-emerald-200/80 group-hover:text-red-300 font-medium mt-1 flex items-center gap-0.5 transition">
-                            <i data-lucide="log-out" class="w-2.5 h-2.5"></i>
-                            Keluar
-                        </span>
-                    </button>
-                </form>
+            <div class="flex flex-col items-center space-y-3 w-full px-2">
+                <div class="w-10 h-10 rounded-full bg-[#FAF8F4] text-[#154734] font-bold text-xs flex items-center justify-center shadow-xs"
+                     title="{{ auth()->user()->nama ?? auth()->user()->name ?? 'Kasir' }}">
+                    {{ strtoupper(substr(auth()->user()->nama ?? auth()->user()->name ?? 'KS', 0, 2)) }}
+                </div>
+                <button type="button"
+                        onclick="openLogoutModal()"
+                        class="w-14 py-2 rounded-2xl bg-rose-500/20 hover:bg-rose-600 border border-rose-300/40 text-rose-100 hover:text-white flex flex-col items-center justify-center gap-1 transition shadow-xs cursor-pointer"
+                        title="Keluar / Logout">
+                    <svg class="w-5 h-5 stroke-current fill-none" stroke-width="2.2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    <span class="text-[10px] font-bold leading-none">Keluar</span>
+                </button>
             </div>
         </aside>
 

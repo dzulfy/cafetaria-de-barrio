@@ -77,4 +77,24 @@ class AccessTest extends TestCase
 
         $this->assertDatabaseHas('pengguna', ['email' => 'dimas@debarrio.id', 'peran' => 'kasir']);
     }
+
+    public function test_admin_and_kasir_pages_render_consistent_logout_button_and_confirmation_modal(): void
+    {
+        $admin = $this->userWith('admin');
+        $kasir = $this->userWith('kasir');
+
+        foreach ([
+            $this->actingAs($admin)->get(route('admin.dashboard')),
+            $this->actingAs($admin)->get(route('admin.tables.index')),
+            $this->actingAs($kasir)->get(route('kasir.index')),
+            $this->actingAs($kasir)->get(route('kasir.sinkron')),
+        ] as $response) {
+            $response->assertOk();
+            $response->assertSee('openLogoutModal()', false);
+            $response->assertSee('Konfirmasi Keluar');
+            $response->assertSee('Ya, Keluar');
+            $response->assertSee('Keluar');
+            $response->assertSee(route('logout'), false);
+        }
+    }
 }

@@ -12,7 +12,7 @@
             <p class="text-sm text-gray-500 mt-0.5">Kelola daftar menu, harga, dan ketersediaan</p>
         </div>
         <div>
-            <button type="button" onclick="openCreateModal()" class="inline-flex items-center gap-2 bg-[#1b3d32] hover:bg-[#254d40] text-white px-4 py-2.5 rounded-xl font-medium text-sm shadow-sm transition-all hover:shadow active:scale-95">
+            <button type="button" onclick="openCreateModal()" class="inline-flex items-center gap-2 bg-[#184233] hover:bg-[#224E3D] text-white px-4 py-2.5 rounded-xl font-medium text-sm shadow-sm transition-all hover:shadow active:scale-95 cursor-pointer">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
@@ -24,16 +24,16 @@
     <!-- Category Filter Pills matching Image 1 -->
     <div class="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-none">
         <a href="{{ route('admin.menus.index', ['q' => $search]) }}" 
-           class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all shadow-sm {{ $selectedCategory === 'semua' ? 'bg-[#1b3d32] text-white' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200' }}">
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all shadow-sm {{ $selectedCategory === 'semua' ? 'bg-[#184233] text-white' : 'bg-white text-gray-700 hover:bg-[#EBF2EE]/60 border border-gray-200' }}">
             <span>Semua</span>
             <span class="text-xs opacity-90">{{ $totalMenusCount }}</span>
         </a>
 
         @foreach($categories as $category)
         <a href="{{ route('admin.menus.index', ['kategori' => $category->slug, 'q' => $search]) }}" 
-           class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all shadow-sm {{ $selectedCategory === $category->slug ? 'bg-[#1b3d32] text-white' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200' }}">
+           class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all shadow-sm {{ $selectedCategory === $category->slug ? 'bg-[#184233] text-white' : 'bg-white text-gray-700 hover:bg-[#EBF2EE]/60 border border-gray-200' }}">
             <span>{{ $category->name }}</span>
-            <span class="text-xs {{ $selectedCategory === $category->slug ? 'text-emerald-200' : 'text-gray-400' }}">{{ $category->menus_count }}</span>
+            <span class="text-xs {{ $selectedCategory === $category->slug ? 'text-[#8DAAA0]' : 'text-gray-400' }}">{{ $category->menus_count }}</span>
         </a>
         @endforeach
     </div>
@@ -53,7 +53,7 @@
                    name="q" 
                    value="{{ $search }}" 
                    placeholder="Cari nama menu..." 
-                   class="w-full bg-white pl-10 pr-4 py-2.5 text-sm rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#1b3d32]/20 focus:border-[#1b3d32] shadow-sm text-gray-800 placeholder-gray-400 transition-all">
+                   class="w-full bg-white pl-10 pr-4 py-2.5 text-sm rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233] shadow-sm text-gray-800 placeholder-gray-400 transition-all">
         </form>
     </div>
 
@@ -62,7 +62,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-[#edf2ec] text-gray-600 text-xs font-semibold tracking-wider border-b border-gray-200/60">
+                    <tr class="bg-[#EBF2EE] text-[#184233] text-xs font-semibold tracking-wider border-b border-gray-200/60">
                         <th class="py-3.5 px-6">Menu</th>
                         <th class="py-3.5 px-6">Kategori</th>
                         <th class="py-3.5 px-6">Harga</th>
@@ -104,18 +104,23 @@
                             {{ $menu->formatted_price }}
                         </td>
 
-                        <!-- Status Toggle Switch matching Image 1 -->
+                        <!-- Status Toggle Button -->
                         <td class="py-3.5 px-6">
-                            <label class="inline-flex items-center gap-3 cursor-pointer select-none">
-                                <input type="checkbox" 
-                                       class="sr-only peer status-toggle" 
-                                       data-id="{{ $menu->id }}"
-                                       {{ $menu->is_available ? 'checked' : '' }}>
-                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1b3d32] relative"></div>
-                                <span id="status-label-{{ $menu->id }}" class="text-xs font-medium {{ $menu->is_available ? 'text-emerald-700' : 'text-gray-400' }}">
+                            <button type="button"
+                                    role="switch"
+                                    aria-checked="{{ $menu->is_available ? 'true' : 'false' }}"
+                                    data-id="{{ $menu->id }}"
+                                    data-available="{{ $menu->is_available ? '1' : '0' }}"
+                                    onclick="toggleMenuStatus(this)"
+                                    title="Klik untuk ubah ketersediaan menu"
+                                    class="status-toggle min-w-[124px] inline-flex items-center justify-between gap-2.5 px-3 py-1.5 rounded-full border text-xs font-bold transition-all cursor-pointer select-none {{ $menu->is_available ? 'bg-[#EBF2EE] border-[#184233]/20 text-[#184233] hover:bg-[#DDEEE3]' : 'bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100' }}">
+                                <span class="status-track flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors {{ $menu->is_available ? 'bg-[#184233] justify-end' : 'bg-rose-300 justify-start' }}">
+                                    <span class="w-4 h-4 rounded-full bg-white shadow-xs"></span>
+                                </span>
+                                <span id="status-label-{{ $menu->id }}" class="status-label flex-1 text-left">
                                     {{ $menu->is_available ? 'Tersedia' : 'Habis' }}
                                 </span>
-                            </label>
+                            </button>
                         </td>
 
                         <!-- Aksi (Edit & Delete) -->
@@ -124,7 +129,7 @@
                                 <button type="button" 
                                         onclick="openEditModal({{ json_encode($menu) }})" 
                                         title="Edit Menu"
-                                        class="p-1.5 text-gray-500 hover:text-[#1b3d32] hover:bg-emerald-50 rounded-lg transition-colors">
+                                        class="p-1.5 text-gray-500 hover:text-[#184233] hover:bg-[#EBF2EE] rounded-lg transition-colors cursor-pointer">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
                                     </svg>
@@ -132,7 +137,7 @@
                                 <button type="button" 
                                         onclick="confirmDelete({{ $menu->id }}, '{{ addslashes($menu->name) }}')" 
                                         title="Hapus Menu"
-                                        class="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                                        class="p-1.5 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                     </svg>
@@ -175,11 +180,11 @@
                 {{-- Pagination Elements --}}
                 @foreach ($menus->getUrlRange(1, $menus->lastPage()) as $page => $url)
                     @if ($page == $menus->currentPage())
-                        <span class="w-8 h-8 rounded-lg bg-[#1b3d32] text-white font-semibold flex items-center justify-center shadow-sm">
+                        <span class="w-8 h-8 rounded-lg bg-[#184233] text-white font-semibold flex items-center justify-center shadow-sm">
                             {{ $page }}
                         </span>
                     @else
-                        <a href="{{ $url }}" class="w-8 h-8 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 font-medium flex items-center justify-center transition-colors">
+                        <a href="{{ $url }}" class="w-8 h-8 rounded-lg border border-gray-200 text-gray-700 hover:bg-[#EBF2EE]/60 font-medium flex items-center justify-center transition-colors">
                             {{ $page }}
                         </a>
                     @endif
@@ -230,7 +235,7 @@
                            name="name" 
                            required 
                            placeholder="Contoh: Kopi Tubruk" 
-                           class="w-full text-sm rounded-xl border border-gray-200 px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#1b3d32]/20 focus:border-[#1b3d32] placeholder-gray-400">
+                           class="w-full text-sm rounded-xl border border-gray-200 px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233] placeholder-gray-400">
                 </div>
 
                 <!-- Kategori -->
@@ -239,7 +244,7 @@
                     <select id="input-category" 
                             name="category_id" 
                             required 
-                            class="w-full text-sm rounded-xl border border-gray-200 px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#1b3d32]/20 focus:border-[#1b3d32] bg-white text-gray-700">
+                            class="w-full text-sm rounded-xl border border-gray-200 px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233] bg-white text-gray-700">
                         <option value="" disabled selected>Pilih kategori</option>
                         @foreach($categories as $category)
                             <option value="{{ $category->id }}">{{ $category->name }}</option>
@@ -256,7 +261,7 @@
                            required 
                            min="0"
                            placeholder="Contoh: 12000" 
-                           class="w-full text-sm rounded-xl border border-gray-200 px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#1b3d32]/20 focus:border-[#1b3d32] placeholder-gray-400">
+                           class="w-full text-sm rounded-xl border border-gray-200 px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233] placeholder-gray-400">
                 </div>
 
                 <!-- Deskripsi (Singkat) -->
@@ -266,14 +271,14 @@
                               name="description" 
                               rows="2"
                               placeholder="Contoh: Espresso, susu, gula aren asli" 
-                              class="w-full text-sm rounded-xl border border-gray-200 px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-[#1b3d32]/20 focus:border-[#1b3d32] placeholder-gray-400"></textarea>
+                              class="w-full text-sm rounded-xl border border-gray-200 px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233] placeholder-gray-400"></textarea>
                 </div>
 
                 <!-- Foto Menu (Drag & Drop box matching Image 1) -->
                 <div>
                     <label class="block text-xs font-semibold text-gray-700 mb-1">Foto menu</label>
-                    <label for="input-image" class="border-2 border-dashed border-gray-200 hover:border-emerald-600/50 bg-[#faf8f4] rounded-2xl p-4 flex flex-col items-center justify-center cursor-pointer transition-all">
-                        <div class="w-10 h-10 rounded-full bg-emerald-100/60 text-[#1b3d32] flex items-center justify-center mb-2">
+                    <label for="input-image" class="border-2 border-dashed border-gray-200 hover:border-[#184233]/40 bg-[#FAF8F4] rounded-2xl p-4 flex flex-col items-center justify-center cursor-pointer transition-all">
+                        <div class="w-10 h-10 rounded-full bg-[#EBF2EE] text-[#184233] flex items-center justify-center mb-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                             </svg>
@@ -291,24 +296,29 @@
                     </div>
                 </div>
 
-                <!-- Status Toggle matching Image 1 -->
-                <div class="flex items-center gap-3 pt-2">
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="input-status" name="is_available" value="1" checked class="sr-only peer">
-                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1b3d32]"></div>
+                <!-- Status Toggle -->
+                <div class="pt-2">
+                    <label class="block text-xs font-semibold text-gray-700 mb-1.5">Status ketersediaan</label>
+                    <label id="modal-status-pill"
+                           for="input-status"
+                           class="inline-flex items-center gap-3 px-3.5 py-2 rounded-full border border-[#184233]/20 bg-[#EBF2EE] text-[#184233] text-xs font-bold cursor-pointer select-none transition-all">
+                        <input type="checkbox" id="input-status" name="is_available" value="1" checked onchange="syncModalStatusSwitch()" class="sr-only">
+                        <span id="modal-status-track" class="flex h-5 w-9 shrink-0 items-center justify-end rounded-full bg-[#184233] p-0.5 transition-colors">
+                            <span class="w-4 h-4 rounded-full bg-white shadow-xs"></span>
+                        </span>
+                        <span id="modal-status-label">Tersedia</span>
                     </label>
-                    <span class="text-xs font-semibold text-gray-800">Tersedia</span>
                 </div>
 
-                <!-- Buttons: Batal & Simpan matching Image 1 -->
+                <!-- Buttons: Batal & Simpan -->
                 <div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
                     <button type="button" 
                             onclick="closeMenuModal()" 
-                            class="px-5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 text-xs font-semibold hover:bg-gray-50 transition-colors">
+                            class="px-5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 text-xs font-semibold hover:bg-gray-50 transition-colors cursor-pointer">
                         Batal
                     </button>
                     <button type="submit" 
-                            class="px-6 py-2.5 rounded-xl bg-[#1b3d32] hover:bg-[#254d40] text-white text-xs font-semibold shadow-sm transition-all active:scale-95">
+                            class="px-6 py-2.5 rounded-xl bg-[#184233] hover:bg-[#224E3D] text-white text-xs font-semibold shadow-sm transition-all active:scale-95 cursor-pointer">
                         Simpan
                     </button>
                 </div>
@@ -347,39 +357,75 @@
 
 @push('scripts')
 <script>
-    // Live AJAX status toggle
-    document.querySelectorAll('.status-toggle').forEach(toggle => {
-        toggle.addEventListener('change', async function() {
-            const menuId = this.dataset.id;
-            const label = document.getElementById(`status-label-${menuId}`);
-            
-            try {
-                const response = await fetch(`/admin/menu/${menuId}/toggle-status`, {
-                    method: 'PATCH',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                        'Accept': 'application/json',
-                    }
-                });
+    function applyStatusButtonState(button, isAvailable) {
+        const track = button.querySelector('.status-track');
+        const label = button.querySelector('.status-label');
 
-                const data = await response.json();
-                if (data.success) {
-                    if (data.is_available) {
-                        label.textContent = 'Tersedia';
-                        label.className = 'text-xs font-medium text-emerald-700';
-                    } else {
-                        label.textContent = 'Habis';
-                        label.className = 'text-xs font-medium text-gray-400';
-                    }
-                    showToast(data.message, 'success');
+        button.dataset.available = isAvailable ? '1' : '0';
+        button.setAttribute('aria-checked', isAvailable ? 'true' : 'false');
+
+        button.className = isAvailable
+            ? 'status-toggle min-w-[124px] inline-flex items-center justify-between gap-2.5 px-3 py-1.5 rounded-full border text-xs font-bold transition-all cursor-pointer select-none bg-[#EBF2EE] border-[#184233]/20 text-[#184233] hover:bg-[#DDEEE3]'
+            : 'status-toggle min-w-[124px] inline-flex items-center justify-between gap-2.5 px-3 py-1.5 rounded-full border text-xs font-bold transition-all cursor-pointer select-none bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100';
+
+        if (track) {
+            track.className = isAvailable
+                ? 'status-track flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors bg-[#184233] justify-end'
+                : 'status-track flex h-5 w-9 shrink-0 items-center rounded-full p-0.5 transition-colors bg-rose-300 justify-start';
+        }
+
+        if (label) {
+            label.textContent = isAvailable ? 'Tersedia' : 'Habis';
+        }
+    }
+
+    async function toggleMenuStatus(button) {
+        const menuId = button.dataset.id;
+        const previousAvailable = button.dataset.available === '1';
+        button.disabled = true;
+
+        try {
+            const response = await fetch(`/admin/menu/${menuId}/toggle-status`, {
+                method: 'PATCH',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
                 }
-            } catch (err) {
-                console.error(err);
-                showToast('Gagal mengubah status menu', 'error');
-                this.checked = !this.checked;
+            });
+
+            const data = await response.json();
+            if (response.ok && data.success) {
+                applyStatusButtonState(button, !!data.is_available);
+                showToast(data.message, 'success');
+            } else {
+                applyStatusButtonState(button, previousAvailable);
+                showToast(data.message || 'Gagal mengubah status menu', 'error');
             }
-        });
-    });
+        } catch (err) {
+            console.error(err);
+            applyStatusButtonState(button, previousAvailable);
+            showToast('Gagal mengubah status menu', 'error');
+        } finally {
+            button.disabled = false;
+        }
+    }
+
+    function syncModalStatusSwitch() {
+        const checkbox = document.getElementById('input-status');
+        const pill = document.getElementById('modal-status-pill');
+        const track = document.getElementById('modal-status-track');
+        const label = document.getElementById('modal-status-label');
+        if (!checkbox || !pill || !track || !label) return;
+
+        const isChecked = checkbox.checked;
+        pill.className = isChecked
+            ? 'inline-flex items-center gap-3 px-3.5 py-2 rounded-full border border-[#184233]/20 bg-[#EBF2EE] text-[#184233] text-xs font-bold cursor-pointer select-none transition-all'
+            : 'inline-flex items-center gap-3 px-3.5 py-2 rounded-full border border-rose-200 bg-rose-50 text-rose-700 text-xs font-bold cursor-pointer select-none transition-all';
+        track.className = isChecked
+            ? 'flex h-5 w-9 shrink-0 items-center justify-end rounded-full bg-[#184233] p-0.5 transition-colors'
+            : 'flex h-5 w-9 shrink-0 items-center justify-start rounded-full bg-rose-300 p-0.5 transition-colors';
+        label.textContent = isChecked ? 'Tersedia' : 'Habis';
+    }
 
     // Create / Edit Modal Handler
     const modal = document.getElementById('menu-modal');
@@ -394,6 +440,7 @@
         menuForm.reset();
         clearImagePreview();
         document.getElementById('input-status').checked = true;
+        syncModalStatusSwitch();
         modal.classList.remove('hidden');
     }
 
@@ -407,6 +454,7 @@
         document.getElementById('input-price').value = menu.price;
         document.getElementById('input-description').value = menu.description || '';
         document.getElementById('input-status').checked = !!menu.is_available;
+        syncModalStatusSwitch();
 
         if (menu.image) {
             document.getElementById('preview-img').src = `/storage/${menu.image}`;

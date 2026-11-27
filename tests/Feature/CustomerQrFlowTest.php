@@ -9,6 +9,7 @@ use App\Models\Category;
 use App\Models\Menu;
 use App\Models\MenuItem;
 use App\Models\Order;
+use App\Services\GuestSessionService;
 use Database\Seeders\CategorySeeder;
 use Database\Seeders\MenuSeeder;
 use Database\Seeders\WarkopDeBarrioSeeder;
@@ -236,7 +237,7 @@ class CustomerQrFlowTest extends TestCase
         $statusResponse = $this->get(route('orders.status', ['order_code' => $order->order_code]));
         $statusResponse->assertStatus(200);
         $statusResponse->assertSee('Menunggu Pembayaran');
-        $statusResponse->assertSee('Bayar Sekarang via Midtrans');
+        $statusResponse->assertSee('Bayar Sekarang (QRIS / Transfer)');
         $statusResponse->assertSee($order->order_code);
         $statusResponse->assertSee('Meja 05');
 
@@ -257,6 +258,19 @@ class CustomerQrFlowTest extends TestCase
         $response->assertSee('images/daftar-menu-de-barrio.jpg', false);
         $response->assertSee(route('customer.menu.download'), false);
         $response->assertSee('Download Menu');
+        $response->assertSee('Jl. HS. Ronggo Waluyo No. 4, RT.022 RW.08, Desa Krajan, Sukaharja, Telukjambe Timur, Karawang, Jawa Barat');
+        $response->assertSee('https://maps.app.goo.gl/vFCsqjuqdCe2CjjH8', false);
+        $response->assertSee('-6.3273058,107.3115915', false);
+        $response->assertSee('maps.google.com/maps', false);
+        $response->assertSee('Buka di Google Maps');
+        $response->assertSee('Cafetaria De Barrio');
+        $response->assertDontSee('Warkop De Barrio');
+        $response->assertDontSee('Cafeteria De Barrio');
+        $response->assertSee('Galeri Cafetaria De Barrio');
+        $response->assertSee('images/gallery/de-barrio-fasad-malam.jpg', false);
+        $response->assertSee('images/gallery/de-barrio-nongkrong.jpg', false);
+        $response->assertSee('images/gallery/de-barrio-bar-interior.jpg', false);
+        $response->assertSee('images/gallery/de-barrio-sudut-seduh.jpg', false);
     }
 
     public function test_menu_poster_can_be_downloaded(): void
@@ -264,7 +278,7 @@ class CustomerQrFlowTest extends TestCase
         $response = $this->get(route('customer.menu.download'));
 
         $response->assertStatus(200);
-        $response->assertDownload('Daftar-Menu-Cafeteria-De-Barrio.jpg');
+        $response->assertDownload('Daftar-Menu-Cafetaria-De-Barrio.jpg');
     }
 
     public function test_real_menu_seeder_populates_exact_catalog_across_tables(): void
@@ -344,5 +358,73 @@ class CustomerQrFlowTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Matcha Spesial');
         $response->assertSee('Stok Habis');
+    }
+
+    public function test_camera_qr_scanner_modal_and_triggers_render_across_customer_pages(): void
+    {
+        foreach ([
+            route('landing'),
+            route('customer.menu'),
+            route('customer.menu.show', ['menu' => $this->kopi->id]),
+            route('orders.history'),
+        ] as $url) {
+            $page = $this->get($url);
+            $page->assertStatus(200);
+            $page->assertSee('id="qr-scanner-modal"', false);
+            $page->assertSee('openQrScannerModal()', false);
+            $page->assertSee('id="qr-scanner-video"', false);
+        }
+    }
+
+    public function test_camera_qr_resolve_endpoint_handles_valid_payloads_rejects_invalid_and_keeps_guest_session(): void
+    {
+        // 1. Full QR URL (generated for Meja 01)
+        $res1 = $this->postJson(route('customer.qr.resolve'), [
+            'qr_data' => $this->tableOne->qr_url,
+        ]);
+
+        $res1->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'table_number' => '01',
+                'redirect_url' => $this->tableOne->qr_url,
+            ]);
+
+        $guestSessionId = session(GuestSessionService::SESSION_KEY);
+        $this->assertNotEmpty($guestSessionId);
+        $this->assertSame('01', session('active_table'));
+
+        // 2. Short QR scan URL (/meja/{token}) for Meja 02 keeps the exact same guest session
+        $res2 = $this->postJson(route('customer.qr.resolve'), [
+            'qr_data' => route('customer.qr.scan', ['token' => $this->tableTwo->token]),
+        ]);
+
+        $res2->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'table_number' => '02',
+                'redirect_url' => $this->tableTwo->qr_url,
+            ]);
+
+        $this->assertSame($guestSessionId, session(GuestSessionService::SESSION_KEY));
+        $this->assertSame('02', session('active_table'));
+
+        // 3. Plain table token or table number ("Meja 05") also resolves cleanly
+        $this->postJson(route('customer.qr.resolve'), [
+            'qr_data' => $this->activeTable->token,
+        ])->assertStatus(200)->assertJson(['table_number' => '05']);
+
+        $this->postJson(route('customer.qr.resolve'), [
+            'qr_data' => 'Meja 01',
+        ])->assertStatus(200)->assertJson(['table_number' => '01']);
+
+        // 4. Rejects inactive table (Meja 08) and unknown/external URLs with 422
+        $this->postJson(route('customer.qr.resolve'), [
+            'qr_data' => $this->inactiveTable->qr_url,
+        ])->assertStatus(422)->assertJson(['success' => false]);
+
+        $this->postJson(route('customer.qr.resolve'), [
+            'qr_data' => 'https://example.com/phishing-qr',
+        ])->assertStatus(422)->assertJson(['success' => false]);
     }
 }

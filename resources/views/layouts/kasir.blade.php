@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title') | Kasir De Barrio</title>
+    <title>@yield('title') | Kasir Cafetaria De Barrio</title>
     <link rel="icon" type="image/jpeg" href="{{ asset('images/logo-de-barrio.jpg') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,7 +15,7 @@
     {{-- Rail Kasir (96px) --}}
     <aside class="flex w-24 shrink-0 flex-col items-center gap-4 bg-brand-900 py-6">
         <span class="flex size-12 items-center justify-center rounded-full bg-cream overflow-hidden border border-white/25 shadow">
-            <img src="{{ asset('images/logo-de-barrio.jpg') }}" alt="Cafeteria De Barrio" class="w-full h-full object-cover">
+            <img src="{{ asset('images/logo-de-barrio.jpg') }}" alt="Cafetaria De Barrio" class="w-full h-full object-cover">
         </span>
 
         <div class="mt-4 flex flex-col items-center gap-3">
@@ -29,16 +29,22 @@
             </a>
         </div>
 
-        <div class="mt-auto flex flex-col items-center gap-2">
-            <span class="flex size-8 items-center justify-center rounded-full bg-cream text-xs font-bold text-brand-900">
+        <div class="mt-auto flex flex-col items-center gap-3 w-full px-2">
+            <span class="flex size-10 items-center justify-center rounded-full bg-cream text-xs font-bold text-brand-900 shadow-xs"
+                  title="{{ auth()->user()->nama ?? auth()->user()->name ?? 'Kasir' }}">
                 {{ strtoupper(substr(auth()->user()->nama ?? auth()->user()->name, 0, 2)) }}
             </span>
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" title="Keluar" class="rounded-xl p-2 text-[#BFD3C7] transition hover:text-white">
-                    <x-lucide.log-out class="size-5" />
-                </button>
-            </form>
+            <button type="button"
+                    onclick="openLogoutModal()"
+                    title="Keluar / Logout"
+                    class="w-14 py-2 rounded-2xl bg-rose-500/20 hover:bg-rose-600 border border-rose-300/40 text-rose-100 hover:text-white flex flex-col items-center justify-center gap-1 transition shadow-xs cursor-pointer">
+                <svg class="w-5 h-5 stroke-current fill-none" stroke-width="2.2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                <span class="text-[10px] font-bold leading-none">Keluar</span>
+            </button>
         </div>
     </aside>
 
@@ -53,5 +59,7 @@
         @yield('content')
     </main>
 </div>
+
+<x-logout-modal />
 </body>
 </html>

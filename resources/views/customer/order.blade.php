@@ -9,7 +9,7 @@
                         <i data-lucide="coffee" class="w-5 h-5"></i>
                     </div>
                     <div>
-                        <h1 class="text-lg font-extrabold tracking-tight">Warkop De Barrio</h1>
+                        <h1 class="text-lg font-extrabold tracking-tight">Cafetaria De Barrio</h1>
                         <p class="text-xs text-emerald-200">Pesan dari Meja (Self QR)</p>
                     </div>
                 </div>
@@ -119,7 +119,7 @@
                 </div>
                 <h3 class="text-lg font-extrabold text-slate-900">Pesanan Diterima!</h3>
                 <p class="text-xs text-slate-500 leading-relaxed">
-                    Pesanan Anda dengan kode <strong class="text-slate-800" x-text="lastOrderCode"></strong> telah dikirim ke Kasir Warkop De Barrio. Mohon tunggu pesanan Anda disiapkan.
+                    Pesanan Anda dengan kode <strong class="text-slate-800" x-text="lastOrderCode"></strong> telah dikirim ke Kasir Cafetaria De Barrio. Mohon tunggu pesanan Anda disiapkan.
                 </p>
                 <button @click="showSuccessModal = false" class="w-full py-2.5 rounded-xl bg-[#154734] text-white text-xs font-bold hover:bg-[#0f3828]">
                     Pesan Menu Lain

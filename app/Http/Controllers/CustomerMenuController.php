@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Menu;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Services\GuestSessionService;
 use App\Services\MidtransService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -17,6 +18,8 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class CustomerMenuController extends Controller
 {
+    public function __construct(public GuestSessionService $guestSessions) {}
+
     /**
      * Resolve active table from request token, table query param, or session.
      *
@@ -56,6 +59,10 @@ class CustomerMenuController extends Controller
             ]);
         }
 
+        if ($request->user() === null) {
+            $this->guestSessions->syncTable($request, $cafeTable);
+        }
+
         return [
             'tableNumber' => $tableNumber,
             'cafeTable' => $cafeTable,
@@ -86,9 +93,13 @@ class CustomerMenuController extends Controller
     /**
      * Handle short QR route /meja/{token} and redirect directly to customer menu page.
      */
-    public function scanQr(string $token): RedirectResponse
+    public function scanQr(Request $request, string $token): RedirectResponse
     {
         $table = CafeTable::where('token', $token)->firstOrFail();
+
+        if ($request->user() === null) {
+            $this->guestSessions->syncTable($request, $table);
+        }
 
         session([
             'active_table' => $table->table_number,
@@ -261,6 +272,17 @@ class CustomerMenuController extends Controller
         ]);
 
         $cleanTable = $this->normalizeTableNumber($validated['table_number'] ?? session('active_table')) ?? '05';
+        $cafeTable = CafeTable::where('table_number', $cleanTable)->first();
+
+        if ($cafeTable && $cafeTable->status !== 'aktif') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Meja ini sedang nonaktif. Pemesanan tidak dapat diproses.',
+            ], 422);
+        }
+
+        $owner = $this->guestSessions->resolveOrderOwner($request, $cafeTable);
+        $registeredCustomer = $this->guestSessions->registeredCustomer($request);
         $orderCode = Order::generateOrderCode();
 
         $total = 0;
@@ -281,8 +303,11 @@ class CustomerMenuController extends Controller
 
         $order = Order::create([
             'order_code' => $orderCode,
+            'user_id' => $owner['user_id'],
+            'guest_session_id' => $owner['guest_session_id'],
+            'table_id' => $cafeTable?->id,
             'table_number' => $cleanTable,
-            'customer_name' => $validated['customer_name'] ?? null,
+            'customer_name' => ($validated['customer_name'] ?? null) ?: $registeredCustomer?->nama,
             'subtotal' => $total,
             'total_price' => $total,
             'total_amount' => $total,
@@ -314,6 +339,87 @@ class CustomerMenuController extends Controller
     }
 
     /**
+     * Validate and resolve a scanned QR code payload (URL, token, or table number) into a table session.
+     */
+    public function resolveQrScan(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'qr_data' => ['required', 'string', 'max:500'],
+        ]);
+
+        $raw = trim($validated['qr_data']);
+        $candidateToken = null;
+        $candidateTable = null;
+
+        if (str_contains($raw, '://') || str_starts_with($raw, '/') || str_contains($raw, '?')) {
+            $parsed = parse_url($raw);
+            if (is_array($parsed)) {
+                if (! empty($parsed['query'])) {
+                    parse_str($parsed['query'], $queryParams);
+                    if (! empty($queryParams['token']) && is_string($queryParams['token'])) {
+                        $candidateToken = trim($queryParams['token']);
+                    }
+                    if (! empty($queryParams['table']) && is_string($queryParams['table'])) {
+                        $candidateTable = $this->normalizeTableNumber($queryParams['table']);
+                    }
+                }
+
+                if ($candidateToken === null && ! empty($parsed['path'])) {
+                    if (preg_match('#/meja/([A-Za-z0-9_-]+)#i', $parsed['path'], $matches) === 1) {
+                        $candidateToken = trim($matches[1]);
+                    }
+                }
+            }
+        } else {
+            $candidateToken = $raw;
+            $candidateTable = $this->normalizeTableNumber($raw);
+        }
+
+        $table = null;
+        if (! empty($candidateToken)) {
+            $table = CafeTable::where('token', $candidateToken)->first();
+        }
+        if ($table === null && ! empty($candidateTable)) {
+            $table = CafeTable::where('table_number', $candidateTable)->first();
+        }
+
+        if ($table === null) {
+            return response()->json([
+                'success' => false,
+                'message' => 'QR Code tidak dikenali sebagai meja Cafetaria De Barrio.',
+            ], 422);
+        }
+
+        if ($table->status !== 'aktif') {
+            return response()->json([
+                'success' => false,
+                'message' => "Meja {$table->table_number} sedang nonaktif. Silakan hubungi kasir.",
+            ], 422);
+        }
+
+        if ($request->user() === null) {
+            $this->guestSessions->syncTable($request, $table);
+        }
+
+        session([
+            'active_table' => $table->table_number,
+            'active_table_token' => $table->token,
+            'qr_flow' => true,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'table_number' => $table->table_number,
+            'table_name' => $table->name,
+            'message' => "Meja {$table->table_number} berhasil dipindai! Membuka menu...",
+            'redirect_url' => route('customer.menu', [
+                'table' => $table->table_number,
+                'token' => $table->token,
+            ]),
+        ]);
+    }
+
+    /**
      * Download the official printable/digital menu poster.
      */
     public function downloadMenu(): BinaryFileResponse
@@ -321,7 +427,7 @@ class CustomerMenuController extends Controller
         $path = public_path('images/daftar-menu-de-barrio.jpg');
         abort_unless(is_file($path), 404, 'File daftar menu belum tersedia.');
 
-        return response()->download($path, 'Daftar-Menu-Cafeteria-De-Barrio.jpg', [
+        return response()->download($path, 'Daftar-Menu-Cafetaria-De-Barrio.jpg', [
             'Content-Type' => 'image/jpeg',
         ]);
     }

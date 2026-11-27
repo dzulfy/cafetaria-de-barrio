@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title') | Warkop De Barrio</title>
+    <title>@yield('title') | Cafetaria De Barrio</title>
     <link rel="icon" type="image/jpeg" href="{{ asset('images/logo-de-barrio.jpg') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,9 +22,9 @@
         <div class="max-w-5xl mx-auto h-16 px-6 flex items-center justify-between gap-4">
             <a href="{{ route('landing', $tableParams) }}" class="flex items-center gap-2.5 group">
                 <div class="size-9 rounded-full bg-cream overflow-hidden border border-brand-900/15 flex items-center justify-center shadow-2xs transition-transform duration-300 group-hover:-rotate-6 shrink-0">
-                    <img src="{{ asset('images/logo-de-barrio.jpg') }}" alt="Cafeteria De Barrio" class="w-full h-full object-cover">
+                    <img src="{{ asset('images/logo-de-barrio.jpg') }}" alt="Cafetaria De Barrio" class="w-full h-full object-cover">
                 </div>
-                <span class="font-bold text-[17px] text-ink tracking-tight">De Barrio</span>
+                <span class="font-bold text-[17px] text-ink tracking-tight">Cafetaria De Barrio</span>
             </a>
 
             <nav class="flex items-center gap-1.5">
@@ -46,10 +46,13 @@
                 </a>
             </nav>
 
-            <span class="inline-flex items-center gap-1.5 rounded-full {{ $activeTable ? 'bg-brand-100 text-brand-900' : 'bg-white border border-line text-muted' }} px-3 py-1.5 text-xs font-semibold">
+            <button type="button"
+                    onclick="openQrScannerModal()"
+                    class="inline-flex items-center gap-1.5 rounded-full {{ $activeTable ? 'bg-brand-100 text-brand-900 hover:bg-brand-900 hover:text-white' : 'bg-white border border-line text-ink hover:bg-brand-100' }} px-3 py-1.5 text-xs font-semibold transition active:scale-95 cursor-pointer"
+                    title="Buka kamera untuk scan QR meja">
                 <x-lucide.qr-code class="size-3.5 shrink-0" />
                 <span>{{ $activeTable ? 'Meja ' . $activeTable : 'Scan QR Meja' }}</span>
-            </span>
+            </button>
         </div>
     </header>
 
@@ -94,5 +97,6 @@
         </a>
     </nav>
 </div>
+<x-qr-scanner-modal />
 </body>
 </html>

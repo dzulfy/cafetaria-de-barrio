@@ -80,7 +80,7 @@
         <div class="flex flex-col items-center">
             <!-- Icon Logo Lingkaran -->
             <div class="w-16 h-16 rounded-full bg-[#F6EFD8] border border-[#E6E0CC] overflow-hidden flex items-center justify-center mb-3 shadow-2xs">
-                <img src="{{ asset('images/logo-de-barrio.jpg') }}" alt="Cafeteria De Barrio" class="w-full h-full object-cover">
+                <img src="{{ asset('images/logo-de-barrio.jpg') }}" alt="Cafetaria De Barrio" class="w-full h-full object-cover">
             </div>
 
             <!-- Nama Cafe -->
@@ -120,7 +120,7 @@
         <!-- Garis Pemisah & Footer Token -->
         <div class="mt-5 pt-3 border-t border-gray-100 flex items-center justify-between text-[10px] text-gray-400">
             <span>Token: <strong class="font-mono text-gray-600">{{ $table->token }}</strong></span>
-            <span class="text-[#1F4D3A] font-semibold">De Barrio Cafe</span>
+            <span class="text-[#1F4D3A] font-semibold">Cafetaria De Barrio</span>
         </div>
     </div>
 

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Menu — De Barrio</title>
+    <title>Menu — Cafetaria De Barrio</title>
     <link rel="icon" type="image/jpeg" href="{{ asset('images/logo-de-barrio.jpg') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -64,18 +64,28 @@
                 @endif
             </div>
 
-            <a href="{{ route('cart', $tableParams) }}"
-               class="w-10 h-10 md:w-auto md:px-4 rounded-xl bg-white border border-line flex items-center justify-center gap-2 text-ink shadow-2xs hover:bg-brand-100/60 active:scale-95 transition relative shrink-0"
-               title="Keranjang">
-                <svg class="w-5 h-5 text-ink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                </svg>
-                <span class="hidden md:inline text-xs font-semibold">Keranjang</span>
-                <span id="cart-badge-count"
-                      class="{{ $totalCartItems > 0 ? '' : 'hidden' }} absolute -top-1.5 -right-1.5 bg-brand-900 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white">
-                    {{ $totalCartItems }}
-                </span>
-            </a>
+            <div class="flex items-center gap-2 shrink-0">
+                <button type="button"
+                        onclick="openQrScannerModal()"
+                        class="w-10 h-10 md:w-auto md:px-3.5 rounded-xl bg-white border border-line flex items-center justify-center gap-1.5 text-brand-900 shadow-2xs hover:bg-brand-100/70 active:scale-95 transition cursor-pointer"
+                        title="Scan QR Meja dengan Kamera">
+                    <x-lucide.qr-code class="w-4 h-4 shrink-0" />
+                    <span class="hidden md:inline text-xs font-semibold">Scan QR</span>
+                </button>
+
+                <a href="{{ route('cart', $tableParams) }}"
+                   class="w-10 h-10 md:w-auto md:px-4 rounded-xl bg-white border border-line flex items-center justify-center gap-2 text-ink shadow-2xs hover:bg-brand-100/60 active:scale-95 transition relative shrink-0"
+                   title="Keranjang">
+                    <svg class="w-5 h-5 text-ink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                    <span class="hidden md:inline text-xs font-semibold">Keranjang</span>
+                    <span id="cart-badge-count"
+                          class="{{ $totalCartItems > 0 ? '' : 'hidden' }} absolute -top-1.5 -right-1.5 bg-brand-900 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white">
+                        {{ $totalCartItems }}
+                    </span>
+                </a>
+            </div>
         </div>
     </header>
 
@@ -390,5 +400,6 @@
         }
     }
 </script>
+<x-qr-scanner-modal />
 </body>
 </html>

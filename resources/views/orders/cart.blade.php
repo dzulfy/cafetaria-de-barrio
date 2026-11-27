@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Keranjang — De Barrio')
+@section('title', 'Keranjang — Cafetaria De Barrio')
 
 @section('content')
 @if(request()->get('view') === 'mockup')
