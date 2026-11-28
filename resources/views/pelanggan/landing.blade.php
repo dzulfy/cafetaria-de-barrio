@@ -137,7 +137,7 @@
                 @endif
 
                 <h1 class="mt-3.5 text-[28px] sm:text-4xl lg:text-[42px] font-extrabold leading-[1.18] tracking-tight text-white">
-                    Ngopi manual brew,<br>harga anak kos.
+                    Ngopi, Ngemil, Nugas<br>harga anak kos.
                 </h1>
 
                 <p class="mt-3 text-[13px] sm:text-sm lg:text-[15px] leading-[1.6] text-[#D7E5DC] max-w-xl">
