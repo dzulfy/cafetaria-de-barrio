@@ -23,3 +23,17 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+# Block access to hidden dotfiles (allow .well-known for SSL verification)
+<IfModule mod_authz_core.c>
+    <FilesMatch "^\.(?!well-known)">
+        Require all denied
+    </FilesMatch>
+</IfModule>
+
+# Security Headers for Production Hosting
+<IfModule mod_headers.c>
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
