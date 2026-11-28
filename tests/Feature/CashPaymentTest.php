@@ -8,7 +8,6 @@ use App\Models\CafeTable;
 use App\Models\Category;
 use App\Models\GuestSession;
 use App\Models\Menu;
-use App\Models\MenuItem;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\User;
@@ -24,8 +23,6 @@ class CashPaymentTest extends TestCase
     private User $kasir;
 
     private Menu $menu;
-
-    private MenuItem $menuItem;
 
     protected function setUp(): void
     {
@@ -50,14 +47,6 @@ class CashPaymentTest extends TestCase
             'category_id' => $cat->id,
             'name' => 'Matcha',
             'slug' => 'matcha',
-            'description' => 'Green tea matcha creamy',
-            'price' => 8000,
-            'is_available' => true,
-        ]);
-
-        $this->menuItem = MenuItem::create([
-            'category_id' => $cat->id,
-            'name' => 'Matcha',
             'description' => 'Green tea matcha creamy',
             'price' => 8000,
             'is_available' => true,
@@ -236,7 +225,7 @@ class CashPaymentTest extends TestCase
             'source' => 'Kasir',
             'payment_method' => 'tunai',
             'items' => [
-                ['menu_item_id' => $this->menuItem->id, 'quantity' => 2],
+                ['menu_id' => $this->menu->id, 'quantity' => 2],
             ],
         ]);
 

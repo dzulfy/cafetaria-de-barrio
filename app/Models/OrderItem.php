@@ -17,7 +17,6 @@ class OrderItem extends Model
     protected $fillable = [
         'order_id',
         'menu_id',
-        'menu_item_id',
         'menu_name',
         'price',
         'quantity',
@@ -43,7 +42,7 @@ class OrderItem extends Model
 
     public function menuItem(): BelongsTo
     {
-        return $this->belongsTo(MenuItem::class);
+        return $this->belongsTo(Menu::class, 'menu_id');
     }
 
     public function getFormattedPriceAttribute(): string

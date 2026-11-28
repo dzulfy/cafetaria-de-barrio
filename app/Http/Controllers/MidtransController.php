@@ -84,7 +84,7 @@ class MidtransController extends Controller
             'snap_token' => $snap['token'],
             'redirect_url' => $snap['redirect_url'],
             'client_key' => $this->midtrans->clientKey(),
-            'order' => $order->fresh(['items.menuItem']),
+            'order' => $order->fresh(['items.menu']),
         ]);
     }
 
@@ -102,7 +102,7 @@ class MidtransController extends Controller
                 'paid' => true,
                 'payment_status' => 'paid',
                 'message' => 'Pembayaran sudah lunas.',
-                'order' => $order->fresh(['items.menuItem']),
+                'order' => $order->fresh(['items.menu']),
             ]);
         }
 

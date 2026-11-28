@@ -118,6 +118,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Meja & QR Code (A7)
     Route::get('/meja', [AdminTableController::class, 'index'])->name('tables.index');
     Route::post('/meja', [AdminTableController::class, 'store'])->name('tables.store');
+    Route::put('/meja/{table}', [AdminTableController::class, 'update'])->name('tables.update');
+    Route::delete('/meja/{table}', [AdminTableController::class, 'destroy'])->name('tables.destroy');
     Route::post('/meja/{table}/toggle', [AdminTableController::class, 'toggleStatus'])->name('tables.toggle');
     Route::get('/meja/{table}/unduh', [AdminTableController::class, 'downloadQr'])->name('tables.download-qr');
     Route::get('/meja/{table}/cetak', [AdminTableController::class, 'print'])->name('tables.print');

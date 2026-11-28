@@ -6,7 +6,9 @@ use App\Models\Category;
 use App\Models\Menu;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class MenuManagementTest extends TestCase
@@ -242,5 +244,132 @@ class MenuManagementTest extends TestCase
         $this->assertDatabaseMissing('menus', [
             'id' => $menu->id,
         ]);
+    }
+
+    public function test_admin_can_create_menu_with_image(): void
+    {
+        Storage::fake('public');
+
+        $category = Category::create(['name' => 'Minuman', 'slug' => 'minuman']);
+        $file = $this->makeTestPngUpload('nescafe.png');
+
+        $response = $this->post(route('admin.menus.store'), [
+            'name' => 'Nescafe Dingin',
+            'category_id' => $category->id,
+            'price' => 7000,
+            'description' => 'Kopi instan Nescafe klasik',
+            'is_available' => '1',
+            'image' => $file,
+        ]);
+
+        $response->assertRedirect(route('admin.menus.index'));
+        $response->assertSessionHasNoErrors();
+
+        $menu = Menu::where('name', 'Nescafe Dingin')->firstOrFail();
+        $this->assertNotNull($menu->image);
+        $this->assertStringStartsWith('menus/', $menu->image);
+        Storage::disk('public')->assertExists($menu->image);
+
+        $this->get(route('admin.menus.index'))
+            ->assertStatus(200)
+            ->assertSee(asset('storage/'.$menu->image), false);
+
+        $this->get(route('customer.menu'))
+            ->assertStatus(200)
+            ->assertSee(asset('storage/'.$menu->image), false);
+    }
+
+    public function test_admin_can_update_menu_with_new_image_replaces_old_image(): void
+    {
+        Storage::fake('public');
+
+        $category = Category::create(['name' => 'Minuman', 'slug' => 'minuman']);
+        $oldPath = $this->makeTestPngUpload('old-nescafe.png')->store('menus', 'public');
+
+        $menu = Menu::create([
+            'category_id' => $category->id,
+            'name' => 'Nescafe',
+            'price' => 7000,
+            'image' => $oldPath,
+            'is_available' => true,
+        ]);
+
+        $newFile = $this->makeTestPngUpload('new-nescafe.png');
+
+        $response = $this->put(route('admin.menus.update', $menu), [
+            'name' => 'Nescafe Spesial',
+            'category_id' => $category->id,
+            'price' => 8000,
+            'description' => 'Dengan susu segar',
+            'is_available' => '1',
+            'image' => $newFile,
+        ]);
+
+        $response->assertRedirect(route('admin.menus.index'));
+        $response->assertSessionHasNoErrors();
+
+        $menu->refresh();
+        $this->assertNotSame($oldPath, $menu->image);
+        Storage::disk('public')->assertMissing($oldPath);
+        Storage::disk('public')->assertExists($menu->image);
+    }
+
+    public function test_admin_can_remove_existing_menu_image_on_update(): void
+    {
+        Storage::fake('public');
+
+        $category = Category::create(['name' => 'Minuman', 'slug' => 'minuman']);
+        $oldPath = $this->makeTestPngUpload('nescafe-remove.png')->store('menus', 'public');
+
+        $menu = Menu::create([
+            'category_id' => $category->id,
+            'name' => 'Nescafe',
+            'price' => 7000,
+            'image' => $oldPath,
+            'is_available' => true,
+        ]);
+
+        $response = $this->put(route('admin.menus.update', $menu), [
+            'name' => 'Nescafe',
+            'category_id' => $category->id,
+            'price' => 7000,
+            'is_available' => '1',
+            'remove_image' => '1',
+        ]);
+
+        $response->assertRedirect(route('admin.menus.index'));
+        $response->assertSessionHasNoErrors();
+
+        $menu->refresh();
+        $this->assertNull($menu->image);
+        Storage::disk('public')->assertMissing($oldPath);
+    }
+
+    public function test_admin_cannot_upload_non_image_file_for_menu(): void
+    {
+        Storage::fake('public');
+
+        $category = Category::create(['name' => 'Minuman', 'slug' => 'minuman']);
+        $invalidFile = UploadedFile::fake()->create('dokumen.pdf', 100, 'application/pdf');
+
+        $response = $this->from(route('admin.menus.index'))
+            ->post(route('admin.menus.store'), [
+                'name' => 'Menu Gagal Upload',
+                'category_id' => $category->id,
+                'price' => 10000,
+                'is_available' => '1',
+                'image' => $invalidFile,
+            ]);
+
+        $response->assertRedirect(route('admin.menus.index'));
+        $response->assertSessionHasErrors('image');
+        $this->assertDatabaseMissing('menus', ['name' => 'Menu Gagal Upload']);
+    }
+
+    private function makeTestPngUpload(string $filename = 'menu.png'): UploadedFile
+    {
+        $pngBytes = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7Z0fcAAAAASUVORK5CYII=');
+
+        return UploadedFile::fake()->createWithContent($filename, $pngBytes);
     }
 }

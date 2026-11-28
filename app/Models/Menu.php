@@ -39,12 +39,6 @@ class Menu extends Model
         'icon',
         'category',
         'is_available',
-        'kategori_id',
-        'nama',
-        'deskripsi',
-        'harga',
-        'foto',
-        'status_tersedia',
     ];
 
     protected $casts = [
@@ -55,16 +49,6 @@ class Menu extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'category_id');
-    }
-
-    public function kategori(): BelongsTo
-    {
-        return $this->belongsTo(Kategori::class, 'kategori_id');
-    }
-
-    public function detailPesanan(): HasMany
-    {
-        return $this->hasMany(DetailPesanan::class, 'menu_id');
     }
 
     public function bahan(): BelongsToMany

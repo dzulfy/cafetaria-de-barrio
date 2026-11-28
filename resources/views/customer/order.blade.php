@@ -137,7 +137,7 @@
                 customerName: 'Bima',
                 customerNotes: 'Gula sedikit, karna perasaan bisa berubah tapi kopi harus tetap manis.',
                 categories: @json($categories),
-                menuItems: @json($categories->pluck('menuItems')->flatten()),
+                menuItems: @json($categories->pluck('menus')->flatten()),
                 selectedCategory: 'semua',
                 cart: [],
                 isSubmitting: false,

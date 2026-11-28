@@ -2,14 +2,14 @@
 
 namespace Database\Seeders;
 
-use App\Models\Kategori;
-use App\Models\Meja;
+use App\Models\CafeTable;
+use App\Models\Category;
 use App\Models\Menu;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Pengeluaran;
-use App\Models\Pesanan;
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class DashboardSeeder extends Seeder
@@ -22,39 +22,50 @@ class DashboardSeeder extends Seeder
         $admin = User::first();
         $adminId = $admin?->id ?? 1;
 
-        // 1. Pastikan Meja 01 s/d Meja 06 tersedia
-        $mejas = ['Meja 01', 'Meja 02', 'Meja 03', 'Meja 04', 'Meja 05', 'Meja 06'];
-        foreach ($mejas as $m) {
-            Meja::firstOrCreate(
-                ['nomor_meja' => $m],
-                ['token_qr' => Str::random(32), 'status_aktif' => true]
+        // 1. Pastikan Meja 01 s/d Meja 06 tersedia pada cafe_tables
+        $defaultTokens = [
+            '01' => 'x7Kp9aLm2Q',
+            '02' => 'b3Td8vNq5R',
+            '03' => 'm9Ws1cHy7E',
+            '04' => 'k2Lf6zXp4A',
+            '05' => 'p8Gh3uJr1N',
+            '06' => 't5Yv7eBd9C',
+        ];
+        foreach ($defaultTokens as $num => $token) {
+            CafeTable::firstOrCreate(
+                ['table_number' => $num],
+                [
+                    'name' => 'Meja '.$num,
+                    'token' => $token,
+                    'status' => 'aktif',
+                ]
             );
         }
 
-        $meja05 = Meja::where('nomor_meja', 'Meja 05')->first();
-        $meja02 = Meja::where('nomor_meja', 'Meja 02')->first();
+        $meja05 = CafeTable::where('table_number', '05')->first();
+        $meja02 = CafeTable::where('table_number', '02')->first();
 
-        // 2. Pastikan Menu terlaris tersedia
-        $kategoriKopi = Kategori::firstOrCreate(['nama' => 'Kopi'], ['urutan' => 1]);
-        $kategoriSnack = Kategori::firstOrCreate(['nama' => 'Makanan Ringan'], ['urutan' => 3]);
+        // 2. Pastikan kategori & menu dasar tersedia di categories / menus
+        $catMinuman = Category::firstOrCreate(['slug' => 'minuman'], ['name' => 'Minuman', 'icon' => 'coffee']);
+        $catSnack = Category::firstOrCreate(['slug' => 'snack'], ['name' => 'Snack', 'icon' => 'food']);
 
         $menuList = [
-            ['nama' => 'Kopi Susu Gula Aren', 'kategori_id' => $kategoriKopi->id, 'harga' => 20000],
-            ['nama' => 'Es Kopi Susu', 'kategori_id' => $kategoriKopi->id, 'harga' => 18000],
-            ['nama' => 'Pisang Goreng', 'kategori_id' => $kategoriSnack->id, 'harga' => 15000],
-            ['nama' => 'V60 Manual Brew', 'kategori_id' => $kategoriKopi->id, 'harga' => 22000],
+            ['name' => 'Kopi Susu Gula Aren', 'category_id' => $catMinuman->id, 'price' => 20000],
+            ['name' => 'Es Kopi Susu', 'category_id' => $catMinuman->id, 'price' => 18000],
+            ['name' => 'Pisang Goreng', 'category_id' => $catSnack->id, 'price' => 15000],
+            ['name' => 'V60 Manual Brew', 'category_id' => $catMinuman->id, 'price' => 22000],
         ];
 
+        $menusByName = [];
         foreach ($menuList as $m) {
-            DB::table('menu')->updateOrInsert(
-                ['nama' => $m['nama']],
+            $menusByName[$m['name']] = Menu::firstOrCreate(
+                ['slug' => Str::slug($m['name'])],
                 [
-                    'kategori_id' => $m['kategori_id'],
-                    'deskripsi' => 'Menu andalan De Barrio',
-                    'harga' => $m['harga'],
-                    'status_tersedia' => true,
-                    'created_at' => now(),
-                    'updated_at' => now(),
+                    'category_id' => $m['category_id'],
+                    'name' => $m['name'],
+                    'description' => 'Menu andalan Cafetaria De Barrio',
+                    'price' => $m['price'],
+                    'is_available' => true,
                 ]
             );
         }
@@ -79,91 +90,184 @@ class DashboardSeeder extends Seeder
             ]);
         }
 
-        // 4. Seed Pesanan Hari Ini (Total 47 pesanan, 8 menunggu, total Rp 1.248.000)
-        Pesanan::whereDate('waktu_pesan', $today)->delete();
+        // 4. Seed Orders Hari Ini (Total 47 pesanan, 8 menunggu, total Rp 1.248.000)
+        Order::whereDate('created_at', $today)->delete();
+        $dayStart = now()->startOfDay();
 
-        // Buat 38 pesanan selesai lampau terlebih dahulu:
+        // Buat 36 pesanan selesai lampau terlebih dahulu:
         for ($i = 1; $i <= 36; $i++) {
-            Pesanan::create([
-                'kode_pesanan' => sprintf('DB-0%03d', 70 + $i),
-                'meja_id' => null,
-                'pengguna_id' => $adminId,
-                'sumber' => 'kasir',
+            $ts = $dayStart->copy()->addMinutes($i);
+            Order::create([
+                'order_code' => sprintf('DB-0%03d', 70 + $i),
+                'table_number' => 'Kasir',
+                'customer_name' => 'Pelanggan Selesai '.$i,
+                'source' => 'Kasir',
                 'status' => 'selesai',
-                'nama_pelanggan' => 'Pelanggan Selesai '.$i,
-                'total_harga' => 26000,
-                'waktu_pesan' => now()->subHours(4)->subMinutes($i * 5),
+                'payment_status' => 'paid',
+                'payment_method' => 'tunai',
+                'subtotal' => 26000,
+                'total_price' => 26000,
+                'total_amount' => 26000,
+                'created_at' => $ts,
+                'updated_at' => $ts,
             ]);
         }
 
-        Pesanan::create([
-            'kode_pesanan' => 'DB-0107',
-            'meja_id' => null,
-            'pengguna_id' => $adminId,
-            'sumber' => 'kasir',
+        $t107 = $dayStart->copy()->addMinutes(40);
+        Order::create([
+            'order_code' => 'DB-0107',
+            'table_number' => 'Kasir',
+            'customer_name' => 'Pelanggan Selesai 37',
+            'source' => 'Kasir',
             'status' => 'selesai',
-            'nama_pelanggan' => 'Pelanggan Selesai 37',
-            'total_harga' => 32000,
-            'waktu_pesan' => now()->subHours(3)->subMinutes(30),
+            'payment_status' => 'paid',
+            'payment_method' => 'tunai',
+            'subtotal' => 32000,
+            'total_price' => 32000,
+            'total_amount' => 32000,
+            'created_at' => $t107,
+            'updated_at' => $t107,
         ]);
 
-        Pesanan::create([
-            'kode_pesanan' => 'DB-0108',
-            'meja_id' => null,
-            'pengguna_id' => $adminId,
-            'sumber' => 'kasir',
+        $t108 = $dayStart->copy()->addMinutes(45);
+        Order::create([
+            'order_code' => 'DB-0108',
+            'table_number' => 'Kasir',
+            'customer_name' => 'Pelanggan Selesai 38',
+            'source' => 'Kasir',
             'status' => 'selesai',
-            'nama_pelanggan' => 'Pelanggan Selesai 38',
-            'total_harga' => 30000,
-            'waktu_pesan' => now()->subHours(3),
+            'payment_status' => 'paid',
+            'payment_method' => 'tunai',
+            'subtotal' => 30000,
+            'total_price' => 30000,
+            'total_amount' => 30000,
+            'created_at' => $t108,
+            'updated_at' => $t108,
         ]);
 
         // 6 pesanan menunggu sebelumnya (total status menunggu = 8):
         for ($i = 1; $i <= 6; $i++) {
-            Pesanan::create([
-                'kode_pesanan' => sprintf('DB-0%03d', 114 + $i),
-                'meja_id' => $meja02?->id,
-                'pengguna_id' => $adminId,
-                'sumber' => 'qr',
+            $ts = $dayStart->copy()->addMinutes(50 + $i);
+            Order::create([
+                'order_code' => sprintf('DB-0%03d', 114 + $i),
+                'table_id' => $meja02?->id,
+                'table_number' => '02',
+                'customer_name' => 'Pelanggan Menunggu '.$i,
+                'source' => 'QR Meja',
                 'status' => 'menunggu',
-                'nama_pelanggan' => 'Pelanggan Menunggu '.$i,
-                'total_harga' => 26000,
-                'waktu_pesan' => now()->subHours(1)->subMinutes($i * 5),
+                'payment_status' => 'unpaid',
+                'subtotal' => 26000,
+                'total_price' => 26000,
+                'total_amount' => 26000,
+                'created_at' => $ts,
+                'updated_at' => $ts,
             ]);
         }
 
-        // 3 Pesanan Terbaru yang tampil di card Pesanan Terbaru (dibuat paling akhir / paling baru):
-        Pesanan::create([
-            'kode_pesanan' => 'DB-0121',
-            'meja_id' => null,
-            'pengguna_id' => $adminId,
-            'sumber' => 'kasir',
+        // 3 Pesanan Terbaru yang tampil di card Pesanan Terbaru:
+        $t121 = $dayStart->copy()->addMinutes(70);
+        Order::create([
+            'order_code' => 'DB-0121',
+            'table_number' => 'Kasir',
+            'customer_name' => 'Takeaway Kasir',
+            'source' => 'Kasir',
             'status' => 'selesai',
-            'nama_pelanggan' => 'Takeaway Kasir',
-            'total_harga' => 24000,
-            'waktu_pesan' => now()->subMinutes(45),
+            'payment_status' => 'paid',
+            'payment_method' => 'tunai',
+            'subtotal' => 24000,
+            'total_price' => 24000,
+            'total_amount' => 24000,
+            'created_at' => $t121,
+            'updated_at' => $t121,
         ]);
 
-        Pesanan::create([
-            'kode_pesanan' => 'DB-0123',
-            'meja_id' => $meja02?->id,
-            'pengguna_id' => $adminId,
-            'sumber' => 'qr',
+        $t123 = $dayStart->copy()->addMinutes(80);
+        Order::create([
+            'order_code' => 'DB-0123',
+            'table_id' => $meja02?->id,
+            'table_number' => '02',
+            'customer_name' => 'Pelanggan Meja 2',
+            'source' => 'QR Meja',
             'status' => 'menunggu',
-            'nama_pelanggan' => 'Pelanggan Meja 2',
-            'total_harga' => 28000,
-            'waktu_pesan' => now()->subMinutes(25),
+            'payment_status' => 'unpaid',
+            'subtotal' => 28000,
+            'total_price' => 28000,
+            'total_amount' => 28000,
+            'created_at' => $t123,
+            'updated_at' => $t123,
         ]);
 
-        Pesanan::create([
-            'kode_pesanan' => 'DB-0124',
-            'meja_id' => $meja05?->id,
-            'pengguna_id' => $adminId,
-            'sumber' => 'qr',
+        $t124 = $dayStart->copy()->addMinutes(90);
+        Order::create([
+            'order_code' => 'DB-0124',
+            'table_id' => $meja05?->id,
+            'table_number' => '05',
+            'customer_name' => 'Pelanggan Meja 5',
+            'source' => 'QR Meja',
             'status' => 'menunggu',
-            'nama_pelanggan' => 'Pelanggan Meja 5',
-            'total_harga' => 42000,
-            'waktu_pesan' => now()->subMinutes(10),
+            'payment_status' => 'unpaid',
+            'subtotal' => 42000,
+            'total_price' => 42000,
+            'total_amount' => 42000,
+            'created_at' => $t124,
+            'updated_at' => $t124,
         ]);
+
+        // 5. Seed Historical Orders 6 hari sebelumnya (untuk grafik 7 hari, trend kemarin, & Menu Terlaris)
+        Order::where('order_code', 'like', 'DB-HIST-%')->delete();
+
+        $historicalDays = [
+            6 => 820000,
+            5 => 960000,
+            4 => 1100000,
+            3 => 740000,
+            2 => 1320000,
+            1 => 1114000, // kemarin: (1.248.000 - 1.114.000) / 1.114.000 = +12%
+        ];
+
+        $historicalOrders = [];
+        foreach ($historicalDays as $daysAgo => $amount) {
+            $histTs = now()->subDays($daysAgo)->startOfDay()->addHours(14);
+            $histOrder = Order::create([
+                'order_code' => 'DB-HIST-'.$daysAgo,
+                'table_number' => 'Kasir',
+                'customer_name' => 'Rekap Harian H-'.$daysAgo,
+                'source' => 'Kasir',
+                'status' => 'selesai',
+                'payment_status' => 'paid',
+                'payment_method' => 'tunai',
+                'subtotal' => $amount,
+                'total_price' => $amount,
+                'total_amount' => $amount,
+            ]);
+            $histOrder->timestamps = false;
+            $histOrder->created_at = $histTs;
+            $histOrder->updated_at = $histTs;
+            $histOrder->save();
+
+            $historicalOrders[$daysAgo] = $histOrder;
+        }
+
+        // Seed relasi order_items untuk menghitung Menu Terlaris dari database
+        $topSellingTargets = [
+            ['order' => $historicalOrders[1], 'menu' => $menusByName['Kopi Susu Gula Aren'], 'qty' => 86],
+            ['order' => $historicalOrders[2], 'menu' => $menusByName['Es Kopi Susu'], 'qty' => 64],
+            ['order' => $historicalOrders[3], 'menu' => $menusByName['Pisang Goreng'], 'qty' => 48],
+            ['order' => $historicalOrders[4], 'menu' => $menusByName['V60 Manual Brew'], 'qty' => 31],
+        ];
+
+        foreach ($topSellingTargets as $entry) {
+            $menu = $entry['menu'];
+            $qty = $entry['qty'];
+
+            OrderItem::create([
+                'order_id' => $entry['order']->id,
+                'menu_id' => $menu->id,
+                'menu_name' => $menu->name,
+                'price' => $menu->price,
+                'quantity' => $qty,
+                'subtotal' => $menu->price * $qty,
+            ]);
+        }
     }
 }

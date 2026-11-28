@@ -5,6 +5,17 @@
 @section('content')
 <div class="max-w-7xl mx-auto space-y-6">
 
+    @if($errors->any())
+        <div class="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm flex items-start justify-between gap-3">
+            <ul class="list-disc list-inside space-y-1">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+            <button type="button" onclick="this.parentElement.remove()" class="text-xs font-bold cursor-pointer shrink-0">×</button>
+        </div>
+    @endif
+
     <!-- Top Header matching Image 1 -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -127,7 +138,14 @@
                         <td class="py-3.5 px-6 text-center">
                             <div class="flex items-center justify-center gap-2">
                                 <button type="button" 
-                                        onclick="openEditModal({{ json_encode($menu) }})" 
+                                        onclick="openEditModal(this)"
+                                        data-update-url="{{ route('admin.menus.update', $menu) }}"
+                                        data-name="{{ $menu->name }}"
+                                        data-category-id="{{ $menu->category_id }}"
+                                        data-price="{{ $menu->price }}"
+                                        data-description="{{ $menu->description ?? '' }}"
+                                        data-is-available="{{ $menu->is_available ? '1' : '0' }}"
+                                        data-image-url="{{ $menu->image ? asset('storage/' . $menu->image) : '' }}"
                                         title="Edit Menu"
                                         class="p-1.5 text-gray-500 hover:text-[#184233] hover:bg-[#EBF2EE] rounded-lg transition-colors cursor-pointer">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -226,6 +244,7 @@
             <form id="menu-form" method="POST" action="{{ route('admin.menus.store') }}" enctype="multipart/form-data" class="mt-4 space-y-4">
                 @csrf
                 <div id="method-spoofing"></div>
+                <input type="hidden" id="input-remove-image" name="remove_image" value="0">
 
                 <!-- Nama Menu -->
                 <div>
@@ -284,14 +303,14 @@
                             </svg>
                         </div>
                         <span class="text-xs font-semibold text-gray-800">Klik untuk unggah foto</span>
-                        <span class="text-[11px] text-gray-400 mt-0.5">JPG atau PNG, maks. 2 MB</span>
-                        <input type="file" id="input-image" name="image" accept="image/png, image/jpeg, image/webp" class="sr-only" onchange="previewImage(this)">
+                        <span class="text-[11px] text-gray-400 mt-0.5">JPG, PNG, WEBP, atau GIF, maks. 5 MB</span>
+                        <input type="file" id="input-image" name="image" accept="image/png, image/jpeg, image/webp, image/gif" class="sr-only" onchange="previewImage(this)">
                     </label>
                     <div id="image-preview" class="mt-2 hidden">
                         <div class="flex items-center gap-2 p-2 bg-gray-50 rounded-xl border border-gray-200">
                             <img id="preview-img" src="" alt="Preview" class="w-10 h-10 object-cover rounded-lg">
                             <span id="preview-name" class="text-xs text-gray-600 truncate flex-1"></span>
-                            <button type="button" onclick="clearImagePreview()" class="text-red-500 hover:text-red-700 text-xs font-medium">Batal</button>
+                            <button type="button" onclick="clearImagePreview(true)" class="text-red-500 hover:text-red-700 text-xs font-medium cursor-pointer">Hapus Foto</button>
                         </div>
                     </div>
                 </div>
@@ -438,30 +457,34 @@
         menuForm.action = "{{ route('admin.menus.store') }}";
         methodSpoofing.innerHTML = '';
         menuForm.reset();
-        clearImagePreview();
+        clearImagePreview(false);
+        document.getElementById('input-remove-image').value = '0';
         document.getElementById('input-status').checked = true;
         syncModalStatusSwitch();
         modal.classList.remove('hidden');
     }
 
-    function openEditModal(menu) {
+    function openEditModal(button) {
+        const data = button.dataset;
         modalTitle.textContent = 'Edit Menu';
-        menuForm.action = `/admin/menu/${menu.id}`;
+        menuForm.action = data.updateUrl || '';
         methodSpoofing.innerHTML = '<input type="hidden" name="_method" value="PUT">';
-        
-        document.getElementById('input-name').value = menu.name;
-        document.getElementById('input-category').value = menu.category_id;
-        document.getElementById('input-price').value = menu.price;
-        document.getElementById('input-description').value = menu.description || '';
-        document.getElementById('input-status').checked = !!menu.is_available;
+
+        document.getElementById('input-name').value = data.name || '';
+        document.getElementById('input-category').value = data.categoryId || '';
+        document.getElementById('input-price').value = data.price || '';
+        document.getElementById('input-description').value = data.description || '';
+        document.getElementById('input-status').checked = data.isAvailable === '1';
+        document.getElementById('input-remove-image').value = '0';
+        document.getElementById('input-image').value = '';
         syncModalStatusSwitch();
 
-        if (menu.image) {
-            document.getElementById('preview-img').src = `/storage/${menu.image}`;
+        if (data.imageUrl) {
+            document.getElementById('preview-img').src = data.imageUrl;
             document.getElementById('preview-name').textContent = 'Foto saat ini';
             document.getElementById('image-preview').classList.remove('hidden');
         } else {
-            clearImagePreview();
+            clearImagePreview(false);
         }
 
         modal.classList.remove('hidden');
@@ -473,6 +496,7 @@
 
     function previewImage(input) {
         if (input.files && input.files[0]) {
+            document.getElementById('input-remove-image').value = '0';
             const reader = new FileReader();
             reader.onload = function(e) {
                 document.getElementById('preview-img').src = e.target.result;
@@ -483,10 +507,11 @@
         }
     }
 
-    function clearImagePreview() {
+    function clearImagePreview(markForRemoval = false) {
         document.getElementById('input-image').value = '';
         document.getElementById('preview-img').src = '';
         document.getElementById('image-preview').classList.add('hidden');
+        document.getElementById('input-remove-image').value = markForRemoval ? '1' : '0';
     }
 
     // Delete confirmation

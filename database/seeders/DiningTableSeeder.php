@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\CafeTable;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class DiningTableSeeder extends Seeder
 {
@@ -13,17 +12,16 @@ class DiningTableSeeder extends Seeder
      */
     public function run(): void
     {
-        $mejaList = ['Meja 01', 'Meja 02', 'Meja 03'];
+        $tables = [
+            ['table_number' => '01', 'name' => 'Meja 01', 'token' => 'x7Kp9aLm2Q', 'status' => 'aktif'],
+            ['table_number' => '02', 'name' => 'Meja 02', 'token' => 'b3Td8vNq5R', 'status' => 'aktif'],
+            ['table_number' => '03', 'name' => 'Meja 03', 'token' => 'm9Ws1cHy7E', 'status' => 'aktif'],
+        ];
 
-        foreach ($mejaList as $meja) {
-            DB::table('meja')->updateOrInsert(
-                ['nomor_meja' => $meja],
-                [
-                    'token_qr' => Str::random(32),
-                    'status_aktif' => true,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]
+        foreach ($tables as $tbl) {
+            CafeTable::updateOrCreate(
+                ['table_number' => $tbl['table_number']],
+                $tbl
             );
         }
     }

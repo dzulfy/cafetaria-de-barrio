@@ -43,6 +43,6 @@ class Category extends Model
 
     public function menuItems(): HasMany
     {
-        return $this->hasMany(MenuItem::class, 'category_id');
+        return $this->hasMany(Menu::class, 'category_id');
     }
 }

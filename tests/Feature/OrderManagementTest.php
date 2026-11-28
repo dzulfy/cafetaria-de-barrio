@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\MenuItem;
+use App\Models\Menu;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -119,7 +119,7 @@ class OrderManagementTest extends TestCase
             ], 201),
         ]);
 
-        $menuItem = MenuItem::first();
+        $menuItem = Menu::first();
 
         $response = $this->postJson(route('orders.store'), [
             'table_number' => 'Meja 06',
@@ -128,7 +128,7 @@ class OrderManagementTest extends TestCase
             'source' => 'QR Meja',
             'items' => [
                 [
-                    'menu_item_id' => $menuItem->id,
+                    'menu_id' => $menuItem->id,
                     'quantity' => 2,
                 ],
             ],

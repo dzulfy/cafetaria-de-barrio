@@ -8,7 +8,6 @@ use App\Models\CafeTable;
 use App\Models\Category;
 use App\Models\GuestSession;
 use App\Models\Menu;
-use App\Models\MenuItem;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\User;
@@ -25,8 +24,6 @@ class MidtransPaymentTest extends TestCase
     private User $kasir;
 
     private Menu $menu;
-
-    private MenuItem $menuItem;
 
     protected function setUp(): void
     {
@@ -51,14 +48,6 @@ class MidtransPaymentTest extends TestCase
             'category_id' => $cat->id,
             'name' => 'Goodday Freeze',
             'slug' => 'goodday-freeze',
-            'description' => 'Kopi dingin menyegarkan',
-            'price' => 9000,
-            'is_available' => true,
-        ]);
-
-        $this->menuItem = MenuItem::create([
-            'category_id' => $cat->id,
-            'name' => 'Goodday Freeze',
             'description' => 'Kopi dingin menyegarkan',
             'price' => 9000,
             'is_available' => true,
@@ -302,7 +291,7 @@ class MidtransPaymentTest extends TestCase
             'customer_name' => 'Doni',
             'source' => 'Kasir',
             'items' => [
-                ['menu_item_id' => $this->menuItem->id, 'quantity' => 2],
+                ['menu_id' => $this->menu->id, 'quantity' => 2],
             ],
         ]);
 

@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Category;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
 class CategorySeeder extends Seeder
 {
@@ -12,22 +12,19 @@ class CategorySeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('kategori')->delete();
-
-        $kategoriList = [
-            ['nama' => 'Minuman', 'urutan' => 1],
-            ['nama' => 'Snack', 'urutan' => 2],
-            ['nama' => 'Mie', 'urutan' => 3],
-            ['nama' => 'Add On', 'urutan' => 4],
+        $categories = [
+            ['name' => 'Minuman', 'slug' => 'minuman', 'icon' => 'coffee'],
+            ['name' => 'Snack', 'slug' => 'snack', 'icon' => 'food'],
+            ['name' => 'Mie', 'slug' => 'mie', 'icon' => 'food'],
+            ['name' => 'Add On', 'slug' => 'add-on', 'icon' => 'food'],
         ];
 
-        foreach ($kategoriList as $kat) {
-            DB::table('kategori')->updateOrInsert(
-                ['nama' => $kat['nama']],
+        foreach ($categories as $cat) {
+            Category::updateOrCreate(
+                ['slug' => $cat['slug']],
                 [
-                    'urutan' => $kat['urutan'],
-                    'created_at' => now(),
-                    'updated_at' => now(),
+                    'name' => $cat['name'],
+                    'icon' => $cat['icon'],
                 ]
             );
         }

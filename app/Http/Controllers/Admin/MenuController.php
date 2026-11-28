@@ -58,7 +58,7 @@ class MenuController extends Controller
             'price' => ['required', 'numeric', 'min:0'],
             'description' => ['nullable', 'string'],
             'is_available' => ['nullable', 'boolean'],
-            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp,gif', 'max:5120'],
         ]);
 
         $imagePath = null;
@@ -98,7 +98,8 @@ class MenuController extends Controller
             'price' => ['required', 'numeric', 'min:0'],
             'description' => ['nullable', 'string'],
             'is_available' => ['nullable', 'boolean'],
-            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
+            'remove_image' => ['nullable', 'boolean'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp,gif', 'max:5120'],
         ]);
 
         $data = [
@@ -114,6 +115,11 @@ class MenuController extends Controller
                 Storage::disk('public')->delete($menu->image);
             }
             $data['image'] = $request->file('image')->store('menus', 'public');
+        } elseif ($request->boolean('remove_image')) {
+            if ($menu->image && Storage::disk('public')->exists($menu->image)) {
+                Storage::disk('public')->delete($menu->image);
+            }
+            $data['image'] = null;
         }
 
         $menu->update($data);

@@ -1,75 +1,134 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\Bahan;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Pengeluaran;
-use App\Models\Pesanan;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
     /**
-     * Display dashboard summary and analytics.
+     * Display dashboard summary and analytics from live database records.
      */
     public function index(Request $request): View
     {
-        // 1. Tanggal Hari Ini (Format Bahasa Indonesia: e.g. Rabu, 18 November 2026)
-        $tanggalHariIni = now()->locale('id')->isoFormat('dddd, D MMMM Y');
+        $now = now();
+        $todayDate = $now->toDateString();
+        $yesterdayDate = $now->copy()->subDay()->toDateString();
+        $tanggalHariIni = $now->copy()->locale('id')->isoFormat('dddd, D MMMM Y');
 
-        // 2. Pendapatan Hari Ini
-        $totalPendapatanDb = Pesanan::whereDate('waktu_pesan', now()->toDateString())
+        // 1. Pendapatan 7 Hari Terakhir (termasuk hari ini & kemarin) dalam 1 query
+        $startDate = $now->copy()->subDays(6)->startOfDay();
+        $endDate = $now->copy()->endOfDay();
+
+        $dailyTotals = Order::query()
+            ->whereBetween('created_at', [$startDate, $endDate])
             ->where('status', '!=', 'dibatalkan')
-            ->sum('total_harga');
+            ->selectRaw('DATE(created_at) as tanggal, SUM(COALESCE(NULLIF(total_amount, 0), total_price, 0)) as total')
+            ->groupByRaw('DATE(created_at)')
+            ->pluck('total', 'tanggal');
 
-        $pendapatanHariIni = $totalPendapatanDb > 0 ? $totalPendapatanDb : 1248000;
-        $trendPendapatan = '+12% dari kemarin';
+        $pendapatanHariIni = (int) ($dailyTotals[$todayDate] ?? 0);
+        $pendapatanKemarin = (int) ($dailyTotals[$yesterdayDate] ?? 0);
 
-        // 3. Jumlah Pesanan
-        $countPesananDb = Pesanan::whereDate('waktu_pesan', now()->toDateString())->count();
-        $jumlahPesanan = $countPesananDb > 0 ? $countPesananDb : 47;
+        if ($pendapatanKemarin > 0) {
+            $percentage = (int) round((($pendapatanHariIni - $pendapatanKemarin) / $pendapatanKemarin) * 100);
+            $prefix = $percentage >= 0 ? '+' : '';
+            $trendPendapatan = "{$prefix}{$percentage}% dari kemarin";
+            $trendPendapatanType = $percentage > 0 ? 'up' : ($percentage < 0 ? 'down' : 'neutral');
+        } elseif ($pendapatanHariIni > 0) {
+            $trendPendapatan = 'Baru hari ini (kemarin Rp 0)';
+            $trendPendapatanType = 'up';
+        } else {
+            $trendPendapatan = 'Belum ada transaksi hari ini';
+            $trendPendapatanType = 'neutral';
+        }
 
-        $menungguCount = Pesanan::where('status', 'menunggu')->count();
-        $pesananMenunggu = $menungguCount > 0 ? $menungguCount : 8;
+        $rawChart = [];
+        for ($offset = 6; $offset >= 0; $offset--) {
+            $date = $now->copy()->subDays($offset);
+            $dateKey = $date->toDateString();
+            $val = (int) ($dailyTotals[$dateKey] ?? 0);
 
-        // 4. Pengeluaran Hari Ini
-        $pengeluaranDbSum = Pengeluaran::whereDate('tanggal_pengeluaran', now()->toDateString())->sum('jumlah');
-        $pengeluaranDbCount = Pengeluaran::whereDate('tanggal_pengeluaran', now()->toDateString())->count();
+            $rawChart[] = [
+                'hari' => $date->copy()->locale('id')->isoFormat('ddd'),
+                'tanggal' => $date->copy()->locale('id')->isoFormat('D MMM'),
+                'val' => $val,
+                'label' => $this->formatCompactRupiah($val),
+                'full_label' => 'Rp '.number_format($val, 0, ',', '.'),
+                'is_today' => $offset === 0,
+            ];
+        }
 
-        $pengeluaranHariIni = $pengeluaranDbSum > 0 ? $pengeluaranDbSum : 320000;
-        $jumlahTransaksiPengeluaran = $pengeluaranDbCount > 0 ? $pengeluaranDbCount : 3;
+        $maxChartVal = max(array_column($rawChart, 'val'));
+        $chart7Hari = array_map(function (array $bar) use ($maxChartVal): array {
+            $bar['tinggi'] = ($bar['val'] > 0 && $maxChartVal > 0)
+                ? max(8, (int) round(($bar['val'] / $maxChartVal) * 100))
+                : 4;
 
-        // 5. Stok Menipis
-        $bahanMenipis = Bahan::whereColumn('stok', '<', 'stok_minimum')->orderBy('id', 'asc')->get();
+            return $bar;
+        }, $rawChart);
+
+        // 2. Jumlah Pesanan Hari Ini & Antrean Menunggu
+        $jumlahPesanan = Order::whereDate('created_at', $todayDate)
+            ->where('status', '!=', 'dibatalkan')
+            ->count();
+        $pesananMenunggu = Order::where('status', 'menunggu')->count();
+
+        // 3. Pengeluaran Hari Ini (aggregate query)
+        $pengeluaranStats = Pengeluaran::whereDate('tanggal_pengeluaran', $todayDate)
+            ->selectRaw('COALESCE(SUM(jumlah), 0) as total, COUNT(*) as transaksi')
+            ->first();
+
+        $pengeluaranHariIni = (float) ($pengeluaranStats?->total ?? 0);
+        $jumlahTransaksiPengeluaran = (int) ($pengeluaranStats?->transaksi ?? 0);
+
+        // 4. Stok Menipis
+        $bahanMenipis = Bahan::whereColumn('stok', '<', 'stok_minimum')
+            ->orderBy('id', 'asc')
+            ->get();
         $stokMenipisCount = $bahanMenipis->count();
 
-        // 6. Data Bar Chart Pendapatan 7 Hari Terakhir
-        $chart7Hari = [
-            ['hari' => 'Kam', 'label' => '0.82 jt', 'val' => 0.82, 'tinggi' => 55, 'is_today' => false],
-            ['hari' => 'Jum', 'label' => '0.96 jt', 'val' => 0.96, 'tinggi' => 65, 'is_today' => false],
-            ['hari' => 'Sab', 'label' => '1.1 jt',  'val' => 1.10, 'tinggi' => 74, 'is_today' => false],
-            ['hari' => 'Min', 'label' => '0.74 jt', 'val' => 0.74, 'tinggi' => 50, 'is_today' => false],
-            ['hari' => 'Sen', 'label' => '1.32 jt', 'val' => 1.32, 'tinggi' => 89, 'is_today' => false],
-            ['hari' => 'Sel', 'label' => '1.48 jt', 'val' => 1.48, 'tinggi' => 100, 'is_today' => false],
-            ['hari' => 'Rab', 'label' => '1.25 jt', 'val' => 1.25, 'tinggi' => 84, 'is_today' => true],
-        ];
+        // 5. Menu Terlaris (aggregasi dari order_items + orders + menus)
+        $topMenuRows = OrderItem::query()
+            ->join('orders', 'order_items.order_id', '=', 'orders.id')
+            ->leftJoin('menus', 'order_items.menu_id', '=', 'menus.id')
+            ->where('orders.status', '!=', 'dibatalkan')
+            ->selectRaw('COALESCE(menus.name, order_items.menu_name) as nama, SUM(order_items.quantity) as terjual')
+            ->groupByRaw('COALESCE(menus.name, order_items.menu_name)')
+            ->orderByDesc('terjual')
+            ->limit(5)
+            ->get();
 
-        // 7. Menu Terlaris
-        $menuTerlaris = [
-            ['nama' => 'Kopi Susu Gula Aren', 'terjual' => 86, 'persen' => 86],
-            ['nama' => 'Es Kopi Susu',        'terjual' => 64, 'persen' => 64],
-            ['nama' => 'Pisang Goreng',        'terjual' => 48, 'persen' => 48],
-            ['nama' => 'V60 Manual Brew',      'terjual' => 31, 'persen' => 31],
-        ];
+        $maxTerjual = (int) ($topMenuRows->max('terjual') ?? 0);
+        $menuTerlaris = $topMenuRows->map(function (object $row) use ($maxTerjual): array {
+            $terjual = (int) $row->terjual;
 
-        // 8. Pesanan Terbaru
-        $pesananTerbaru = Pesanan::with('meja')->orderByDesc('waktu_pesan')->orderByDesc('id')->take(3)->get();
+            return [
+                'nama' => (string) $row->nama,
+                'terjual' => $terjual,
+                'persen' => $maxTerjual > 0 ? max(8, (int) round(($terjual / $maxTerjual) * 100)) : 0,
+            ];
+        })->all();
+
+        // 6. Pesanan Terbaru
+        $pesananTerbaru = Order::with('cafeTable')
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->take(5)
+            ->get();
 
         return view('dashboard', [
             'tanggalHariIni' => $tanggalHariIni,
             'pendapatanHariIni' => $pendapatanHariIni,
             'trendPendapatan' => $trendPendapatan,
+            'trendPendapatanType' => $trendPendapatanType,
             'jumlahPesanan' => $jumlahPesanan,
             'pesananMenunggu' => $pesananMenunggu,
             'pengeluaranHariIni' => $pengeluaranHariIni,
@@ -80,5 +139,21 @@ class DashboardController extends Controller
             'menuTerlaris' => $menuTerlaris,
             'pesananTerbaru' => $pesananTerbaru,
         ]);
+    }
+
+    /**
+     * Format rupiah concisely for the 7-day chart bar labels.
+     */
+    private function formatCompactRupiah(int $amount): string
+    {
+        if ($amount >= 1000000) {
+            return rtrim(rtrim(number_format($amount / 1000000, 2, '.', ''), '0'), '.').' jt';
+        }
+
+        if ($amount >= 1000) {
+            return rtrim(rtrim(number_format($amount / 1000, 1, '.', ''), '0'), '.').' rb';
+        }
+
+        return 'Rp '.number_format($amount, 0, ',', '.');
     }
 }

@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class TableController extends Controller
@@ -38,22 +39,104 @@ class TableController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $request->merge([
+            'table_number' => $this->normalizeTableNumber($request->input('table_number')),
+        ]);
+
         $validated = $request->validate([
             'table_number' => ['required', 'string', 'max:10', 'unique:cafe_tables,table_number'],
             'name' => ['nullable', 'string', 'max:50'],
             'status' => ['nullable', 'in:aktif,nonaktif'],
         ]);
 
-        $tableNumber = str_pad($validated['table_number'], 2, '0', STR_PAD_LEFT);
+        $tableNumber = $validated['table_number'];
+        $name = trim((string) ($validated['name'] ?? ''));
 
         CafeTable::create([
             'table_number' => $tableNumber,
-            'name' => $validated['name'] ?: 'Meja '.$tableNumber,
+            'name' => $name !== '' ? $name : 'Meja '.$tableNumber,
             'token' => CafeTable::generateUniqueToken(),
             'status' => $validated['status'] ?? 'aktif',
         ]);
 
         return redirect()->route('admin.tables.index')->with('success', 'Meja baru berhasil ditambahkan!');
+    }
+
+    /**
+     * Update the specified table and optionally regenerate its QR token.
+     */
+    public function update(Request $request, CafeTable $table): RedirectResponse|JsonResponse
+    {
+        $request->merge([
+            'table_number' => $this->normalizeTableNumber($request->input('table_number')),
+        ]);
+
+        $validated = $request->validate([
+            'table_number' => [
+                'required',
+                'string',
+                'max:10',
+                Rule::unique('cafe_tables', 'table_number')->ignore($table->id),
+            ],
+            'name' => ['nullable', 'string', 'max:50'],
+            'status' => ['required', 'in:aktif,nonaktif'],
+            'regenerate_token' => ['nullable', 'boolean'],
+        ]);
+
+        $name = trim((string) ($validated['name'] ?? ''));
+
+        $data = [
+            'table_number' => $validated['table_number'],
+            'name' => $name !== '' ? $name : 'Meja '.$validated['table_number'],
+            'status' => $validated['status'],
+        ];
+
+        if ($request->boolean('regenerate_token')) {
+            $data['token'] = CafeTable::generateUniqueToken();
+        }
+
+        $table->update($data);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "{$table->name} berhasil diperbarui!",
+                'table' => $table,
+            ]);
+        }
+
+        return redirect()->route('admin.tables.index')->with('success', "{$table->name} berhasil diperbarui!");
+    }
+
+    /**
+     * Remove the specified table from storage.
+     */
+    public function destroy(Request $request, CafeTable $table): RedirectResponse|JsonResponse
+    {
+        $tableName = $table->name;
+        $table->delete();
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "{$tableName} berhasil dihapus!",
+            ]);
+        }
+
+        return redirect()->route('admin.tables.index')->with('success', "{$tableName} berhasil dihapus!");
+    }
+
+    /**
+     * Normalize table numbers (e.g. '1' -> '01') consistently before validation and storage.
+     */
+    private function normalizeTableNumber(mixed $value): string
+    {
+        $trimmed = trim((string) $value);
+        if ($trimmed === '') {
+            return '';
+        }
+
+        return str_pad($trimmed, 2, '0', STR_PAD_LEFT);
     }
 
     /**

@@ -7,14 +7,12 @@ namespace Tests\Feature;
 use App\Models\CafeTable;
 use App\Models\Category;
 use App\Models\Menu;
-use App\Models\MenuItem;
 use App\Models\Order;
 use App\Services\GuestSessionService;
 use Database\Seeders\CategorySeeder;
 use Database\Seeders\MenuSeeder;
 use Database\Seeders\WarkopDeBarrioSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -289,10 +287,8 @@ class CustomerQrFlowTest extends TestCase
             WarkopDeBarrioSeeder::class,
         ]);
 
-        $this->assertSame(4, DB::table('kategori')->count());
         $this->assertSame(4, Category::count());
         $this->assertSame(29, Menu::count());
-        $this->assertSame(29, MenuItem::count());
 
         $this->assertDatabaseHas('menus', ['name' => 'Nescafe', 'price' => 7000]);
         $this->assertDatabaseHas('menus', ['name' => 'Mix Platter', 'price' => 15000]);
@@ -300,7 +296,7 @@ class CustomerQrFlowTest extends TestCase
         $this->assertDatabaseHas('menus', ['slug' => 'add-on-telor', 'name' => 'Telor', 'price' => 5000]);
         $this->assertDatabaseHas('menus', ['slug' => 'add-on-sosis', 'name' => 'Sosis', 'price' => 5000]);
         $this->assertDatabaseHas('menus', ['slug' => 'add-on-nugget', 'name' => 'Nugget', 'price' => 5000]);
-        $this->assertDatabaseHas('menu_items', ['name' => 'Goodday Freeze', 'price' => 9000]);
+        $this->assertDatabaseHas('menus', ['name' => 'Goodday Freeze', 'price' => 9000]);
     }
 
     public function test_customer_can_view_product_detail_page_for_each_menu(): void

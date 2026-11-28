@@ -2,26 +2,33 @@
 
 namespace Database\Seeders;
 
+use App\Models\CafeTable;
 use App\Models\Category;
-use App\Models\MenuItem;
+use App\Models\Menu;
 use App\Models\Order;
-use App\Models\RestaurantTable;
 use App\Models\SyncQueue;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class WarkopDeBarrioSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Tables
+        // 1. Tables (canonical cafe_tables)
         $tables = [
-            'Meja 01', 'Meja 02', 'Meja 03', 'Meja 04',
-            'Meja 05', 'Meja 06', 'Meja 07', 'Meja 08',
+            ['table_number' => '01', 'name' => 'Meja 01', 'token' => 'x7Kp9aLm2Q', 'status' => 'aktif'],
+            ['table_number' => '02', 'name' => 'Meja 02', 'token' => 'b3Td8vNq5R', 'status' => 'aktif'],
+            ['table_number' => '03', 'name' => 'Meja 03', 'token' => 'm9Ws1cHy7E', 'status' => 'aktif'],
+            ['table_number' => '04', 'name' => 'Meja 04', 'token' => 'k2Lf6zXp4A', 'status' => 'aktif'],
+            ['table_number' => '05', 'name' => 'Meja 05', 'token' => 'p8Gh3uJr1N', 'status' => 'aktif'],
+            ['table_number' => '06', 'name' => 'Meja 06', 'token' => 't5Yv7eBd9C', 'status' => 'aktif'],
+            ['table_number' => '07', 'name' => 'Meja 07', 'token' => 'w1Qn4sKm6Z', 'status' => 'aktif'],
+            ['table_number' => '08', 'name' => 'Meja 08', 'token' => 'h6Rj2xFa8P', 'status' => 'nonaktif'],
         ];
 
         foreach ($tables as $tbl) {
-            RestaurantTable::firstOrCreate(['table_number' => $tbl], ['status' => 'available']);
+            CafeTable::firstOrCreate(['table_number' => $tbl['table_number']], $tbl);
         }
 
         // 2. Categories
@@ -30,8 +37,7 @@ class WarkopDeBarrioSeeder extends Seeder
         $catMie = Category::firstOrCreate(['slug' => 'mie'], ['name' => 'Mie', 'icon' => 'food']);
         $catAddOn = Category::firstOrCreate(['slug' => 'add-on'], ['name' => 'Add On', 'icon' => 'food']);
 
-        // 3. Menu Items (29 item menu asli Cafeteria De Barrio)
-        MenuItem::query()->delete();
+        // 3. Menus (29 item menu asli Cafetaria De Barrio pada tabel canonical `menus`)
 
         $menus = [
             // Minuman (14 item)
@@ -248,7 +254,11 @@ class WarkopDeBarrioSeeder extends Seeder
 
         $menuMap = [];
         foreach ($menus as $m) {
-            $created = MenuItem::create($m);
+            $slugPrefix = $m['category_id'] === $catAddOn->id ? 'add-on-' : '';
+            $created = Menu::updateOrCreate(
+                ['slug' => $slugPrefix.Str::slug($m['name'])],
+                $m
+            );
             $menuMap[$m['category_id'].'|'.$m['name']] = $created;
         }
 
@@ -276,14 +286,14 @@ class WarkopDeBarrioSeeder extends Seeder
         $order1->items()->delete();
         $order1->items()->createMany([
             [
-                'menu_item_id' => null,
+                'menu_id' => null,
                 'menu_name' => 'Kopi Susu Gula Aren',
                 'price' => 16000,
                 'quantity' => 2,
                 'subtotal' => 32000,
             ],
             [
-                'menu_item_id' => null,
+                'menu_id' => null,
                 'menu_name' => 'Pisang Goreng',
                 'price' => 10000,
                 'quantity' => 1,
@@ -309,7 +319,7 @@ class WarkopDeBarrioSeeder extends Seeder
         $order2->items()->delete();
         $order2->items()->createMany([
             [
-                'menu_item_id' => null,
+                'menu_id' => null,
                 'menu_name' => 'Nasi Goreng Spesial',
                 'price' => 25000,
                 'quantity' => 1,
@@ -335,21 +345,21 @@ class WarkopDeBarrioSeeder extends Seeder
         $order3->items()->delete();
         $order3->items()->createMany([
             [
-                'menu_item_id' => null,
+                'menu_id' => null,
                 'menu_name' => 'Mie Nyemek De Barrio',
                 'price' => 18000,
                 'quantity' => 1,
                 'subtotal' => 18000,
             ],
             [
-                'menu_item_id' => ($menuMap[$catMinuman->id.'|Matcha'] ?? null)?->id,
+                'menu_id' => ($menuMap[$catMinuman->id.'|Matcha'] ?? null)?->id,
                 'menu_name' => 'Matcha Latte',
                 'price' => 20000,
                 'quantity' => 1,
                 'subtotal' => 20000,
             ],
             [
-                'menu_item_id' => null,
+                'menu_id' => null,
                 'menu_name' => 'Ayam Geprek Sambal Korek',
                 'price' => 23000,
                 'quantity' => 1,
@@ -380,14 +390,14 @@ class WarkopDeBarrioSeeder extends Seeder
         $order4->items()->delete();
         $order4->items()->createMany([
             [
-                'menu_item_id' => null,
+                'menu_id' => null,
                 'menu_name' => 'Caramel Macchiato',
                 'price' => 22000,
                 'quantity' => 1,
                 'subtotal' => 22000,
             ],
             [
-                'menu_item_id' => null,
+                'menu_id' => null,
                 'menu_name' => 'Roti Bakar Coklat Keju',
                 'price' => 15000,
                 'quantity' => 1,
@@ -418,14 +428,14 @@ class WarkopDeBarrioSeeder extends Seeder
         $order5->items()->delete();
         $order5->items()->createMany([
             [
-                'menu_item_id' => null,
+                'menu_id' => null,
                 'menu_name' => 'Cafe Latte',
                 'price' => 18000,
                 'quantity' => 1,
                 'subtotal' => 18000,
             ],
             [
-                'menu_item_id' => null,
+                'menu_id' => null,
                 'menu_name' => 'Chocolate Signature',
                 'price' => 20000,
                 'quantity' => 1,

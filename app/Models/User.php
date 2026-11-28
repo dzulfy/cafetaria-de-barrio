@@ -94,16 +94,6 @@ class User extends Authenticatable
         return $this->hasMany(Order::class, 'user_id');
     }
 
-    public function pesanan(): HasMany
-    {
-        return $this->hasMany(Pesanan::class, 'pengguna_id');
-    }
-
-    public function pembayaran(): HasMany
-    {
-        return $this->hasMany(Pembayaran::class, 'pengguna_id');
-    }
-
     public function pengeluaran(): HasMany
     {
         return $this->hasMany(Pengeluaran::class, 'pengguna_id');

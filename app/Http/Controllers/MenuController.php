@@ -9,7 +9,7 @@ class MenuController extends Controller
 {
     public function index(): JsonResponse
     {
-        $categories = Category::with('menuItems')->get();
+        $categories = Category::with('menus')->get();
 
         return response()->json([
             'categories' => $categories,

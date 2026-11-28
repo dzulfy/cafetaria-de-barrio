@@ -50,7 +50,14 @@
                 <div class="text-2xl sm:text-[26px] font-bold text-[#1E2922] tracking-tight leading-none">
                     Rp {{ number_format($pendapatanHariIni, 0, ',', '.') }}
                 </div>
-                <div class="mt-2 text-xs font-semibold text-[#184233]">
+                @php
+                    $trendClass = match ($trendPendapatanType ?? 'neutral') {
+                        'up' => 'text-[#184233]',
+                        'down' => 'text-rose-600',
+                        default => 'text-[#6F7D75]',
+                    };
+                @endphp
+                <div class="mt-2 text-xs font-semibold {{ $trendClass }}">
                     {{ $trendPendapatan }}
                 </div>
             </div>
@@ -104,10 +111,10 @@
         </a>
 
         <!-- 4. Stok menipis -->
-        <a href="{{ route('bahan.index') }}" class="bg-white rounded-2xl p-5 border border-[#EBE8E0] shadow-xs flex flex-col justify-between transition hover:shadow-md hover:border-[#BD852A]/40 group cursor-pointer">
+        <a href="{{ route('bahan.index') }}" class="bg-white rounded-2xl p-5 border border-[#EBE8E0] shadow-xs flex flex-col justify-between transition hover:shadow-md {{ $stokMenipisCount > 0 ? 'hover:border-[#BD852A]/40' : 'hover:border-[#184233]/40' }} group cursor-pointer">
             <div class="flex items-center justify-between">
-                <span class="text-xs text-[#6F7D75] font-medium group-hover:text-[#BD852A] transition">Stok menipis</span>
-                <div class="w-8 h-8 rounded-lg bg-[#FEF7DC] text-[#BD852A] flex items-center justify-center shrink-0 group-hover:scale-105 transition">
+                <span class="text-xs text-[#6F7D75] font-medium {{ $stokMenipisCount > 0 ? 'group-hover:text-[#BD852A]' : 'group-hover:text-[#184233]' }} transition">Stok menipis</span>
+                <div class="w-8 h-8 rounded-lg {{ $stokMenipisCount > 0 ? 'bg-[#FEF7DC] text-[#BD852A]' : 'bg-[#EBF2EE] text-[#184233]' }} flex items-center justify-center shrink-0 group-hover:scale-105 transition">
                     <!-- Alert Triangle Icon -->
                     <svg class="w-4 h-4 stroke-current stroke-2 fill-none" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
                         <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
@@ -120,8 +127,8 @@
                 <div class="text-2xl sm:text-[26px] font-bold text-[#1E2922] tracking-tight leading-none">
                     {{ $stokMenipisCount }} bahan
                 </div>
-                <div class="mt-2 text-xs font-semibold text-[#BD852A]">
-                    Perlu belanja
+                <div class="mt-2 text-xs font-semibold {{ $stokMenipisCount > 0 ? 'text-[#BD852A]' : 'text-[#184233]' }}">
+                    {{ $stokMenipisCount > 0 ? 'Perlu belanja' : 'Semua stok aman' }}
                 </div>
             </div>
         </a>
@@ -143,11 +150,16 @@
                             </span>
 
                             <!-- Bar Graphic -->
+                            @php
+                                $barColorClass = $bar['val'] <= 0
+                                    ? 'bg-[#E6ECE9]'
+                                    : ($bar['is_today'] ? 'bg-[#184233]' : 'bg-[#A3C2B4]');
+                            @endphp
                             <div class="w-full flex justify-center items-end h-32 sm:h-36">
                                 <div 
                                     style="height: {{ $bar['tinggi'] }}%;" 
-                                    class="w-full max-w-[42px] sm:max-w-[48px] {{ $bar['is_today'] ? 'bg-[#184233]' : 'bg-[#A3C2B4]' }} rounded-t-md sm:rounded-t-lg transition-all duration-300 hover:opacity-90"
-                                    title="{{ $bar['hari'] }}: {{ $bar['label'] }}"
+                                    class="w-full max-w-[42px] sm:max-w-[48px] {{ $barColorClass }} rounded-t-md sm:rounded-t-lg transition-all duration-300 hover:opacity-90"
+                                    title="{{ $bar['hari'] }} ({{ $bar['tanggal'] }}): {{ $bar['full_label'] }}"
                                 ></div>
                             </div>
 
@@ -166,7 +178,7 @@
             <h2 class="text-base sm:text-lg font-bold text-[#1E2922] mb-4">Menu terlaris</h2>
 
             <div class="space-y-4 sm:space-y-4.5 my-auto">
-                @foreach($menuTerlaris as $menu)
+                @forelse($menuTerlaris as $menu)
                     <div>
                         <div class="flex items-center justify-between text-xs sm:text-sm">
                             <span class="font-semibold text-[#1E2922] truncate pr-2">{{ $menu['nama'] }}</span>
@@ -179,7 +191,9 @@
                             ></div>
                         </div>
                     </div>
-                @endforeach
+                @empty
+                    <p class="text-xs sm:text-sm text-[#6F7D75] italic py-2">Belum ada data penjualan menu.</p>
+                @endforelse
             </div>
         </div>
     </div>
@@ -229,16 +243,22 @@
             <div class="space-y-3.5 my-auto">
                 @forelse($pesananTerbaru as $order)
                     @php
-                        $sumberText = $order->meja ? $order->meja->nomor_meja : 'Kasir';
-                        $isMenunggu = strtolower($order->status) === 'menunggu';
-                        $statusBadgeClass = $isMenunggu 
-                            ? 'bg-[#FEF7DC] text-[#BD852A]' 
-                            : 'bg-[#EBF2EE] text-[#184233]';
+                        $sumberText = $order->cafeTable?->name
+                            ?: (strtolower((string) $order->table_number) === 'kasir' || $order->table_number === null
+                                ? 'Kasir'
+                                : 'Meja ' . ltrim(preg_replace('/^Meja\s+/i', '', (string) $order->table_number)));
+                        $statusBadgeClass = match (strtolower((string) $order->status)) {
+                            'menunggu' => 'bg-[#FEF7DC] text-[#BD852A]',
+                            'diproses' => 'bg-sky-50 text-sky-700',
+                            'dibatalkan' => 'bg-rose-50 text-rose-700',
+                            default => 'bg-[#EBF2EE] text-[#184233]',
+                        };
                         $statusLabel = ucfirst($order->status);
+                        $orderTotal = $order->total_amount ?: $order->total_price ?: 0;
                     @endphp
                     <div class="flex items-center justify-between py-1 text-xs sm:text-sm">
                         <div class="font-semibold text-[#1E2922] truncate pr-2">
-                            {{ $order->kode_pesanan }} | {{ $sumberText }}
+                            {{ $order->order_code }} | {{ $sumberText }}
                         </div>
 
                         <div class="flex items-center gap-3 shrink-0">
@@ -246,12 +266,12 @@
                                 {{ $statusLabel }}
                             </span>
                             <span class="font-bold text-[#1E2922]">
-                                Rp {{ number_format($order->total_harga, 0, ',', '.') }}
+                                Rp {{ number_format($orderTotal, 0, ',', '.') }}
                             </span>
                         </div>
                     </div>
                 @empty
-                    <p class="text-xs sm:text-sm text-[#6F7D75] italic py-2">Belum ada pesanan terbaru hari ini.</p>
+                    <p class="text-xs sm:text-sm text-[#6F7D75] italic py-2">Belum ada pesanan masuk.</p>
                 @endforelse
             </div>
         </div>

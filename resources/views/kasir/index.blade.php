@@ -378,7 +378,7 @@
                         <span class="text-xs font-semibold text-slate-500">Pilih Meja:</span>
                         <select x-model="posOrder.table_number" class="py-1.5 px-3 rounded-xl border border-slate-200 text-sm font-bold text-slate-800 bg-slate-50 focus:ring-2 focus:ring-[#154734]">
                             @foreach($tables as $table)
-                                <option value="{{ $table->table_number }}">{{ $table->table_number }}</option>
+                                <option value="{{ $table->name }}">{{ $table->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -879,7 +879,7 @@
                 orders: @json($orders),
                 counts: @json($counts),
                 categories: @json($categories),
-                menuItems: @json($categories->pluck('menuItems')->flatten()),
+                menuItems: @json($categories->pluck('menus')->flatten()),
                 selectedOrder: @json($selectedOrder),
                 selectedCategory: 'semua',
                 isSyncing: false,

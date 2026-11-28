@@ -13,14 +13,12 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             UserSeeder::class,
+            CafeTableSeeder::class,
             CategorySeeder::class,
             MenuSeeder::class,
-            DiningTableSeeder::class,
             BahanSeeder::class,
-            DashboardSeeder::class,
             PengeluaranSeeder::class,
-            CafeTableSeeder::class,
-            OrderSeeder::class,
+            DashboardSeeder::class,
         ]);
 
         if (class_exists(WarkopDeBarrioSeeder::class)) {

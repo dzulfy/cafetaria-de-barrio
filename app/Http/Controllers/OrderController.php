@@ -5,10 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\CafeTable;
 use App\Models\Category;
 use App\Models\Menu;
-use App\Models\MenuItem;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\RestaurantTable;
 use App\Models\SyncQueue;
 use App\Services\GuestSessionService;
 use App\Services\MidtransService;
@@ -31,7 +29,7 @@ class OrderController extends Controller
      */
     public function index(Request $request): View|JsonResponse
     {
-        $orders = Order::with('items.menuItem')
+        $orders = Order::with('items.menu')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -48,8 +46,8 @@ class OrderController extends Controller
             ]);
         }
 
-        $categories = Category::with('menuItems')->get();
-        $tables = RestaurantTable::orderBy('table_number')->get();
+        $categories = Category::with('menus')->get();
+        $tables = CafeTable::orderBy('table_number')->get();
 
         $selectedOrder = $orders->firstWhere('order_code', 'DB-0124')
             ?? $orders->firstWhere('status', 'menunggu')
@@ -87,7 +85,7 @@ class OrderController extends Controller
     public function show(Request $request, Order $order): JsonResponse
     {
         $this->guestSessions->authorizeOrder($request, $order);
-        $order->load(['items.menuItem', 'cafeTable']);
+        $order->load(['items.menu', 'cafeTable']);
 
         return response()->json([
             'success' => true,
@@ -123,7 +121,7 @@ class OrderController extends Controller
         return response()->json([
             'success' => true,
             'message' => "Pesanan {$order->order_code} sedang diproses.",
-            'order' => $order->fresh(['items.menuItem']),
+            'order' => $order->fresh(['items.menu']),
         ]);
     }
 
@@ -151,7 +149,7 @@ class OrderController extends Controller
         return response()->json([
             'success' => true,
             'message' => "Pesanan {$order->order_code} selesai!",
-            'order' => $order->fresh(['items.menuItem']),
+            'order' => $order->fresh(['items.menu']),
         ]);
     }
 
@@ -181,7 +179,7 @@ class OrderController extends Controller
                 'success' => true,
                 'already_paid' => true,
                 'message' => "Pesanan sudah dibayar melalui {$paidLabel}.",
-                'order' => $order->fresh(['items.menuItem']),
+                'order' => $order->fresh(['items.menu']),
             ]);
         }
 
@@ -220,7 +218,7 @@ class OrderController extends Controller
                 'paid' => true,
                 'payment_method' => 'tunai',
                 'message' => "Pembayaran tunai untuk {$order->order_code} berhasil dikonfirmasi! Pesanan sekarang dapat diproses.",
-                'order' => $order->fresh(['items.menuItem']),
+                'order' => $order->fresh(['items.menu']),
             ]);
         }
 
@@ -239,7 +237,7 @@ class OrderController extends Controller
             'redirect_url' => $snap['redirect_url'],
             'client_key' => $this->midtrans->clientKey(),
             'message' => "Pembayaran QRIS / Transfer siap untuk {$order->order_code}.",
-            'order' => $order->fresh(['items.menuItem']),
+            'order' => $order->fresh(['items.menu']),
         ]);
     }
 
@@ -256,7 +254,8 @@ class OrderController extends Controller
                 'source' => 'nullable|string',
                 'payment_method' => 'nullable|in:midtrans,tunai,cash',
                 'items' => 'required|array|min:1',
-                'items.*.menu_item_id' => 'required|exists:menu_items,id',
+                'items.*.menu_id' => 'required_without:items.*.menu_item_id|nullable|exists:menus,id',
+                'items.*.menu_item_id' => 'required_without:items.*.menu_id|nullable|exists:menus,id',
                 'items.*.quantity' => 'required|integer|min:1',
                 'items.*.notes' => 'nullable|string',
             ]);
@@ -304,13 +303,13 @@ class OrderController extends Controller
 
             $total = 0;
             foreach ($validated['items'] as $itemData) {
-                $menu = MenuItem::findOrFail($itemData['menu_item_id']);
+                $menu = Menu::findOrFail($itemData['menu_id'] ?? $itemData['menu_item_id']);
                 $qty = (int) $itemData['quantity'];
                 $subtotal = $menu->price * $qty;
                 $total += $subtotal;
 
                 $order->items()->create([
-                    'menu_item_id' => $menu->id,
+                    'menu_id' => $menu->id,
                     'menu_name' => $menu->name,
                     'price' => $menu->price,
                     'quantity' => $qty,
@@ -329,7 +328,7 @@ class OrderController extends Controller
                 }
             }
 
-            $freshOrder = $order->fresh(['items.menuItem']);
+            $freshOrder = $order->fresh(['items.menu']);
             $successMessage = $paymentMethod === 'tunai'
                 ? "Pesanan baru {$orderCode} berhasil dibuat! Silakan konfirmasi pembayaran tunai di kasir."
                 : "Pesanan baru {$orderCode} berhasil dibuat! Silakan lanjutkan pembayaran via QRIS atau Transfer.";
@@ -456,7 +455,7 @@ class OrderController extends Controller
     public function history(Request $request): View|JsonResponse|RedirectResponse
     {
         if ($request->routeIs('kasir.riwayat') || ($request->wantsJson() && $this->guestSessions->isStaff($request))) {
-            $query = Order::with(['items.menuItem', 'cafeTable'])
+            $query = Order::with(['items.menu', 'cafeTable'])
                 ->whereIn('status', ['selesai', 'dibatalkan'])
                 ->orderBy('updated_at', 'desc');
 
