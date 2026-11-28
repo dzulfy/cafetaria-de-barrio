@@ -94,7 +94,7 @@
                 type="text"
                 name="search"
                 value="{{ request('search') }}"
-                placeholder="Cari bahan..."
+                placeholder="Cari bahan atau nama menu..."
                 class="w-full bg-white border border-[#E3E8E4] rounded-xl pl-10 pr-4 py-2.5 text-xs sm:text-sm text-[#1B2721] placeholder-[#9AA59F] focus:outline-none focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233] transition shadow-xs"
                 onchange="this.form.submit()"
             >
@@ -151,9 +151,25 @@
                             }
                         @endphp
                         <tr class="hover:bg-[#FAFBF9] transition-colors">
-                            <!-- Nama Bahan -->
-                            <td class="py-4 px-4 sm:px-6 font-bold text-[#1B2721] whitespace-nowrap">
-                                {{ $bahan->nama }}
+                            <!-- Nama Bahan & Menu Terkait -->
+                            <td class="py-4 px-4 sm:px-6">
+                                <div class="font-bold text-[#1B2721] whitespace-nowrap">
+                                    {{ $bahan->nama }}
+                                </div>
+                                @if($bahan->menu->isNotEmpty())
+                                    <div class="flex flex-wrap items-center gap-1 mt-1" title="{{ $bahan->menu->pluck('name')->implode(', ') }}">
+                                        @foreach($bahan->menu->take(3) as $linkedMenu)
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-[#EBF2EE] text-[#184233]">
+                                                {{ $linkedMenu->name }}
+                                            </span>
+                                        @endforeach
+                                        @if($bahan->menu->count() > 3)
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-gray-100 text-gray-600">
+                                                +{{ $bahan->menu->count() - 3 }} menu
+                                            </span>
+                                        @endif
+                                    </div>
+                                @endif
                             </td>
 
                             <!-- Satuan -->
@@ -200,7 +216,13 @@
                                     <!-- Edit Button -->
                                     <button
                                         type="button"
-                                        onclick="openEditModal({{ json_encode($bahan) }})"
+                                        onclick="openEditModal(this)"
+                                        data-update-url="{{ route('bahan.update', $bahan) }}"
+                                        data-nama="{{ $bahan->nama }}"
+                                        data-satuan="{{ $bahan->satuan }}"
+                                        data-stok="{{ (float) $bahan->stok }}"
+                                        data-stok-minimum="{{ (float) $bahan->stok_minimum }}"
+                                        data-menu-ids="{{ $bahan->menu->pluck('id')->implode(',') }}"
                                         class="text-[#4A5568] hover:text-[#184233] p-1.5 rounded-lg hover:bg-emerald-50 transition cursor-pointer"
                                         title="Edit Bahan"
                                     >
@@ -322,6 +344,23 @@
                     <input type="number" step="any" min="0" name="stok_minimum" required placeholder="Contoh: 1000" class="w-full bg-[#FAFBF9] border border-[#E3E8E4] rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
                     <p class="text-[11px] text-gray-400 mt-1">Sistem akan memberi peringatan jika stok berada di bawah angka ini.</p>
                 </div>
+
+                @if($menus->isNotEmpty())
+                    <div>
+                        <label class="block text-xs font-semibold text-[#2F4439] uppercase tracking-wider mb-1.5">Menu yang Menggunakan Bahan Ini</label>
+                        <div class="max-h-36 overflow-y-auto custom-scrollbar rounded-xl border border-[#E3E8E4] bg-[#FAFBF9] p-2.5 space-y-1.5">
+                            @foreach($menus as $menu)
+                                <label class="flex items-center justify-between gap-2 px-2 py-1 rounded-lg hover:bg-white cursor-pointer text-xs text-[#1B2721]">
+                                    <span class="flex items-center gap-2 min-w-0">
+                                        <input type="checkbox" name="menu_ids[]" value="{{ $menu->id }}" class="tambah-menu-checkbox rounded border-gray-300 text-[#184233] focus:ring-[#184233]">
+                                        <span class="truncate font-medium">{{ $menu->name }}</span>
+                                    </span>
+                                    <span class="text-[10px] text-[#738078] shrink-0">{{ $menu->getRelationValue('category')?->name ?? '-' }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </div>
 
             <!-- Footer (Permanen di bagian bawah) -->
@@ -347,6 +386,7 @@
         <form id="formEdit" method="POST" action="" class="flex flex-col flex-1 overflow-hidden min-h-0">
             @csrf
             @method('PUT')
+            <input type="hidden" name="sync_menus" value="1">
 
             <!-- Form Body (Hanya area ini yang dapat di-scroll) -->
             <div class="p-5 sm:p-6 space-y-3.5 sm:space-y-4 overflow-y-auto flex-1 custom-scrollbar">
@@ -370,6 +410,23 @@
                     <label class="block text-xs font-semibold text-[#2F4439] uppercase tracking-wider mb-1.5">Batas Minimum</label>
                     <input type="number" step="any" min="0" id="editStokMinimum" name="stok_minimum" required class="w-full bg-[#FAFBF9] border border-[#E3E8E4] rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#184233]/20 focus:border-[#184233]">
                 </div>
+
+                @if($menus->isNotEmpty())
+                    <div>
+                        <label class="block text-xs font-semibold text-[#2F4439] uppercase tracking-wider mb-1.5">Menu yang Menggunakan Bahan Ini</label>
+                        <div class="max-h-36 overflow-y-auto custom-scrollbar rounded-xl border border-[#E3E8E4] bg-[#FAFBF9] p-2.5 space-y-1.5">
+                            @foreach($menus as $menu)
+                                <label class="flex items-center justify-between gap-2 px-2 py-1 rounded-lg hover:bg-white cursor-pointer text-xs text-[#1B2721]">
+                                    <span class="flex items-center gap-2 min-w-0">
+                                        <input type="checkbox" name="menu_ids[]" value="{{ $menu->id }}" class="edit-menu-checkbox rounded border-gray-300 text-[#184233] focus:ring-[#184233]">
+                                        <span class="truncate font-medium">{{ $menu->name }}</span>
+                                    </span>
+                                    <span class="text-[10px] text-[#738078] shrink-0">{{ $menu->getRelationValue('category')?->name ?? '-' }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </div>
 
             <!-- Footer (Permanen di bagian bawah) -->
@@ -483,6 +540,9 @@
     }
 
     function openTambahModal() {
+        document.querySelectorAll('.tambah-menu-checkbox').forEach(function (checkbox) {
+            checkbox.checked = false;
+        });
         openModal('modalTambah');
     }
 
@@ -490,12 +550,19 @@
         openModal('modalMutasi');
     }
 
-    function openEditModal(bahan) {
-        document.getElementById('editNama').value = bahan.nama;
-        document.getElementById('editSatuan').value = bahan.satuan;
-        document.getElementById('editStok').value = bahan.stok;
-        document.getElementById('editStokMinimum').value = bahan.stok_minimum;
-        document.getElementById('formEdit').action = bahanBaseUrl + '/' + bahan.id;
+    function openEditModal(button) {
+        const data = button.dataset;
+        document.getElementById('editNama').value = data.nama || '';
+        document.getElementById('editSatuan').value = data.satuan || '';
+        document.getElementById('editStok').value = data.stok || '0';
+        document.getElementById('editStokMinimum').value = data.stokMinimum || '0';
+        document.getElementById('formEdit').action = data.updateUrl || '';
+
+        const selectedIds = (data.menuIds || '').split(',').filter(Boolean);
+        document.querySelectorAll('.edit-menu-checkbox').forEach(function (checkbox) {
+            checkbox.checked = selectedIds.includes(checkbox.value);
+        });
+
         openModal('modalEdit');
     }
 

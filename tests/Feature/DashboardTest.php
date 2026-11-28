@@ -267,9 +267,9 @@ class DashboardTest extends TestCase
         $response->assertSee('86 terjual');
         $response->assertSee('DB-0124');
         $response->assertSee('Meja 05');
-        $response->assertSee('Biji kopi arabica');
-        $response->assertSee('Gula aren');
-        $response->assertSee('Pisang');
+        $response->assertSee('Nescafe Sachet');
+        $response->assertSee('Susu Kental Manis');
+        $response->assertSee('Kentang Beku (French Fries)');
     }
 
     public function test_admin_dashboard_route_displays_database_metrics(): void

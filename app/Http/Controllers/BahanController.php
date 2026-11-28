@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\Bahan;
+use App\Models\Menu;
 use App\Models\MutasiStok;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -44,10 +47,17 @@ class BahanController extends Controller
         $search = $request->query('search');
         $status = $request->query('status');
 
-        $query = Bahan::query()->orderBy('id', 'asc');
+        $query = Bahan::query()
+            ->with(['menu' => fn ($q) => $q->select('menus.id', 'menus.name', 'menus.category_id')])
+            ->orderBy('id', 'asc');
 
         if (! empty($search)) {
-            $query->where('nama', 'like', '%'.$search.'%');
+            $query->where(function ($q) use ($search): void {
+                $q->where('nama', 'like', '%'.$search.'%')
+                    ->orWhereHas('menu', function ($menuQuery) use ($search): void {
+                        $menuQuery->where('name', 'like', '%'.$search.'%');
+                    });
+            });
         }
 
         if ($status === 'menipis') {
@@ -64,10 +74,14 @@ class BahanController extends Controller
         // Ambil semua bahan untuk dropdown modal mutasi
         $allBahan = Bahan::orderBy('nama', 'asc')->get();
 
+        // Daftar menu untuk menghubungkan bahan dengan resep menu
+        $menus = Menu::with('category')->orderBy('category_id')->orderBy('name')->get();
+
         return view('bahan.index', [
             'bahanList' => $bahanList,
             'menipisItems' => $menipisItems,
             'allBahan' => $allBahan,
+            'menus' => $menus,
             'search' => $search,
             'status' => $status,
         ]);
@@ -83,9 +97,27 @@ class BahanController extends Controller
             'satuan' => ['required', 'string', 'max:20'],
             'stok' => ['required', 'numeric', 'min:0'],
             'stok_minimum' => ['required', 'numeric', 'min:0'],
+            'menu_ids' => ['nullable', 'array'],
+            'menu_ids.*' => ['integer', 'exists:menus,id'],
+            'jumlah_pakai' => ['nullable', 'numeric', 'min:0.01'],
         ]);
 
-        $bahan = Bahan::create($validated);
+        $bahan = Bahan::create([
+            'nama' => $validated['nama'],
+            'satuan' => $validated['satuan'],
+            'stok' => $validated['stok'],
+            'stok_minimum' => $validated['stok_minimum'],
+        ]);
+
+        $menuIds = array_values(array_unique(array_map('intval', $validated['menu_ids'] ?? [])));
+        if ($menuIds !== []) {
+            $jumlahPakai = (float) ($validated['jumlah_pakai'] ?? 1);
+            $pivotData = [];
+            foreach ($menuIds as $menuId) {
+                $pivotData[$menuId] = ['jumlah_pakai' => $jumlahPakai];
+            }
+            $bahan->menu()->sync($pivotData);
+        }
 
         if ($bahan->stok > 0) {
             MutasiStok::create([
@@ -110,11 +142,34 @@ class BahanController extends Controller
             'satuan' => ['required', 'string', 'max:20'],
             'stok' => ['required', 'numeric', 'min:0'],
             'stok_minimum' => ['required', 'numeric', 'min:0'],
+            'menu_ids' => ['nullable', 'array'],
+            'menu_ids.*' => ['integer', 'exists:menus,id'],
+            'jumlah_pakai' => ['nullable', 'numeric', 'min:0.01'],
+            'sync_menus' => ['nullable', 'boolean'],
         ]);
 
         $selisih = $validated['stok'] - $bahan->stok;
 
-        $bahan->update($validated);
+        $bahan->update([
+            'nama' => $validated['nama'],
+            'satuan' => $validated['satuan'],
+            'stok' => $validated['stok'],
+            'stok_minimum' => $validated['stok_minimum'],
+        ]);
+
+        if ($request->boolean('sync_menus') || $request->has('menu_ids')) {
+            $existingQuantities = $bahan->menu()->pluck('resep_menu.jumlah_pakai', 'menus.id')->all();
+            $defaultJumlahPakai = (float) ($validated['jumlah_pakai'] ?? 1);
+            $menuIds = array_values(array_unique(array_map('intval', $validated['menu_ids'] ?? [])));
+
+            $pivotData = [];
+            foreach ($menuIds as $menuId) {
+                $pivotData[$menuId] = [
+                    'jumlah_pakai' => (float) ($existingQuantities[$menuId] ?? $defaultJumlahPakai),
+                ];
+            }
+            $bahan->menu()->sync($pivotData);
+        }
 
         if ($selisih != 0) {
             MutasiStok::create([
@@ -134,7 +189,8 @@ class BahanController extends Controller
      */
     public function destroy(Bahan $bahan): RedirectResponse
     {
-        // Hapus mutasi terkait jika ada
+        // Lepas relasi resep menu & hapus mutasi terkait
+        $bahan->menu()->detach();
         $bahan->mutasiStok()->delete();
         $bahan->delete();
 
